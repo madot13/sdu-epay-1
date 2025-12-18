@@ -21,7 +21,7 @@ const processQueue = (error: unknown, token?: string) => {
 };
 
 export const api = axios.create({
-    baseURL: "https://epay.sdu.sdu.kz/api/api",
+    baseURL: "https://epay.sdu.edu.kz/api/api",
 });
 
 api.interceptors.request.use(
@@ -59,7 +59,7 @@ api.interceptors.response.use(
                 const refresh = getRefreshToken();
                 if (!refresh) throw new Error("No refresh token");
 
-                const response = await axios.post("https://epay.sdu.sdu.kz/api/api/auth/login/refresh", {
+                const response = await axios.post("https://epay.sdu.edu.kz/api/api/auth/login/refresh", {
                     refresh,
                 });
 
