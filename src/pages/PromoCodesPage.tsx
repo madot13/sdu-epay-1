@@ -86,10 +86,10 @@ export const PromoCodesPage:FC = () => {
 
     return (
         <AdminLayout>
-            <div className="flex-1 w-full">
+            <div className="flex-1 w-full min-w-0">
                 <h1 className="text-2xl lg:text-[32px] font-bold mb-4 lg:mb-6">Информация о промо-кодах</h1>
                 <PromoCodeFilters/>
-                <div className="overflow-x-auto -mx-4 px-4 lg:mx-0 lg:px-0">
+                <div className="-mx-4 px-4 lg:mx-0 lg:px-0">
                     <CustomTable
                         columns={columns}
                         data={formattedData}

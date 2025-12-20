@@ -20,7 +20,7 @@ const processQueue = (error: unknown, token?: string) => {
     failedQueue = [];
 };
 
-const API_URL = import.meta.env.VITE_API_URL || "https://epay.sdu.edu.kz/api/api";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export const api = axios.create({
     baseURL: API_URL,

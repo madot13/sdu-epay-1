@@ -10,9 +10,12 @@ import {
     UserIcon,
     Bars3Icon,
     XMarkIcon,
+    ChevronLeftIcon,
+    ChevronRightIcon,
 } from "@heroicons/react/24/outline";
 import { clearTokens } from "@/api/utils/tokenUtils.ts";
 import { useUserData } from "@/hooks/useUserData.ts";
+import { useSidebar } from "@/contexts/SidebarContext.tsx";
 const navItems = [
     {
         label: "Панель управления",
@@ -56,6 +59,7 @@ const navItems = [
 export const SideBar: FC = () => {
     const user = useUserData();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const { isCollapsed, toggleSidebar } = useSidebar();
 
     const filteredItems = navItems.filter(
         (item) => !user?.role || item.roles.includes(user.role)
@@ -83,12 +87,36 @@ export const SideBar: FC = () => {
 
             {/* Sidebar */}
             <aside
-                className={`fixed lg:static w-64 h-screen bg-[#006799] text-white flex flex-col z-40 transform transition-transform duration-300 ${
+                className={`fixed lg:static h-screen bg-[#006799] text-white flex flex-col z-40 transform transition-all duration-300 ${
                     isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+                } ${
+                    isCollapsed ? "w-20" : "w-64"
                 }`}
             >
-                <div className="p-6 text-2xl font-bold border-b border-[#00547C] flex-shrink-0">
-                    <img src="logo-2.png" alt="logo" className="max-md:mt-10 lg:w-auto" />
+                <div className={`p-6 text-2xl font-bold border-b border-[#00547C] flex-shrink-0 flex items-center ${isCollapsed ? "justify-center px-2 relative" : "justify-between"}`}>
+                    {!isCollapsed ? (
+                        <>
+                            <img src="logo-2.png" alt="logo" className="max-md:mt-10 lg:w-auto" />
+                            <button
+                                onClick={toggleSidebar}
+                                className="hidden lg:flex items-center justify-center w-8 h-8 rounded-md hover:bg-[#005B88] transition-colors"
+                                title="Свернуть меню"
+                            >
+                                <ChevronLeftIcon width={20} height={20} />
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <img src="logo-2.png" alt="logo" className="w-8 h-8 max-md:mt-10" />
+                            <button
+                                onClick={toggleSidebar}
+                                className="hidden lg:flex items-center justify-center w-8 h-8 rounded-md hover:bg-[#005B88] transition-colors absolute top-2 right-2"
+                                title="Развернуть меню"
+                            >
+                                <ChevronRightIcon width={20} height={20} />
+                            </button>
+                        </>
+                    )}
                 </div>
                 <nav className="flex flex-col flex-1 p-4 overflow-y-auto">
                     <div className="space-y-2 flex-1">
@@ -99,20 +127,30 @@ export const SideBar: FC = () => {
                             label={item.label}
                             to={item.to}
                             onClick={() => setIsMobileMenuOpen(false)}
+                            isCollapsed={isCollapsed}
                         />
                         ))}
                     </div>
                     <div className="pt-4 border-t border-[#00547C] mt-auto flex-shrink-0">
-                        <div className="flex items-center gap-4 mb-4 px-2">
-                            <div className="bg-white p-2 rounded-full shadow-md flex-shrink-0">
-                                <UserIcon width={40} height={40} color="#006799" />
+                        {!isCollapsed && (
+                            <div className="flex items-center gap-4 mb-4 px-2">
+                                <div className="bg-white p-2 rounded-full shadow-md flex-shrink-0">
+                                    <UserIcon width={40} height={40} color="#006799" />
+                                </div>
+                                <div className="text-sm min-w-0">
+                                    <p className="font-semibold truncate">{user?.name ?? "Unknown User"}</p>
+                                    <p className="text-gray-200 truncate">{user?.username}</p>
+                                    <p className="text-gray-300 text-xs capitalize">Role: {user?.role?.toLowerCase()}</p>
+                                </div>
                             </div>
-                            <div className="text-sm min-w-0">
-                                <p className="font-semibold truncate">{user?.name ?? "Unknown User"}</p>
-                                <p className="text-gray-200 truncate">{user?.username}</p>
-                                <p className="text-gray-300 text-xs capitalize">Role: {user?.role?.toLowerCase()}</p>
+                        )}
+                        {isCollapsed && (
+                            <div className="flex items-center justify-center mb-4">
+                                <div className="bg-white p-2 rounded-full shadow-md">
+                                    <UserIcon width={24} height={24} color="#006799" />
+                                </div>
                             </div>
-                        </div>
+                        )}
                         <NavItem
                             icon={<ArrowLeftStartOnRectangleIcon width={20} />}
                             label="Выйти"
@@ -121,6 +159,7 @@ export const SideBar: FC = () => {
                                 clearTokens();
                                 setIsMobileMenuOpen(false);
                             }}
+                            isCollapsed={isCollapsed}
                         />
                     </div>
             </nav>
