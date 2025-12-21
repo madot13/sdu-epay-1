@@ -21,11 +21,10 @@ export const EventsPage:FC = () => {
     const columns = [
         { header: "Событие", accessor: "title" },
         { header: "Департамент", accessor: "department" },
-        { header: "Email Менеджера", accessor: "manager_email" },
+        { header: "Email", accessor: "manager_email" },
         { header: "Период с", accessor: "period_from" },
         { header: "Период по", accessor: "period_till" },
-        { header: "Тип цены", accessor: "priced" },
-        { header: "Цена", accessor: "price" },
+        { header: "Цена", accessor: "price_display" },
     ];
 
 
@@ -83,13 +82,16 @@ export const EventsPage:FC = () => {
 
     return (
         <AdminLayout>
-            <div className="flex-1 w-full">
+            <div className="w-full max-w-full">
                 <h1 className="text-2xl lg:text-[32px] font-bold mb-4 lg:mb-6">Информация о событиях</h1>
                 <EventFilters />
-                <div className="overflow-x-auto -mx-4 px-4 lg:mx-0 lg:px-0">
+                <div className="overflow-x-auto">
                 <CustomTable
                     columns={columns}
-                    data={events}
+                    data={events.map((event: any) => ({
+                        ...event,
+                        price_display: event.priced ? `${event.price} ₸` : "Произвольная"
+                    }))}
                     actions={(row) => (
                         <div className="flex gap-2">
                             <button onClick={() => handleEditClick(row)} className="text-blue-600 hover:text-blue-800">
@@ -102,7 +104,7 @@ export const EventsPage:FC = () => {
                     )}
                 />
                 </div>
-                <div className="mt-4 overflow-x-auto">
+                <div className="mt-4">
                 <Paginator
                     first={first}
                     rows={rows}

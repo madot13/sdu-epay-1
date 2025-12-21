@@ -32,10 +32,10 @@ export const CustomTable: FC<CustomTableProps> = ({ columns, data, actions }) =>
 
     return (
         <div className="w-full overflow-x-auto rounded-[4px] shadow-md border border-gray-200">
-            <table className="divide-y divide-gray-200 bg-white text-sm lg:text-[16px]" style={{ width: '100%', minWidth: '100%' }}>
+            <table className="w-full divide-y divide-gray-200 bg-white text-sm lg:text-[16px]">
                 <thead className="bg-blue-50 text-gray-700 uppercase text-sm lg:text-[16px] font-semibold">
                 <tr>
-                    <th className="px-2 lg:px-4 py-2 lg:py-3 text-left" style={{ width: '40px' }}>
+                    <th className="px-2 lg:px-4 py-2 lg:py-3 text-left w-10">
                         <input
                             type="checkbox"
                             checked={isAllSelected}
@@ -45,10 +45,10 @@ export const CustomTable: FC<CustomTableProps> = ({ columns, data, actions }) =>
                     </th>
                     {columns.map(col => (
                         <th key={col.accessor} className="px-3 lg:px-6 py-2 lg:py-3 text-left">
-                            <div className="whitespace-nowrap truncate" title={col.header}>{col.header}</div>
+                            <div className="whitespace-nowrap" title={col.header}>{col.header}</div>
                         </th>
                     ))}
-                    {actions && <th className="px-3 lg:px-6 py-2 lg:py-3 text-left whitespace-nowrap w-[100px]">Действия</th>}
+                    {actions && <th className="px-3 lg:px-6 py-2 lg:py-3 text-left whitespace-nowrap w-24">Действия</th>}
                 </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 text-sm lg:text-[16px]">
@@ -70,8 +70,6 @@ export const CustomTable: FC<CustomTableProps> = ({ columns, data, actions }) =>
                                 <div className="truncate" title={typeof row[col.accessor] === "object" ? row[col.accessor]?.name ?? "-" : String(row[col.accessor] ?? "")}>
                                     {typeof row[col.accessor] === "object"
                                         ? row[col.accessor]?.name ?? "-"
-                                        : typeof row[col.accessor] === "boolean"
-                                        ? row[col.accessor] ? "Фиксированная" : "Произвольная"
                                         : row[col.accessor] ?? "-"}
                                 </div>
                             </td>
