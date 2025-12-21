@@ -24,6 +24,7 @@ export const EventsPage:FC = () => {
         { header: "Email Менеджера", accessor: "manager_email" },
         { header: "Период с", accessor: "period_from" },
         { header: "Период по", accessor: "period_till" },
+        { header: "Тип цены", accessor: "priced" },
         { header: "Цена", accessor: "price" },
     ];
 

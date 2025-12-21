@@ -21,7 +21,9 @@ interface EditEventsModalProps {
         id: string;
         title: string;
         manager_email: string;
+        priced: boolean;
         price: number;
+        without_period: boolean;
         period_from: string;
         period_till: string;
         department: {
@@ -35,13 +37,14 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
     const [title, setTitle] = useState(eventData.title);
     const [email, setEmail] = useState(eventData.manager_email);
     const [price, setPrice] = useState(eventData.price);
-    const [periodFrom, setPeriodFrom] = useState(eventData.period_from);
-    const [periodTill, setPeriodTill] = useState(eventData.period_till);
+    const [priced, setPriced] = useState(eventData.priced);
+    const [withoutPeriod, setWithoutPeriod] = useState(eventData.without_period);
     const [selectedDepartment, setSelectedDepartment] = useState(eventData.department.id);
-    const [dates, setDates] = useState<Date[] | null>([
-        new Date(eventData.period_from),
-        new Date(eventData.period_till)
-    ]);
+    const [dates, setDates] = useState<Date[] | null>(
+        eventData.without_period 
+            ? null 
+            : [new Date(eventData.period_from), new Date(eventData.period_till)]
+    );
     const [errors, setErrors] = useState({
         title: false,
         email: false,
@@ -58,13 +61,14 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
             setTitle(eventData.title);
             setEmail(eventData.manager_email);
             setPrice(eventData.price);
-            setPeriodFrom(eventData.period_from);
-            setPeriodTill(eventData.period_till);
+            setPriced(eventData.priced);
+            setWithoutPeriod(eventData.without_period);
             setSelectedDepartment(eventData.department.id);
-            setDates([
-                new Date(eventData.period_from),
-                new Date(eventData.period_till)
-            ]);
+            setDates(
+                eventData.without_period
+                    ? null
+                    : [new Date(eventData.period_from), new Date(eventData.period_till)]
+            );
         }
     }, [isOpen, eventData]);
 
@@ -101,8 +105,8 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
             title: !title.trim(),
             email: !email.trim() || !emailRegex.test(email),
             department: !selectedDepartment,
-            price: !price || price <= 0,
-            dates: !periodFrom || !periodTill,
+            price: priced && (!price || price <= 0),
+            dates: !withoutPeriod && (!from || !till),
         };
 
         setErrors(newErrors);
@@ -130,9 +134,13 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
                 title,
                 manager_email: email,
                 department_id: selectedDepartment,
-                price,
-                period_from: from!,
-                period_till: till!,
+                priced: priced,
+                price: priced ? price : 0,
+                without_period: withoutPeriod,
+                ...(withoutPeriod 
+                    ? {} 
+                    : { period_from: from!, period_till: till! }
+                ),
             });
 
             await fetchEvents();
@@ -171,22 +179,54 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
                     optionClassName="text-sm"
                     activeOptionClassName="bg-blue-200"
                 />
-                <CustomInput
-                    icon={<CurrencyDollarIcon className={errors.price ? " text-red-500" : "text-[#6B9AB0]"} />}
-                    placeholder="Введите сумму"
-                    type="number"
-                    value={String(price)}
-                    onChange={(e) => setPrice(Number(e.target.value))}
-                />
-                <Calendar
-                    className={`w-full border ${errors.dates ? " border-red-500" : "border-[#6B9AB0]"} rounded-md shadow-sm`}
-                    placeholder="Выберите диапазон дат"
-                    value={dates}
-                    onChange={(e) => setDates(e.value as Date[])}
-                    selectionMode="range"
-                    readOnlyInput
-                    hideOnRangeSelection
-                />
+                
+                <div className="flex items-center gap-2">
+                    <input
+                        type="checkbox"
+                        id="priced-edit"
+                        checked={priced}
+                        onChange={(e) => setPriced(e.target.checked)}
+                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <label htmlFor="priced-edit" className="text-sm text-gray-700">
+                        Фиксированная цена
+                    </label>
+                </div>
+
+                {priced && (
+                    <CustomInput
+                        icon={<CurrencyDollarIcon className={errors.price ? " text-red-500" : "text-[#6B9AB0]"} />}
+                        placeholder="Введите сумму"
+                        type="number"
+                        value={String(price)}
+                        onChange={(e) => setPrice(Number(e.target.value))}
+                    />
+                )}
+
+                <div className="flex items-center gap-2">
+                    <input
+                        type="checkbox"
+                        id="withoutPeriod-edit"
+                        checked={withoutPeriod}
+                        onChange={(e) => setWithoutPeriod(e.target.checked)}
+                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <label htmlFor="withoutPeriod-edit" className="text-sm text-gray-700">
+                        Без периода
+                    </label>
+                </div>
+
+                {!withoutPeriod && (
+                    <Calendar
+                        className={`w-full border ${errors.dates ? " border-red-500" : "border-[#6B9AB0]"} rounded-md shadow-sm`}
+                        placeholder="Выберите диапазон дат"
+                        value={dates}
+                        onChange={(e) => setDates(e.value as Date[])}
+                        selectionMode="range"
+                        readOnlyInput
+                        hideOnRangeSelection
+                    />
+                )}
 
                 <CustomButton onClick={handleSubmit} className="w-full">
                     Сохранить

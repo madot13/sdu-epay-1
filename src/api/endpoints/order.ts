@@ -68,3 +68,31 @@ export const orderSelfHalyk = async (order: Omit<{
 
     return data;
 }
+
+export const orderKaspiCustomPrice = async (order: {
+    event_id: string;
+    fullname: string;
+    email: string;
+    cellphone: string;
+    additional: string;
+    additional_fields: Record<string, string | boolean>;
+    amount: number;
+}): Promise<PaymentResponseKaspi> => {
+    const {data} = await api.post("/orders/public/kaspi/event-custom-price", order);
+
+    return data;
+}
+
+export const orderHalykCustomPrice = async (order: {
+    event_id: string;
+    fullname: string;
+    email: string;
+    cellphone: string;
+    additional: string;
+    additional_fields: Record<string, string | boolean>;
+    amount: number;
+}): Promise<PaymentResponseKaspi> => {
+    const {data} = await api.post("/orders/public/epay/event-custom-price", order);
+
+    return data;
+}

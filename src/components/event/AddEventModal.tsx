@@ -22,6 +22,8 @@ export const AddEventModal: FC = () => {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [price, setPrice] = useState(0);
+    const [priced, setPriced] = useState(true);
+    const [withoutPeriod, setWithoutPeriod] = useState(false);
     const [selectedDepartment, setSelectedDepartment] = useState("");
     const [departments, setDepartments] = useState<{ label: string; value: string }[]>([]);
     const [errors, setErrors] = useState({
@@ -62,8 +64,8 @@ export const AddEventModal: FC = () => {
             name: !name,
             email: !email || !emailRegex.test(email),
             department: !selectedDepartment,
-            price: !price || price <= 0,
-            dates: !periodFrom || !periodTo,
+            price: priced && (!price || price <= 0),
+            dates: !withoutPeriod && (!periodFrom || !periodTo),
         };
 
         setErrors(newErrors);
@@ -91,9 +93,13 @@ export const AddEventModal: FC = () => {
                 title: name,
                 manager_email: email,
                 department_id: selectedDepartment,
-                period_from: periodFrom!,
-                period_till: periodTo!,
-                price: price,
+                priced: priced,
+                price: priced ? price : 0,
+                without_period: withoutPeriod,
+                ...(withoutPeriod 
+                    ? {} 
+                    : { period_from: periodFrom!, period_till: periodTo! }
+                ),
             });
 
             await fetchEvents()
@@ -103,6 +109,8 @@ export const AddEventModal: FC = () => {
             setName("");
             setEmail("");
             setPrice(0);
+            setPriced(true);
+            setWithoutPeriod(false);
             setSelectedDepartment("");
             setDates(null);
             setErrors({
@@ -158,26 +166,56 @@ export const AddEventModal: FC = () => {
                         activeOptionClassName="bg-blue-200"
                     />
 
-                    <CustomInput
-                        value={String(price)}
-                        onChange={(e) => setPrice(Number(e.target.value))}
-                        icon={<TengeIcon  color={errors.price ? "#fb2c36" : "#6B9AB0"} />}
-                        placeholder="Введите цену"
-                        type="number"
-                        className={errors.price ? "border border-red-500" : ""}
-                    />
-
-                    <div className={`card flex justify-content-center ${errors.dates ? "border border-red-500 rounded-md" : ""}`}>
-                        <Calendar
-                            className="w-full rounded-md shadow-sm"
-                            placeholder="Выберите диапазон дат"
-                            value={dates}
-                            onChange={(e) => setDates(e.value as Date[])}
-                            selectionMode="range"
-                            readOnlyInput
-                            hideOnRangeSelection
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            id="priced"
+                            checked={priced}
+                            onChange={(e) => setPriced(e.target.checked)}
+                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
                         />
+                        <label htmlFor="priced" className="text-sm text-gray-700">
+                            Фиксированная цена
+                        </label>
                     </div>
+
+                    {priced && (
+                        <CustomInput
+                            value={String(price)}
+                            onChange={(e) => setPrice(Number(e.target.value))}
+                            icon={<TengeIcon  color={errors.price ? "#fb2c36" : "#6B9AB0"} />}
+                            placeholder="Введите цену"
+                            type="number"
+                            className={errors.price ? "border border-red-500" : ""}
+                        />
+                    )}
+
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            id="withoutPeriod"
+                            checked={withoutPeriod}
+                            onChange={(e) => setWithoutPeriod(e.target.checked)}
+                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                        />
+                        <label htmlFor="withoutPeriod" className="text-sm text-gray-700">
+                            Без периода
+                        </label>
+                    </div>
+
+                    {!withoutPeriod && (
+                        <div className={`card flex justify-content-center ${errors.dates ? "border border-red-500 rounded-md" : ""}`}>
+                            <Calendar
+                                className="w-full rounded-md shadow-sm"
+                                placeholder="Выберите диапазон дат"
+                                value={dates}
+                                onChange={(e) => setDates(e.value as Date[])}
+                                selectionMode="range"
+                                readOnlyInput
+                                hideOnRangeSelection
+                            />
+                        </div>
+                    )}
 
                     <CustomButton onClick={handleSubmit} className="w-full">
                         Добавить

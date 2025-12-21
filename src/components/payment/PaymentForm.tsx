@@ -14,7 +14,7 @@ import {getPublicDepartments} from "@/api/endpoints/departments.ts";
 import {getPublicEventsById} from "@/api/endpoints/events.ts";
 import {IEvent} from "@/types/events.ts";
 import {usePaymentStore} from "@/store/usePaymentStore.ts";
-import {orderHalyk, orderKaspi, orderSelfHalyk, orderSelfKaspi} from "@/api/endpoints/order.ts";
+import {orderHalyk, orderKaspi, orderSelfHalyk, orderSelfKaspi, orderKaspiCustomPrice, orderHalykCustomPrice} from "@/api/endpoints/order.ts";
 import {PaymentHalyk} from "@/components/payment/PaymentHalyk.tsx";
 import {toast} from "react-hot-toast";
 import {Calendar} from "primereact/calendar";
@@ -36,7 +36,7 @@ interface FormValues {
 
 
 
-export const usePaymentSchema = (departmentType: DepartmentType | null) => {
+export const usePaymentSchema = (departmentType: DepartmentType | null, eventPriced: boolean | null) => {
     const { t } = useTranslation();
 
     return yup.object().shape({
@@ -53,7 +53,7 @@ export const usePaymentSchema = (departmentType: DepartmentType | null) => {
             : yup.string().optional(),
         additional: yup.string().optional(),
         paymentMethod: yup.string().required(t("paymentPage.errors.paymentMethod")),
-        amount: departmentType === "SELF_PAY"
+        amount: departmentType === "SELF_PAY" || (departmentType === "EVENT_BASED" && eventPriced === false)
             ? yup.number().typeError(t("paymentPage.errors.amount")).required(t("paymentPage.errors.amount"))
             : yup.number().nullable().optional(),
     });
@@ -75,6 +75,7 @@ export const PaymentForm: FC = () => {
     const [additionalFields, setAdditionalFields] = useState<any[]>([]);
     const [additionalFieldValues, setAdditionalFieldValues] = useState<Record<string, string | boolean>>({});
     const [selectedDepartmentType, setSelectedDepartmentType] = useState<DepartmentType | null>(null);
+    const [selectedEventPriced, setSelectedEventPriced] = useState<boolean | null>(null);
 
 
 
@@ -107,6 +108,7 @@ export const PaymentForm: FC = () => {
                     label: event.title || '',
                     value: event.id || '',
                     price: Number(event.price || 0),
+                    priced: event.priced ?? true,
                 })).filter(event => event.label && event.value);
                 setEventOptions(mapped);
             } catch (error) {
@@ -119,7 +121,7 @@ export const PaymentForm: FC = () => {
 
 
 
-    const schema = usePaymentSchema(selectedDepartmentType);
+    const schema = usePaymentSchema(selectedDepartmentType, selectedEventPriced);
     const {
         control,
         handleSubmit,
@@ -163,18 +165,43 @@ export const PaymentForm: FC = () => {
 
             if(selectedDepartmentType==="EVENT_BASED"){
                 if (data.paymentMethod === "KaspiBank") {
-                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                    const { paymentMethod, department_id, amount,  ...dataWithoutPaymentMethodAndDepartment } = payload;
-                    const kaspiData = await orderKaspi(dataWithoutPaymentMethodAndDepartment);
-                    console.log("kaspiData", kaspiData);
-                    setPaymentData(kaspiData);
-
-
+                    if (selectedEventPriced === false) {
+                        // Если событие без фиксированной цены, используем эндпоинт event-custom-price
+                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                        const { paymentMethod, department_id, promo_code, ...customPriceData } = payload;
+                        const kaspiData = await orderKaspiCustomPrice({
+                            ...customPriceData,
+                            event_id: customPriceData.event_id!,
+                            amount: customPriceData.amount!
+                        });
+                        console.log("kaspiData", kaspiData);
+                        setPaymentData(kaspiData);
+                    } else {
+                        // Если событие с фиксированной ценой, используем обычный эндпоинт
+                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                        const { paymentMethod, department_id, amount, ...dataWithoutPaymentMethodAndDepartment } = payload;
+                        const kaspiData = await orderKaspi(dataWithoutPaymentMethodAndDepartment);
+                        console.log("kaspiData", kaspiData);
+                        setPaymentData(kaspiData);
+                    }
                 }else if (data.paymentMethod === "HalykBank") {
-                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                    const { paymentMethod, department_id, amount, ...dataWithoutPaymentMethodAndDepartment } = payload;
-                    setPaymentData(await orderHalyk(dataWithoutPaymentMethodAndDepartment));
-                    setShowWidget(true);
+                    if (selectedEventPriced === false) {
+                        // Если событие без фиксированной цены, используем эндпоинт event-custom-price
+                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                        const { paymentMethod, department_id, promo_code, ...customPriceData } = payload;
+                        setPaymentData(await orderHalykCustomPrice({
+                            ...customPriceData,
+                            event_id: customPriceData.event_id!,
+                            amount: customPriceData.amount!
+                        }));
+                        setShowWidget(true);
+                    } else {
+                        // Если событие с фиксированной ценой, используем обычный эндпоинт
+                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                        const { paymentMethod, department_id, amount, ...dataWithoutPaymentMethodAndDepartment } = payload;
+                        setPaymentData(await orderHalyk(dataWithoutPaymentMethodAndDepartment));
+                        setShowWidget(true);
+                    }
                 }
                 else {
                     console.warn("Unknown payment method");
@@ -348,6 +375,7 @@ export const PaymentForm: FC = () => {
                                             const selectedEvent = eventOptions.find(e => e.value === val);
                                             if (selectedEvent && "price" in selectedEvent) {
                                                 setPrice(Number((selectedEvent as IEvent).price));
+                                                setSelectedEventPriced((selectedEvent as any).priced ?? true);
                                             }
                                         }}
                                         triggerClassName={"text-white"}
@@ -431,6 +459,31 @@ export const PaymentForm: FC = () => {
 
                                             )}
                                         />
+
+                                        {selectedEventPriced === false && (
+                                            <Controller
+                                                name="amount"
+                                                control={control}
+                                                render={({ field }) => (
+                                                    <>
+                                                        <CustomInput
+                                                            {...field}
+                                                            icon={<TengeIcon  color={errors.amount ? "#fb2c36" : "#6B9AB0"} />}
+                                                            type="number"
+                                                            onChange={(e) => {
+                                                                field.onChange(e);
+                                                                setOrderField("amount", Number(e.target.value));
+                                                            }}
+                                                            placeholder={t('paymentPage.inputs.amountPH')}
+                                                            error={errors.amount?.message}
+                                                        />
+                                                        {errors.amount && (
+                                                            <p className="text-red-500 text-sm -mt-4 ml-2">{errors.amount.message}</p>
+                                                        )}
+                                                    </>
+                                                )}
+                                            />
+                                        )}
 
                                         <CheckOut /></>
                             ) : (

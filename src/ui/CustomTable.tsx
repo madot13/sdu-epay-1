@@ -70,6 +70,8 @@ export const CustomTable: FC<CustomTableProps> = ({ columns, data, actions }) =>
                                 <div className="truncate" title={typeof row[col.accessor] === "object" ? row[col.accessor]?.name ?? "-" : String(row[col.accessor] ?? "")}>
                                     {typeof row[col.accessor] === "object"
                                         ? row[col.accessor]?.name ?? "-"
+                                        : typeof row[col.accessor] === "boolean"
+                                        ? row[col.accessor] ? "Фиксированная" : "Произвольная"
                                         : row[col.accessor] ?? "-"}
                                 </div>
                             </td>
