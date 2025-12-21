@@ -161,7 +161,7 @@ export const OrdersFilters: FC = () => {
                     onClick={handleExport}
                     disabled={isExporting}
                     variant="default"
-                    className="h-[37px] px-4 mt-auto rounded-[4px] transition w-full sm:w-auto flex items-center gap-2"
+                    className="h-[37px] px-4 justify-center mt-auto rounded-[4px] transition w-full sm:w-auto flex items-center gap-2"
                 >
                     {isExporting ? (
                         <>Загрузка...</>
