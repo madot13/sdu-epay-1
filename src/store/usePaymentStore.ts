@@ -16,6 +16,7 @@ interface PaymentState {
     setCurrency: (currency: "KZT" | "USD") => void;
     verifyPromo: (payload: VerifyPromocodePayload) => Promise<string | null>;
     applyPromo: (promoCode: string) => void;
+    resetPromo: () => void;
     setLoading: (loading: boolean) => void;
     setError: (error: string | null) => void;
     resetOrder: () => void;
@@ -96,6 +97,16 @@ export const usePaymentStore = create<PaymentState>((set) => ({
             order: {
                 ...state.order,
                 promo_code: promoCode,
+            },
+        })),
+
+    resetPromo: () =>
+        set((state) => ({
+            discount: 0,
+            finalPrice: state.price,
+            order: {
+                ...state.order,
+                promo_code: '',
             },
         })),
 

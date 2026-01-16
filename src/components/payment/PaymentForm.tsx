@@ -66,7 +66,7 @@ export const usePaymentSchema = (departmentType: DepartmentType | null, eventPri
 
 
 export const PaymentForm: FC = () => {
-    const {setPrice, setOrderField, setCurrency} = usePaymentStore();
+    const {setPrice, setOrderField, setCurrency, discount, resetPromo} = usePaymentStore();
     const { t } = useTranslation();
 
     const [selectedDepartmentId, setSelectedDepartmentId] = useState("");
@@ -412,6 +412,15 @@ export const PaymentForm: FC = () => {
                                                 onChange={(val) => {
                                                     field.onChange(val);
                                                     setOrderField("event_id", val);
+
+                                                    // Reset promo code when event changes
+                                                    if (discount > 0) {
+                                                        setValue("promo_code", null);
+                                                        resetPromo();
+                                                        toast("Промокод сброшен. Событие изменено.", {
+                                                            icon: "ℹ️"
+                                                        });
+                                                    }
 
                                                     const selectedEvent = eventOptions.find(e => e.value === val);
                                                     if (selectedEvent && "price" in selectedEvent) {
