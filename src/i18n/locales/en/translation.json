@@ -10,7 +10,8 @@
       "department_id": "Department selection is required",
       "event_id": "Event selection is required",
       "paymentMethod": "Payment method selection is required",
-      "amount": "Amount is required"
+      "amount": "Amount is required",
+      "residencyStatus": "Residency status is required"
     },
     "toasts": {
       "error": "Something went wrong, please try again"
@@ -38,6 +39,10 @@
       "promo": "Promo code",
       "total": "Total"
     },
-    "payBtn": "Pay"
+    "payBtn": "Pay",
+    "residency": {
+      "resident": "Resident",
+      "nonResident": "Non-resident"
+    }
   }
 }

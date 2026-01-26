@@ -1,6 +1,6 @@
 import {FC, useEffect, useState} from "react";
 import { CustomInput } from "../../ui/CustomInput.tsx";
-import {EnvelopeIcon, PhoneIcon, UserIcon} from "@heroicons/react/24/outline";
+import {EnvelopeIcon, PhoneIcon, UserIcon, CurrencyDollarIcon} from "@heroicons/react/24/outline";
 import {CustomSelect, Option} from "../../ui/CustomSelect.tsx";
 import { PaymentMethod } from "./PaymentMethod.tsx";
 import { PromocodeInput } from "./PromocodeInput.tsx";
@@ -58,7 +58,7 @@ export const usePaymentSchema = (departmentType: DepartmentType | null, eventPri
             ? yup.number().typeError(t("paymentPage.errors.amount")).required(t("paymentPage.errors.amount"))
             : yup.number().nullable().optional(),
         residencyStatus: departmentType === "EVENT_BASED"
-            ? yup.string().required("Residency status is required")
+            ? yup.string().required(t("paymentPage.errors.residencyStatus"))
             : yup.string().nullable().optional(),
     });
 };
@@ -372,6 +372,31 @@ export const PaymentForm: FC = () => {
                                     field.onChange(val);
                                     setSelectedDepartmentId(val);
 
+                                    // Reset promo code and event when department changes
+                                    if (discount > 0) {
+                                        setValue("promo_code", null);
+                                        resetPromo();
+                                        toast("Промокод сброшен. Департамент изменен.", {
+                                            icon: "ℹ️"
+                                        });
+                                    }
+
+                                    // Reset event selection
+                                    setValue("event_id", null);
+                                    setOrderField("event_id", ""); // Reset in store too
+                                    setEventOptions([]); // Clear event options
+                                    setSelectedEventPriced(null);
+                                    setSelectedEventPriceKzt(null);
+                                    setSelectedEventPriceUsd(null);
+                                    setPrice(0);
+
+                                    // Reset residency status
+                                    setValue("residencyStatus", null);
+                                    setCurrency("KZT");
+
+                                    // Reset additional fields
+                                    setAdditionalFieldValues({});
+
                                     type AdditionalFieldsMap = Record<string, { type: string }>;
 
                                     const selected = departments.find((d) => d.id === val);
@@ -422,6 +447,10 @@ export const PaymentForm: FC = () => {
                                                         });
                                                     }
 
+                                                    // Reset residency status when event changes
+                                                    setValue("residencyStatus", null);
+                                                    setCurrency("KZT");
+
                                                     const selectedEvent = eventOptions.find(e => e.value === val);
                                                     if (selectedEvent && "price" in selectedEvent) {
                                                         setPrice(Number((selectedEvent as IEvent).price));
@@ -443,52 +472,66 @@ export const PaymentForm: FC = () => {
                                 <Controller
                                     name="residencyStatus"
                                     control={control}
-                                    render={({ field }) => (
-                                        <>
-                                            <CustomSelect
-                                                {...field}
-                                                options={[
-                                                    { label: "Resident", value: "resident" },
-                                                    { label: "Non-resident", value: "non-resident" }
-                                                ]}
-                                                value={field.value || ''}
-                                                onChange={(val) => {
-                                                    field.onChange(val);
-                                                    // Auto-fill amount and currency based on residency status
-                                                    if (selectedEventPriced) {
-                                                        if (val === "resident") {
-                                                            setValue("amount", selectedEventPriceKzt);
-                                                            setPrice(selectedEventPriceKzt || 0);
-                                                            setCurrency("KZT");
-                                                        } else if (val === "non-resident") {
-                                                            if (selectedEventPriceUsd) {
-                                                                setValue("amount", selectedEventPriceUsd);
-                                                                setPrice(selectedEventPriceUsd || 0);
-                                                                setCurrency("USD");
-                                                            } else {
-                                                                // Fallback to KZT price if USD not available
-                                                                toast.error("USD price not available for this event. Using KZT price instead.");
-                                                                setValue("amount", selectedEventPriceKzt);
-                                                                setPrice(selectedEventPriceKzt || 0);
-                                                                setCurrency("KZT");
-                                                            }
-                                                        }
+                                    render={({ field }) => {
+                                        const handleResidencyChange = (val: "resident" | "non-resident") => {
+                                            field.onChange(val);
+                                            // Auto-fill amount and currency based on residency status
+                                            if (selectedEventPriced) {
+                                                if (val === "resident") {
+                                                    setValue("amount", selectedEventPriceKzt);
+                                                    setPrice(selectedEventPriceKzt || 0);
+                                                    setCurrency("KZT");
+                                                } else if (val === "non-resident") {
+                                                    if (selectedEventPriceUsd) {
+                                                        setValue("amount", selectedEventPriceUsd);
+                                                        setPrice(selectedEventPriceUsd || 0);
+                                                        setCurrency("USD");
+                                                    } else {
+                                                        // Fallback to KZT price if USD not available
+                                                        toast.error("USD price not available for this event. Using KZT price instead.");
+                                                        setValue("amount", selectedEventPriceKzt);
+                                                        setPrice(selectedEventPriceKzt || 0);
+                                                        setCurrency("KZT");
                                                     }
-                                                }}
-                                                triggerClassName={"text-white"}
-                                                placeholder="Select Residency Status"
-                                                error={errors.residencyStatus?.message}
-                                            />
-                                            {errors.residencyStatus && (
-                                                <p className="text-red-500 text-sm -mt-2 ml-2">{errors.residencyStatus.message}</p>
-                                            )}
-                                            {field.value === "non-resident" && !selectedEventPriceUsd && selectedEventPriced && (
-                                                <p className="text-yellow-600 text-sm -mt-2 ml-2">
-                                                    ⚠️ USD price not available. KZT price will be used.
-                                                </p>
-                                            )}
-                                        </>
-                                    )}
+                                                }
+                                            }
+                                        };
+
+                                        return (
+                                            <>
+                                                <div className={`flex gap-4 p-4 rounded-[5px] border ${errors.residencyStatus ? 'border-red-500' : 'border-[#6B9AB0]'}`}>
+                                                    <label className="flex items-center gap-2 cursor-pointer">
+                                                        <input
+                                                            type="radio"
+                                                            name="residencyStatus"
+                                                            checked={field.value === "resident"}
+                                                            onChange={() => handleResidencyChange("resident")}
+                                                            className="w-5 h-5 text-[#006799] border-[#6B9AB0] focus:ring-[#006799]"
+                                                        />
+                                                        <span className="text-[16px]">{t('paymentPage.residency.resident')}</span>
+                                                    </label>
+                                                    <label className="flex items-center gap-2 cursor-pointer">
+                                                        <input
+                                                            type="radio"
+                                                            name="residencyStatus"
+                                                            checked={field.value === "non-resident"}
+                                                            onChange={() => handleResidencyChange("non-resident")}
+                                                            className="w-5 h-5 text-[#006799] border-[#6B9AB0] focus:ring-[#006799]"
+                                                        />
+                                                        <span className="text-[16px]">{t('paymentPage.residency.nonResident')}</span>
+                                                    </label>
+                                                </div>
+                                                {errors.residencyStatus && (
+                                                    <p className="text-red-500 text-sm -mt-2 ml-2">{errors.residencyStatus.message}</p>
+                                                )}
+                                                {field.value === "non-resident" && !selectedEventPriceUsd && selectedEventPriced && (
+                                                    <p className="text-yellow-600 text-sm -mt-2 ml-2">
+                                                        ⚠️ USD price not available. KZT price will be used.
+                                                    </p>
+                                                )}
+                                            </>
+                                        );
+                                    }}
                                 />
                             </>
                         ): null}
@@ -579,7 +622,10 @@ export const PaymentForm: FC = () => {
                                                     <>
                                                         <CustomInput
                                                             {...field}
-                                                            icon={<TengeIcon  color={errors.amount ? "#fb2c36" : "#6B9AB0"} />}
+                                                            icon={watchResidencyStatus === "non-resident"
+                                                                ? <CurrencyDollarIcon className={errors.amount ? "text-red-500" : "text-[#6B9AB0]"} />
+                                                                : <TengeIcon color={errors.amount ? "#fb2c36" : "#6B9AB0"} />
+                                                            }
                                                             type="number"
                                                             onChange={(e) => {
                                                                 field.onChange(e);
