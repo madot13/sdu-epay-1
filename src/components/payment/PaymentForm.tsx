@@ -467,6 +467,58 @@ export const PaymentForm: FC = () => {
                                         </>
                                     )}
                                 />
+                                <Controller
+                                    name="residencyStatus"
+                                    control={control}
+                                    render={({ field }) => {
+                                        const residencyOptions = [
+                                            { label: t('paymentPage.residency.resident'), value: "resident" },
+                                            { label: t('paymentPage.residency.nonResident'), value: "non-resident" }
+                                        ];
+
+                                        const handleResidencyChange = (val: string) => {
+                                            field.onChange(val);
+                                            // Auto-fill amount and currency based on residency status
+                                            if (selectedEventPriced) {
+                                                if (val === "resident") {
+                                                    setValue("amount", selectedEventPriceKzt);
+                                                    setPrice(selectedEventPriceKzt || 0);
+                                                    setCurrency("KZT");
+                                                } else if (val === "non-resident") {
+                                                    if (selectedEventPriceUsd) {
+                                                        setValue("amount", selectedEventPriceUsd);
+                                                        setPrice(selectedEventPriceUsd || 0);
+                                                        setCurrency("USD");
+                                                    } else {
+                                                        // Fallback to KZT price if USD not available
+                                                        toast.error("USD price not available for this event. Using KZT price instead.");
+                                                        setValue("amount", selectedEventPriceKzt);
+                                                        setPrice(selectedEventPriceKzt || 0);
+                                                        setCurrency("KZT");
+                                                    }
+                                                }
+                                            }
+                                        };
+
+                                        return (
+                                            <>
+                                                <CustomSelect
+                                                    {...field}
+                                                    options={residencyOptions}
+                                                    value={field.value || ''}
+                                                    onChange={handleResidencyChange}
+                                                    triggerClassName={"text-white"}
+                                                    placeholder={t('paymentPage.residency.resident')}
+                                                />
+                                                {field.value === "non-resident" && !selectedEventPriceUsd && selectedEventPriced && (
+                                                    <p className="text-yellow-600 text-sm -mt-2 ml-2">
+                                                        ⚠️ USD price not available. KZT price will be used.
+                                                    </p>
+                                                )}
+                                            </>
+                                        );
+                                    }}
+                                />
                             </>
                         ): null}
                         {additionalFields.map((field) => {
@@ -510,57 +562,6 @@ export const PaymentForm: FC = () => {
                                 />
                             );
                         })}
-                        {selectedDepartmentType === "EVENT_BASED" && (
-                            <Controller
-                                name="residencyStatus"
-                                control={control}
-                                render={({ field }) => {
-                                    const handleResidencyChange = (isNonResident: boolean) => {
-                                        const val = isNonResident ? "non-resident" : "resident";
-                                        field.onChange(val);
-                                        // Auto-fill amount and currency based on residency status
-                                        if (selectedEventPriced) {
-                                            if (val === "resident") {
-                                                setValue("amount", selectedEventPriceKzt);
-                                                setPrice(selectedEventPriceKzt || 0);
-                                                setCurrency("KZT");
-                                            } else if (val === "non-resident") {
-                                                if (selectedEventPriceUsd) {
-                                                    setValue("amount", selectedEventPriceUsd);
-                                                    setPrice(selectedEventPriceUsd || 0);
-                                                    setCurrency("USD");
-                                                } else {
-                                                    // Fallback to KZT price if USD not available
-                                                    toast.error("USD price not available for this event. Using KZT price instead.");
-                                                    setValue("amount", selectedEventPriceKzt);
-                                                    setPrice(selectedEventPriceKzt || 0);
-                                                    setCurrency("KZT");
-                                                }
-                                            }
-                                        }
-                                    };
-
-                                    return (
-                                        <>
-                                            <label className="flex items-center gap-2 cursor-pointer">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={field.value === "non-resident"}
-                                                    onChange={(e) => handleResidencyChange(e.target.checked)}
-                                                    className="w-5 h-5 text-[#006799] border-[#6B9AB0] focus:ring-[#006799] rounded"
-                                                />
-                                                <span className="text-[16px]">{t('paymentPage.residency.nonResident')}</span>
-                                            </label>
-                                            {field.value === "non-resident" && !selectedEventPriceUsd && selectedEventPriced && (
-                                                <p className="text-yellow-600 text-sm -mt-2 ml-2">
-                                                    ⚠️ USD price not available. KZT price will be used.
-                                                </p>
-                                            )}
-                                        </>
-                                    );
-                                }}
-                            />
-                        )}
                         <Controller
                             name="paymentMethod"
                             control={control}
