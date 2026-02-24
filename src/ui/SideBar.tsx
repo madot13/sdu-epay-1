@@ -44,6 +44,12 @@ const navItems = [
         roles: ["ADMIN", "SUPER_ADMIN", "MANAGER"],
     },
     {
+        label: 'Пакеты для событий',
+        to: '/admin/packet-events',
+        icon: <FileTextIcon />,
+        roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER'],
+    },
+    {
         label: "Промокоды",
         to: "/promo-codes",
         icon: <ReceiptPercentIcon width={20} />,
@@ -54,12 +60,6 @@ const navItems = [
         to: "/orders",
         icon: <ShoppingCartIcon width={20} />,
         roles: ["SUPER_ADMIN", "ADMIN", "MANAGER"],
-    },
-    {
-        label: 'Пакеты для событий',
-        to: '/admin/packet-events', // Было '/packet-events', а в App.tsx у тебя '/admin/packet-events'
-        icon: <FileTextIcon />,
-        roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER'],
     },
     {
         label: "Чтение файлов",
