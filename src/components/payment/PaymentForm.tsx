@@ -21,6 +21,7 @@ import {Calendar} from "primereact/calendar";
 import {useTranslation} from "react-i18next";
 import {DepartmentType} from "@/types/payment.ts";
 import {TengeIcon} from "@/assets/TengeIcon.tsx";
+import { set } from "date-fns";
 
 interface FormValues {
     fullname: string;
@@ -500,7 +501,7 @@ export const PaymentForm: FC = () => {
                                                     }}
                                                     className="w-4 h-4 rounded accent-[#6B9AB0]"
                                                 />
-                                                <span className="text-white">Show in USD</span>
+                                                <span className="text-black">Show in USD</span>
                                             </label>
                                             {field.value && !selectedEventPriceUsd && selectedEventPriced && (
                                                 <p className="text-yellow-600 text-sm -mt-2 ml-2">
@@ -561,7 +562,11 @@ export const PaymentForm: FC = () => {
                                     <PaymentMethod
                                         {...field}
                                         error={errors.paymentMethod?.message}
-                                        onChange={(value) => setValue("paymentMethod", value)}
+                                        onChange={(value) => {
+                                            if (watchShowInUsd && value === "KaspiBank") return;
+                                            setValue("paymentMethod", value);
+                                        }}
+                                        disableKaspi={watchShowInUsd} // Disable Kaspi if showing in USD
                                     />
                                     {errors.paymentMethod && (
                                         <p className="text-red-500 text-sm -mt-2 ml-2">{errors.paymentMethod.message}</p>
