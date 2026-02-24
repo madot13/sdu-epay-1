@@ -15,7 +15,7 @@ import {DashboardPage} from "@/pages/DashboardPage.tsx";
 import {Toaster} from "react-hot-toast";
 import {FileViewerPage} from "@/pages/FileViewerPage.tsx";
 import {OrdersPage} from "@/pages/OrdersPage.tsx";
-import PacketEventsPage from '@/components/packet-events/PacketEventsPage';
+import {PacketEventsPage} from '@/pages/PacketEventsPage.tsx';
 
 function App() {
   return (
