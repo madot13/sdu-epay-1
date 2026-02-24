@@ -21,7 +21,6 @@ import {Calendar} from "primereact/calendar";
 import {useTranslation} from "react-i18next";
 import {DepartmentType} from "@/types/payment.ts";
 import {TengeIcon} from "@/assets/TengeIcon.tsx";
-import { set } from "date-fns";
 
 interface FormValues {
     fullname: string;
