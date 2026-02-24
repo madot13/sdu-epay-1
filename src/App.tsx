@@ -61,7 +61,11 @@ function App() {
                   </ReauireAuth>
               }
               />
-              <Route path="/admin/packet-events" element={<PacketEventsPage />} />
+              <Route path="/admin/packet-events" element={
+                    <ReauireAuth>
+                        <PacketEventsPage />
+                    </ReauireAuth>
+              } />
               <Route path={"/success"} element={<SuccessPaymentPage />} />
               <Route path={"/fail"} element={<FailPaymentPage />} />
           </Routes>

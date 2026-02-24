@@ -1,59 +1,77 @@
 import React, { useState, useEffect } from 'react';
-import { IEventRecord } from '../../types/packetevents'; 
+import { PacketEventsFilter } from './PacketEventsFilter';
 import { packetEventsApi } from '../../api/endpoints/packet-events';
-import { CustomButton } from '../../ui/CustomButton';
+import { IEventRecord } from '../../types/packetevents';
 
 const PacketEventsPage: React.FC = () => {
     const [data, setData] = useState<IEventRecord[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const result = await packetEventsApi.getAll();
-                setData(result);
-            } catch (error) {
-                console.error("Failed to fetch packet events:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchData();
-    }, []);
+    const loadData = async (filters = {}) => {
+        setLoading(true);
+        try {
+            const result = await packetEventsApi.getAll(filters);
+            setData(result);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => { loadData(); }, []);
 
     return (
-        <div className="p-6 bg-white rounded-lg shadow">
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-800">Чтение файлов (Packet Events)</h1>
-                <CustomButton onClick={() => alert('Add modal soon!')}>Добавить запись</CustomButton>
-            </div>
+        <div className="flex flex-col p-4 lg:p-8 bg-[#F8FAFC] min-h-screen">
+            {/* Заголовок страницы */}
+            <h1 className="text-[24px] font-bold text-[#1A1A1A] mb-6">
+                Информация о пакетных событиях
+            </h1>
 
-            {loading ? (
-                <p>Загрузка...</p>
-            ) : (
+            {/* Блок фильтров */}
+            <PacketEventsFilter onSearch={loadData} />
+
+            {/* Контейнер таблицы */}
+            <div className="bg-white rounded-[8px] shadow-sm border border-gray-200 overflow-hidden">
                 <div className="overflow-x-auto">
-                    <table className="min-w-full border-collapse">
-                        <thead>
-                            <tr className="bg-blue-50">
-                                <th className="border p-2">Event Name</th>
-                                <th className="border p-2">Department</th>
-                                <th className="border p-2">Email</th>
-                                <th className="border p-2">Сумма (KZT)</th>
+                    <table className="w-full text-left border-collapse">
+                        <thead className="bg-[#E5EEF5] text-[#4A5568] text-xs uppercase font-semibold">
+                            <tr>
+                                <th className="px-6 py-4 border-b">Событие</th>
+                                <th className="px-6 py-4 border-b">Департамент</th>
+                                <th className="px-6 py-4 border-b">Email</th>
+                                <th className="px-6 py-4 border-b">Период с</th>
+                                <th className="px-6 py-4 border-b">Период по</th>
+                                <th className="px-6 py-4 border-b">Цена (KZT)</th>
+                                <th className="px-6 py-4 border-b">Цена (USD)</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            {data.map((item) => (
-                                <tr key={item.id} className="hover:bg-gray-50">
-                                    <td className="border p-2">{item.event_name}</td>
-                                    <td className="border p-2">{item.department}</td>
-                                    <td className="border p-2">{item.email}</td>
-                                    <td className="border p-2">{item.amount_kzt}</td>
-                                </tr>
-                            ))}
+                        <tbody className="divide-y divide-gray-100">
+                            {loading ? (
+                                <tr><td colSpan={7} className="text-center py-10">Загрузка...</td></tr>
+                            ) : data.length > 0 ? (
+                                data.map((item) => (
+                                    <tr key={item.id} className="hover:bg-gray-50 transition">
+                                        <td className="px-6 py-4 text-sm font-medium">{item.event_name}</td>
+                                        <td className="px-6 py-4 text-sm text-gray-600">{item.department}</td>
+                                        <td className="px-6 py-4 text-sm text-gray-600">{item.email}</td>
+                                        <td className="px-6 py-4 text-sm text-gray-600">{item.period_from || '-'}</td>
+                                        <td className="px-6 py-4 text-sm text-gray-600">{item.period_to || '-'}</td>
+                                        <td className="px-6 py-4 text-sm font-semibold">{item.amount_kzt} ₸</td>
+                                        <td className="px-6 py-4 text-sm font-semibold text-gray-500">${item.amount_usd}</td>
+                                    </tr>
+                                ))
+                            ) : (
+                                [...Array(5)].map((_, i) => (
+                                    <tr key={i} className="h-12 bg-white odd:bg-gray-50/50">
+                                        {[...Array(7)].map((_, j) => <td key={j} className="px-6 py-4"></td>)}
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
-            )}
+            </div>
         </div>
     );
 };
