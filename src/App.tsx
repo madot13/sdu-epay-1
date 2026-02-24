@@ -15,7 +15,7 @@ import {DashboardPage} from "@/pages/DashboardPage.tsx";
 import {Toaster} from "react-hot-toast";
 import {FileViewerPage} from "@/pages/FileViewerPage.tsx";
 import {OrdersPage} from "@/pages/OrdersPage.tsx";
-
+import PacketEventsPage from '@/components/packet-events/PacketEventsPage';
 
 function App() {
   return (
@@ -61,7 +61,7 @@ function App() {
                   </ReauireAuth>
               }
               />
-
+              <Route path="/admin/packet-events" element={<PacketEventsPage />} />
               <Route path={"/success"} element={<SuccessPaymentPage />} />
               <Route path={"/fail"} element={<FailPaymentPage />} />
           </Routes>

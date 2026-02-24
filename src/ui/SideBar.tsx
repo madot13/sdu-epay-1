@@ -17,6 +17,7 @@ import {
 import { clearTokens } from "@/api/utils/tokenUtils.ts";
 import { useUserData } from "@/hooks/useUserData.ts";
 import { useSidebar } from "@/contexts/SidebarContext.tsx";
+import { FileTextIcon } from "lucide-react";
 const navItems = [
     {
         label: "Панель управления",
@@ -53,6 +54,12 @@ const navItems = [
         to: "/orders",
         icon: <ShoppingCartIcon width={20} />,
         roles: ["SUPER_ADMIN", "ADMIN", "MANAGER"],
+    },
+    {
+        label: 'Пакеты для событий',
+        to: '/admin/packet-events', // Было '/packet-events', а в App.tsx у тебя '/admin/packet-events'
+        icon: <FileTextIcon />,
+        roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER'],
     },
     {
         label: "Чтение файлов",
