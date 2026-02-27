@@ -7,7 +7,7 @@ import { useUsersStore } from "@/store/useUsersStore.ts";
 import { EditAdminModal } from "@/components/admin/EditAdminModal.tsx";
 import {DeleteModal} from "@/ui/DeleteModal.tsx";
 import {Paginator} from "primereact/paginator";
-import {toast} from "react-hot-toast"; // подключи модал
+import {toast} from "react-hot-toast";
 
 export const AdminPage: FC = () => {
     const { fetchUsers, users, deleteUser, total} = useUsersStore();
@@ -76,7 +76,7 @@ export const AdminPage: FC = () => {
     return (
         <AdminLayout>
             <div className="flex-1 w-full">
-                <h1 className="text-2xl lg:text-[32px] font-bold mb-4 lg:mb-6">Инфомация о пользователях</h1>
+                <h1 className="text-2xl lg:text-[32px] font-bold mb-4 lg:mb-6">Информация о пользователях</h1>
                 <AdminFilters />
                 <div className="overflow-x-auto -mx-4 px-4 lg:mx-0 lg:px-0">
                     <CustomTable

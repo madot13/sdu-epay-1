@@ -44,7 +44,7 @@ const navItems = [
         roles: ["ADMIN", "SUPER_ADMIN", "MANAGER"],
     },
     {
-        label: 'Пакеты для событий',
+        label: 'Типы оплаты',
         to: '/admin/packet-events',
         icon: <FileTextIcon />,
         roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER'],
@@ -110,7 +110,7 @@ export const SideBar: FC = () => {
                 <div className={`p-6 text-2xl font-bold border-b border-[#00547C] flex-shrink-0 flex items-center ${isCollapsed ? "justify-center px-2 relative" : "justify-between"}`}>
                     {!isCollapsed ? (
                         <>
-                            <img src="logo-2.png" alt="logo" className="max-md:mt-10 lg:w-auto" />
+                            <img src="/logo-2.png" alt="logo" className="max-md:mt-10 lg:w-auto" />
                             <button
                                 onClick={toggleSidebar}
                                 className="hidden lg:flex items-center justify-center w-8 h-8 rounded-md hover:bg-[#005B88] transition-colors"
@@ -121,7 +121,7 @@ export const SideBar: FC = () => {
                         </>
                     ) : (
                         <>
-                            <img src="logo-3.png" alt="logo" className="w-8 h-8 max-md:mt-10" />
+                            <img src="/logo-3.png" alt="logo" className="w-8 h-8 max-md:mt-10" />
                             <button
                                 onClick={toggleSidebar}
                                 className="hidden lg:flex items-center justify-center w-8 h-8 rounded-md hover:bg-[#005B88] transition-colors absolute top-2 right-2"
