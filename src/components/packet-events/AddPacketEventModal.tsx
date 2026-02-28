@@ -16,6 +16,8 @@ import { Department } from "@/types/departments.ts";
 import { toast } from "react-hot-toast";
 import { TengeIcon } from "@/assets/TengeIcon.tsx";
 import { packetEventsApi } from "@/api/endpoints/packet-events";
+import { getPublicEventsById } from "@/api/endpoints/events.ts";
+import { IEvent } from "@/types/events.ts";
 
 export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -24,25 +26,49 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
     const [eventName, setEventName] = useState("");
     const [email, setEmail] = useState("");
     const [department, setDepartment] = useState("");
+    const [selectedEvent, setSelectedEvent] = useState("");
     const [amountKzt, setAmountKzt] = useState(0);
     const [amountUsd, setAmountUsd] = useState(0);
     const [paymentCategory, setPaymentCategory] = useState("");
     const [dates, setDates] = useState<Date[] | null>(null);
 
     const [departments, setDepartments] = useState<{ label: string; value: string }[]>([]);
+    const [events, setEvents] = useState<{ label: string; value: string }[]>([]);
 
     useEffect(() => {
         const fetchDepts = async () => {
             try {
                 const res = await getDepartments();
-                setDepartments(res.data.map((d: Department) => ({ label: d.name, value: d.name })));
+                setDepartments(res.data.map((d: Department) => ({ label: d.name, value: d.id })));
             } catch (e) { console.error(e); }
         };
         if (isOpen) fetchDepts();
     }, [isOpen]);
 
+    useEffect(() => {
+        const fetchEvents = async () => {
+            if (department) {
+                try {
+                    const eventsData = await getPublicEventsById(department);
+                    setEvents(eventsData
+                        .filter((event: IEvent) => event.title && event.id)
+                        .map((event: IEvent) => ({ 
+                            label: event.title!, 
+                            value: event.id! 
+                        })));
+                } catch (e) { 
+                    console.error(e); 
+                    setEvents([]);
+                }
+            } else {
+                setEvents([]);
+            }
+        };
+        fetchEvents();
+    }, [department]);
+
     const handleSubmit = async () => {
-        if (!eventName || !email || !department || !dates || dates.length < 2) {
+        if (!eventName || !email || !department || !selectedEvent || !dates || dates.length < 2) {
             toast.error("Пожалуйста, заполните все обязательные поля");
             return;
         }
@@ -50,6 +76,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
         try {
             await packetEventsApi.create({
                 event_name: eventName,
+                event_id: selectedEvent,
                 department: department,
                 email: email,
                 period_from: dates[0].toISOString().split('T')[0],
@@ -63,7 +90,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
             setIsOpen(false);
             onRefresh(); // Обновляем таблицу
             // Очистка полей
-            setEventName(""); setEmail(""); setAmountKzt(0); setDates(null);
+            setEventName(""); setEmail(""); setDepartment(""); setSelectedEvent(""); setAmountKzt(0); setDates(null);
         } catch (error) {
             toast.error("Ошибка при создании");
         }
@@ -76,7 +103,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                 className="h-[38px] font-bold gap-2 px-4 flex items-center"
                 onClick={() => setIsOpen(true)}
             >
-                <PlusIcon width={18}/> Добавить пакет
+                <PlusIcon width={18}/> Добавить
             </CustomButton>
 
             <CustomModal title="Добавить пакетное событие" isOpen={isOpen} onClose={() => setIsOpen(false)} className="max-w-md w-full">
@@ -99,9 +126,22 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                         placeholder="Выберите департамент"
                         options={departments}
                         value={department}
-                        onChange={setDepartment}
+                        onChange={(value) => {
+                            setDepartment(value);
+                            setSelectedEvent(""); // Сбрасываем выбранное событие при смене департамента
+                        }}
                         triggerClassName="bg-white border-[#6B9AB0] h-[45px]"
                     />
+
+                    {department && (
+                        <CustomSelect 
+                            placeholder="Выберите событие"
+                            options={events}
+                            value={selectedEvent}
+                            onChange={setSelectedEvent}
+                            triggerClassName="bg-white border-[#6B9AB0] h-[45px]"
+                        />
+                    )}
 
                     <CustomInput 
                         placeholder="Категория платежа" 

@@ -1,6 +1,7 @@
 export interface IEventRecord {
     id?: string;
     event_name: string;
+    event_id?: string;
     department: string;
     email: string;
     period_from: string;
