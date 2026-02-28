@@ -45,7 +45,7 @@ const navItems = [
     },
     {
         label: 'Типы оплаты',
-        to: '/admin/packet-events',
+        to: '/packet-events',
         icon: <FileTextIcon />,
         roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER'],
     },

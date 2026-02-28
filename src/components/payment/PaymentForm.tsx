@@ -468,49 +468,41 @@ export const PaymentForm: FC = () => {
                                         </>
                                     )}
                                 />
-                                <Controller
-                                    name="showInUsd"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <>
-                                            <label className="flex items-center gap-3 ml-2 cursor-pointer">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={field.value || false}
-                                                    onChange={(e) => {
-                                                        field.onChange(e.target.checked);
-                                                        if (selectedEventPriced) {
-                                                            if (e.target.checked) {
-                                                                if (selectedEventPriceUsd) {
-                                                                    setValue("amount", selectedEventPriceUsd);
-                                                                    setPrice(selectedEventPriceUsd || 0);
-                                                                    setCurrency("USD");
-                                                                } else {
-                                                                    toast.error("USD price not available for this event. Using KZT price instead.");
-                                                                    setValue("amount", selectedEventPriceKzt);
-                                                                    setPrice(selectedEventPriceKzt || 0);
-                                                                    setCurrency("KZT");
-                                                                }
-                                                            } else {
-                                                                setValue("amount", selectedEventPriceKzt);
-                                                                setPrice(selectedEventPriceKzt || 0);
-                                                                setCurrency("KZT");
-                                                            }
-                                                        }
-                                                    }}
-                                                    className="w-4 h-4 rounded accent-[#6B9AB0]"
-                                                />
-                                                <span className="text-black">Show in USD</span>
-                                            </label>
-                                            {field.value && !selectedEventPriceUsd && selectedEventPriced && (
-                                                <p className="text-yellow-600 text-sm -mt-2 ml-2">
-                                                    ⚠️ USD price not available. KZT price will be used.
-                                                </p>
-                                            )}
-                                        </>
-                                    )}
-                                />
-                            </>
+                                {/* Чекбокс рендерится только если есть цена в USD */}
+                        {selectedDepartmentType === "EVENT_BASED" && selectedEventPriceUsd && (
+                            <Controller
+                                name="showInUsd"
+                                control={control}
+                                render={({ field }) => (
+                                    <div className="flex flex-col gap-2">
+                                        <label className="flex items-center gap-3 ml-2 cursor-pointer group">
+                                            <input
+                                                type="checkbox"
+                                                checked={field.value || false}
+                                                onChange={(e) => {
+                                                    const isChecked = e.target.checked;
+                                                    field.onChange(isChecked);  
+                                                    if (isChecked) {
+                                                        setValue("amount", selectedEventPriceUsd);
+                                                        setPrice(selectedEventPriceUsd);
+                                                        setCurrency("USD");
+                                                    } else {
+                                                        setValue("amount", selectedEventPriceKzt);
+                                                        setPrice(selectedEventPriceKzt || 0);
+                                                        setCurrency("KZT");
+                                                    }
+                                                }}
+                                                className="w-4 h-4 rounded accent-[#6B9AB0]"
+                                            />
+                                            <span className="text-black group-hover:text-[#6B9AB0] transition-colors">
+                                                {t('paymentPage.inputs.showInUsd')}
+                                            </span>
+                                        </label>
+                                    </div>
+                                )}
+                            />
+                        )}
+                        </>
                         ): null}
                         {additionalFields.map((field) => {
                             const key = field.name;

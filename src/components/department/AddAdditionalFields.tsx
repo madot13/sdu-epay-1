@@ -73,7 +73,7 @@ export const AddAdditionalFields: FC<AddAdditionalFieldsProps> = ({ value, onCha
                 onClick={addField}
                 className="px-4 py-2 cursor-pointer rounded-md text-white bg-[#4c96ba] hover:bg-[#3b7ca0] transition"
             >
-                + Допольнительные поле
+                + Дополнительные поле
             </button>
         </div>
     );

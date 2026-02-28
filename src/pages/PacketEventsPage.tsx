@@ -92,7 +92,7 @@ export const PacketEventsPage: FC = () => {
             <div className="w-full max-w-full px-4 lg:px-0">
                 <div className="flex items-center gap-4 mb-4 lg:mb-6">
                     <h1 className="text-2xl lg:text-[32px] font-bold text-[#1A1A1A]">
-                        Информация о пакетных событиях
+                        Информация о типах оплаты
                     </h1>
                     {/* Используем loading, чтобы убрать Warning */}
                     {loading && <Loader2 className="w-6 h-6 animate-spin text-blue-500" />}
