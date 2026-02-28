@@ -61,7 +61,7 @@ function App() {
                   </ReauireAuth>
               }
               />
-              <Route path="/admin/packet-events" element={
+              <Route path="/packet-events" element={
                     <ReauireAuth>
                         <PacketEventsPage />
                     </ReauireAuth>

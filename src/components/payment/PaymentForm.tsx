@@ -503,7 +503,7 @@ export const PaymentForm: FC = () => {
                             />
                         )}
                         </>
-                        ): null}
+                        ) : null)}
                         {additionalFields.map((field) => {
                             const key = field.name;
 
