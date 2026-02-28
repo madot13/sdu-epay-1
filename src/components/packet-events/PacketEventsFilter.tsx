@@ -47,7 +47,7 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         className="bg-white h-[37px] p-2 border border-[#6B9AB0] rounded-[4px] text-sm"
-                        placeholder="Поиск по названию..."
+                        placeholder="Название оплаты"
                     />
                 </div>
                 <div className="flex flex-col gap-[10px] flex-1 sm:flex-none">
