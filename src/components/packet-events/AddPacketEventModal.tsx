@@ -4,8 +4,7 @@ import {
     EnvelopeIcon, 
     PlusIcon, 
     UserCircleIcon, 
-    CurrencyDollarIcon,
-    InformationCircleIcon 
+    CurrencyDollarIcon
 } from "@heroicons/react/24/outline";
 import { CustomModal } from "@/ui/CustomModal.tsx";
 import { CustomInput } from "@/ui/CustomInput.tsx";
@@ -23,7 +22,6 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
     const [isOpen, setIsOpen] = useState(false);
     
     // Поля на основе твоего IEventRecord
-    const [eventName, setEventName] = useState("");
     const [email, setEmail] = useState("");
     const [department, setDepartment] = useState("");
     const [selectedEvent, setSelectedEvent] = useState("");
@@ -33,7 +31,8 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
     const [dates, setDates] = useState<Date[] | null>(null);
 
     const [departments, setDepartments] = useState<{ label: string; value: string }[]>([]);
-    const [events, setEvents] = useState<{ label: string; value: string }[]>([]);
+    const [events, setEvents] = useState<{ label: string; value: string; }[]>([]);
+    const [eventsData, setEventsData] = useState<IEvent[]>([]);
 
     useEffect(() => {
         const fetchDepts = async () => {
@@ -50,6 +49,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
             if (department) {
                 try {
                     const eventsData = await getPublicEventsById(department);
+                    setEventsData(eventsData);
                     setEvents(eventsData
                         .filter((event: IEvent) => event.title && event.id)
                         .map((event: IEvent) => ({ 
@@ -68,14 +68,15 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
     }, [department]);
 
     const handleSubmit = async () => {
-        if (!eventName || !email || !department || !selectedEvent || !dates || dates.length < 2) {
+        if (!email || !department || !selectedEvent || !dates || dates.length < 2) {
             toast.error("Пожалуйста, заполните все обязательные поля");
             return;
         }
 
         try {
+            const selectedEventData = eventsData.find(event => event.id === selectedEvent);
             await packetEventsApi.create({
-                event_name: eventName,
+                event_name: selectedEventData?.title || '',
                 event_id: selectedEvent,
                 department: department,
                 email: email,
@@ -90,7 +91,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
             setIsOpen(false);
             onRefresh(); // Обновляем таблицу
             // Очистка полей
-            setEventName(""); setEmail(""); setDepartment(""); setSelectedEvent(""); setAmountKzt(0); setDates(null);
+            setEmail(""); setDepartment(""); setSelectedEvent(""); setAmountKzt(0); setDates(null);
         } catch (error) {
             toast.error("Ошибка при создании");
         }
@@ -106,15 +107,8 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                 <PlusIcon width={18}/> Добавить
             </CustomButton>
 
-            <CustomModal title="Добавить пакетное событие" isOpen={isOpen} onClose={() => setIsOpen(false)} className="max-w-md w-full">
+            <CustomModal title="Добавить тип оплаты" isOpen={isOpen} onClose={() => setIsOpen(false)} className="max-w-md w-full">
                 <div className="flex flex-col gap-5">
-                    <CustomInput 
-                        placeholder="Название события" 
-                        value={eventName} 
-                        onChange={(e) => setEventName(e.target.value)}
-                        icon={<InformationCircleIcon className="text-[#6B9AB0]" />} 
-                    />
-                    
                     <CustomInput 
                         placeholder="Email ответственного" 
                         value={email} 
