@@ -23,7 +23,8 @@
       "phonePH": "Телефон нөмірін енгізіңіз",
       "selectDepPH": "Бөлімді таңдаңыз",
       "selectEvPH": "Іс-шараны таңдаңыз",
-      "amountPH": "Соманы енгізіңіз"
+      "amountPH": "Соманы енгізіңіз",
+      "showInUsd": "USD-де көрсету"
     },
     "paymentMethod": "Төлем әдісі",
     "promocode": {

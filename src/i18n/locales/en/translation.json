@@ -22,7 +22,8 @@
       "phonePH": "Enter phone number",
       "selectDepPH": "Select department",
       "selectEvPH": "Select event",
-      "amountPH": "Enter amount"
+      "amountPH": "Enter amount",
+      "showInUsd": "Show in USD"
     },
     "paymentMethod": "Payment Method",
     "promocode": {

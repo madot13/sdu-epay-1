@@ -23,7 +23,8 @@
       "phonePH": "Введите номер телефона",
       "selectDepPH": "Выберите департамент",
       "selectEvPH": "Выберите событие",
-      "amountPH": "Введите сумму"
+      "amountPH": "Введите сумму",
+      "showInUsd": "Показать в USD"
     },
     "paymentMethod": "Способ оплаты",
     "promocode": {
