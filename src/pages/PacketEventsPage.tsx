@@ -28,7 +28,6 @@ export const PacketEventsPage: FC = () => {
         { header: "Категория", accessor: "category" },
         { header: "Цена (KZT)", accessor: "price_display" },
         { header: "Цена (USD)", accessor: "price_usd_display" },
-        { header: "Активный", accessor: "active_display" },
     ];
 
     const loadData = async () => {
@@ -114,7 +113,6 @@ export const PacketEventsPage: FC = () => {
                             price_display: `${item.price?.toLocaleString() || 0} ₸`,
                             price_usd_display: item.price_usd ? `$${item.price_usd}` : "—",
                             category: item.category || "—",
-                            active_display: item.active || item.event_active ? "Да" : "Нет",
                             department: item.department_name || item.department || ''
                         }))}
                         actions={(row: any) => (

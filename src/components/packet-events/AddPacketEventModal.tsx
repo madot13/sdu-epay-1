@@ -27,7 +27,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
     const [price, setPrice] = useState(0);
     const [priceUsd, setPriceUsd] = useState(0);
     const [category, setCategory] = useState("");
-    const [active, setActive] = useState(true);
+    const [active] = useState(true); // ← Убрали setActive, оставили по умолчанию true
 
     const [departments, setDepartments] = useState<{ label: string; value: string }[]>([]);
     const [events, setEvents] = useState<{ label: string; value: string }[]>([]);
@@ -90,7 +90,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
             setIsOpen(false);
             onRefresh(); // Обновляем таблицу
             // Очистка полей
-            setEmail(""); setDepartment(""); setSelectedEvent(""); setPrice(0); setPriceUsd(0); setCategory(""); setActive(true);
+            setEmail(""); setDepartment(""); setSelectedEvent(""); setPrice(0); setPriceUsd(0); setCategory("");
         } catch (error) {
             toast.error("Ошибка при создании");
         }
@@ -158,19 +158,6 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                             onChange={(e) => setPriceUsd(Number(e.target.value))}
                             icon={<CurrencyDollarIcon className="text-[#6B9AB0]" />} 
                         />
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                        <input
-                            type="checkbox"
-                            id="active"
-                            checked={active}
-                            onChange={(e) => setActive(e.target.checked)}
-                            className="w-4 h-4 rounded accent-[#6B9AB0]"
-                        />
-                        <label htmlFor="active" className="text-sm font-medium text-gray-700">
-                            Активный
-                        </label>
                     </div>
 
                     <CustomButton onClick={handleSubmit} className="w-full mt-2">
