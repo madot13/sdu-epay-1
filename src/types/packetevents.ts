@@ -7,6 +7,7 @@ export interface IEventRecord {
     category: string;
     price: number;
     price_usd: number;
+    active?: boolean;
 }
 
 export type CreateEventPayload = Omit<IEventRecord, 'id'>;

@@ -29,6 +29,7 @@ export const PacketEventsPage: FC = () => {
         { header: "Категория", accessor: "category" },
         { header: "Цена (KZT)", accessor: "price_display" },
         { header: "Цена (USD)", accessor: "price_usd_display" },
+        { header: "Активный", accessor: "active_display" },
     ];
 
     const loadData = async (currentFilters = filters, page = first / rows, size = rows) => {
@@ -105,7 +106,8 @@ export const PacketEventsPage: FC = () => {
                             ...item,
                             price_display: `${item.price?.toLocaleString() || 0} ₸`,
                             price_usd_display: item.price_usd ? `$${item.price_usd}` : "—",
-                            category: item.category || "—"
+                            category: item.category || "—",
+                            active_display: item.active ? "Да" : "Нет"
                         }))}
                         actions={(row: any) => (
                             <div className="flex gap-3">

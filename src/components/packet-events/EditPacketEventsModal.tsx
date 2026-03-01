@@ -90,6 +90,19 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
                     </div>
                 </div>
 
+                <div className="flex items-center gap-3">
+                    <input
+                        type="checkbox"
+                        id="active-edit"
+                        checked={form.active || false}
+                        onChange={(e) => setForm({...form, active: e.target.checked})}
+                        className="w-4 h-4 rounded accent-[#6B9AB0]"
+                    />
+                    <label htmlFor="active-edit" className="text-sm font-medium text-gray-700">
+                        Активный
+                    </label>
+                </div>
+
                 <div className="flex gap-3 pt-2">
                     <CustomButton onClick={handleSave} className="flex-1">
                         Сохранить
