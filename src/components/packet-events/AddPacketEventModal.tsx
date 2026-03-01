@@ -10,8 +10,6 @@ import { CustomModal } from "@/ui/CustomModal.tsx";
 import { CustomInput } from "@/ui/CustomInput.tsx";
 import { Calendar } from "primereact/calendar";
 import { CustomSelect } from "@/ui/CustomSelect.tsx";
-import { getDepartments } from "@/api/endpoints/departments.ts";
-import { Department } from "@/types/departments.ts";
 import { toast } from "react-hot-toast";
 import { TengeIcon } from "@/assets/TengeIcon.tsx";
 import { packetEventsApi } from "@/api/endpoints/packet-events";
@@ -23,52 +21,36 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
     
     // Поля на основе твоего IEventRecord
     const [email, setEmail] = useState("");
-    const [department, setDepartment] = useState("");
     const [selectedEvent, setSelectedEvent] = useState("");
-    const [amountKzt, setAmountKzt] = useState(0);
-    const [amountUsd, setAmountUsd] = useState(0);
-    const [paymentCategory, setPaymentCategory] = useState("");
+    const [price, setPrice] = useState(0);
+    const [priceUsd, setPriceUsd] = useState(0);
+    const [category, setCategory] = useState("");
     const [dates, setDates] = useState<Date[] | null>(null);
 
-    const [departments, setDepartments] = useState<{ label: string; value: string }[]>([]);
-    const [events, setEvents] = useState<{ label: string; value: string; }[]>([]);
+    const [events, setEvents] = useState<{ label: string; value: string }[]>([]);
     const [eventsData, setEventsData] = useState<IEvent[]>([]);
 
     useEffect(() => {
-        const fetchDepts = async () => {
-            try {
-                const res = await getDepartments();
-                setDepartments(res.data.map((d: Department) => ({ label: d.name, value: d.id })));
-            } catch (e) { console.error(e); }
-        };
-        if (isOpen) fetchDepts();
-    }, [isOpen]);
-
-    useEffect(() => {
         const fetchEvents = async () => {
-            if (department) {
-                try {
-                    const eventsData = await getPublicEventsById(department);
-                    setEventsData(eventsData);
-                    setEvents(eventsData
-                        .filter((event: IEvent) => event.title && event.id)
-                        .map((event: IEvent) => ({ 
-                            label: event.title!, 
-                            value: event.id! 
-                        })));
-                } catch (e) { 
-                    console.error(e); 
-                    setEvents([]);
-                }
-            } else {
+            try {
+                const eventsData = await getPublicEventsById(''); // Получаем все события
+                setEventsData(eventsData);
+                setEvents(eventsData
+                    .filter((event: IEvent) => event.title && event.id)
+                    .map((event: IEvent) => ({ 
+                        label: event.title!, 
+                        value: event.id! 
+                    })));
+            } catch (e) { 
+                console.error(e); 
                 setEvents([]);
             }
         };
         fetchEvents();
-    }, [department]);
+    }, [isOpen]);
 
     const handleSubmit = async () => {
-        if (!email || !department || !selectedEvent || !dates || dates.length < 2) {
+        if (!email || !selectedEvent || !dates || dates.length < 2) {
             toast.error("Пожалуйста, заполните все обязательные поля");
             return;
         }
@@ -78,20 +60,20 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
             await packetEventsApi.create({
                 event_name: selectedEventData?.title || '',
                 event_id: selectedEvent,
-                department: department,
+                department: selectedEventData?.department_id || '',
                 email: email,
                 period_from: dates[0].toISOString().split('T')[0],
                 period_to: dates[1].toISOString().split('T')[0],
-                payment_category: paymentCategory,
-                amount_kzt: amountKzt,
-                amount_usd: amountUsd
+                category: category,
+                price: price,
+                price_usd: priceUsd
             });
 
             toast.success("Запись успешно добавлена");
             setIsOpen(false);
             onRefresh(); // Обновляем таблицу
             // Очистка полей
-            setEmail(""); setDepartment(""); setSelectedEvent(""); setAmountKzt(0); setDates(null);
+            setEmail(""); setSelectedEvent(""); setPrice(0); setPriceUsd(0); setCategory(""); setDates(null);
         } catch (error) {
             toast.error("Ошибка при создании");
         }
@@ -117,30 +99,17 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                     />
 
                     <CustomSelect 
-                        placeholder="Выберите департамент"
-                        options={departments}
-                        value={department}
-                        onChange={(value) => {
-                            setDepartment(value);
-                            setSelectedEvent(""); // Сбрасываем выбранное событие при смене департамента
-                        }}
+                        placeholder="Выберите событие"
+                        options={events}
+                        value={selectedEvent}
+                        onChange={setSelectedEvent}
                         triggerClassName="bg-white border-[#6B9AB0] h-[45px]"
                     />
 
-                    {department && (
-                        <CustomSelect 
-                            placeholder="Выберите событие"
-                            options={events}
-                            value={selectedEvent}
-                            onChange={setSelectedEvent}
-                            triggerClassName="bg-white border-[#6B9AB0] h-[45px]"
-                        />
-                    )}
-
                     <CustomInput 
                         placeholder="Категория платежа" 
-                        value={paymentCategory} 
-                        onChange={(e) => setPaymentCategory(e.target.value)}
+                        value={category} 
+                        onChange={(e) => setCategory(e.target.value)}
                         icon={<UserCircleIcon className="text-[#6B9AB0]" />} 
                     />
 
@@ -148,15 +117,15 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                         <CustomInput 
                             type="number" 
                             placeholder="Сумма KZT" 
-                            value={String(amountKzt)} 
-                            onChange={(e) => setAmountKzt(Number(e.target.value))}
+                            value={String(price)} 
+                            onChange={(e) => setPrice(Number(e.target.value))}
                             icon={<TengeIcon color="#6B9AB0" />} 
                         />
                         <CustomInput 
                             type="number" 
                             placeholder="Сумма USD" 
-                            value={String(amountUsd)} 
-                            onChange={(e) => setAmountUsd(Number(e.target.value))}
+                            value={String(priceUsd)} 
+                            onChange={(e) => setPriceUsd(Number(e.target.value))}
                             icon={<CurrencyDollarIcon className="text-[#6B9AB0]" />} 
                         />
                     </div>
@@ -168,8 +137,8 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                             onChange={(e) => setDates(e.value as Date[])} 
                             selectionMode="range" 
                             readOnlyInput 
+                            className="w-full h-[40px] border border-[#6B9AB0] rounded-md"
                             placeholder="Выберите даты"
-                            className="w-full border border-[#6B9AB0] rounded-md"
                         />
                     </div>
 

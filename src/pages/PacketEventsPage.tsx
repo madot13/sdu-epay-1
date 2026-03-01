@@ -28,9 +28,9 @@ export const PacketEventsPage: FC = () => {
         { header: "Email", accessor: "email" },
         { header: "Период с", accessor: "period_from" },
         { header: "Период по", accessor: "period_to" },
-        { header: "Категория", accessor: "payment_category" },
-        { header: "Цена (KZT)", accessor: "amount_kzt_display" },
-        { header: "Цена (USD)", accessor: "amount_usd_display" },
+        { header: "Категория", accessor: "category" },
+        { header: "Цена (KZT)", accessor: "price_display" },
+        { header: "Цена (USD)", accessor: "price_usd_display" },
     ];
 
     const loadData = async (currentFilters = filters, page = first / rows, size = rows) => {
@@ -105,9 +105,9 @@ export const PacketEventsPage: FC = () => {
                         columns={columns}
                         data={data.map((item) => ({
                             ...item,
-                            amount_kzt_display: `${item.amount_kzt?.toLocaleString() || 0} ₸`,
-                            amount_usd_display: item.amount_usd ? `$${item.amount_usd}` : "—",
-                            payment_category: item.payment_category || "—"
+                            price_display: `${item.price?.toLocaleString() || 0} ₸`,
+                            price_usd_display: item.price_usd ? `$${item.price_usd}` : "—",
+                            category: item.category || "—"
                         }))}
                         actions={(row: any) => (
                             <div className="flex gap-3">

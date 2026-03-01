@@ -6,9 +6,9 @@ export interface IEventRecord {
     email: string;
     period_from: string;
     period_to: string;
-    payment_category: string;
-    amount_kzt: number;
-    amount_usd: number;
+    category: string;
+    price: number;
+    price_usd: number;
 }
 
 export type CreateEventPayload = Omit<IEventRecord, 'id'>;

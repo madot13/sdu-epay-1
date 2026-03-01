@@ -1,5 +1,5 @@
-import { api } from "../api";
-import { IEventRecord, CreateEventPayload } from "../../types/packetevents";
+import { api } from "@/api/api";
+import { IEventRecord, CreateEventPayload } from "@/types/packetevents";
 
 export const packetEventsApi = {
     getAll: async (params?: any) => {
