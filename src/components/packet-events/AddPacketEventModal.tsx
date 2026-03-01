@@ -21,10 +21,11 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
     const [email, setEmail] = useState("");
     const [department, setDepartment] = useState("");
     const [selectedEvent, setSelectedEvent] = useState("");
-    const [price, setPrice] = useState(0);
-    const [priceUsd, setPriceUsd] = useState(0);
+    const [price, setPrice] = useState(1000); // ← По умолчанию > 0
+    const [priceUsd, setPriceUsd] = useState(5); // ← По умолчанию > 0
     const [category, setCategory] = useState("");
     const [active] = useState(true); // ← Убрали setActive, оставили по умолчанию true
+    const [withoutFixedPrice, setWithoutFixedPrice] = useState(false); // ← Чекбокс без фиксированной цены
 
     const [departments, setDepartments] = useState<{ label: string; value: string }[]>([]);
     const [events, setEvents] = useState<{ label: string; value: string }[]>([]);
@@ -86,13 +87,26 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
             return;
         }
 
+        // Валидация цен только если не выбран "без фиксированной цены"
+        if (!withoutFixedPrice) {
+            if (price <= 0) {
+                toast.error("Цена в KZT должна быть больше 0");
+                return;
+            }
+
+            if (priceUsd <= 0) {
+                toast.error("Цена в USD должна быть больше 0");
+                return;
+            }
+        }
+
         try {
             await packetEventsApi.create({
                 event_id: selectedEvent, // ← event_id, не event_name
                 email: email,
                 category: category,
-                price: price,
-                price_usd: priceUsd,
+                price: withoutFixedPrice ? 0 : price,
+                price_usd: withoutFixedPrice ? 0 : priceUsd,
                 active: active
                 // ← department не нужен, он уже есть в event
             });
@@ -101,7 +115,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
             setIsOpen(false);
             onRefresh(); // Обновляем таблицу
             // Очистка полей
-            setEmail(""); setDepartment(""); setSelectedEvent(""); setPrice(0); setPriceUsd(0); setCategory("");
+            setEmail(""); setDepartment(""); setSelectedEvent(""); setPrice(1000); setPriceUsd(5); setCategory(""); setWithoutFixedPrice(false);
         } catch (error) {
             toast.error("Ошибка при создании");
         }
@@ -197,6 +211,19 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                             onChange={(e) => setPriceUsd(Number(e.target.value))}
                             icon={<CurrencyDollarIcon className="text-[#6B9AB0]" />} 
                         />
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <input
+                            type="checkbox"
+                            id="without-fixed-price"
+                            checked={withoutFixedPrice}
+                            onChange={(e) => setWithoutFixedPrice(e.target.checked)}
+                            className="w-4 h-4 rounded accent-[#6B9AB0]"
+                        />
+                        <label htmlFor="without-fixed-price" className="text-sm font-medium text-gray-700">
+                            Без фиксированной цены
+                        </label>
                     </div>
 
                     <CustomButton onClick={handleSubmit} className="w-full mt-2">

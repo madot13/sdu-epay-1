@@ -14,10 +14,13 @@ interface Props {
 }
 
 export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, onSuccess }) => {
-    const [form, setForm] = useState<IEventRecord>({ ...eventData });
+    const [form, setForm] = useState<IEventRecord>({} as IEventRecord);
+    const [withoutFixedPrice, setWithoutFixedPrice] = useState(false);
 
     useEffect(() => {
         setForm({ ...eventData });
+        // Устанавливаем чекбокс если цены 0 или не заданы
+        setWithoutFixedPrice((eventData.price || 0) === 0 && (eventData.price_usd || 0) === 0);
     }, [eventData, isOpen]);
 
     const handleSave = async () => {
@@ -27,8 +30,25 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
             return;
         }
 
+        // Валидация цен только если не выбран "без фиксированной цены"
+        if (!withoutFixedPrice) {
+            if ((form.price || 0) <= 0) {
+                toast.error("Цена в KZT должна быть больше 0");
+                return;
+            }
+
+            if ((form.price_usd || 0) <= 0) {
+                toast.error("Цена в USD должна быть больше 0");
+                return;
+            }
+        }
+
         try {
-            await packetEventsApi.update(eventData.id, form);
+            await packetEventsApi.update(eventData.id, {
+                ...form,
+                price: withoutFixedPrice ? 0 : (form.price || 0),
+                price_usd: withoutFixedPrice ? 0 : (form.price_usd || 0)
+            });
             toast.success("Данные успешно обновлены");
             onSuccess();
             onClose();
@@ -88,6 +108,19 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
                             placeholder="0"
                         />
                     </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <input
+                        type="checkbox"
+                        id="without-fixed-price-edit"
+                        checked={withoutFixedPrice}
+                        onChange={(e) => setWithoutFixedPrice(e.target.checked)}
+                        className="w-4 h-4 rounded accent-[#6B9AB0]"
+                    />
+                    <label htmlFor="without-fixed-price-edit" className="text-sm font-medium text-gray-700">
+                        Без фиксированной цены
+                    </label>
                 </div>
 
                 <div className="flex gap-3 pt-2">
