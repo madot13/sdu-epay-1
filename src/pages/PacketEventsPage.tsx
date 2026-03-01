@@ -26,8 +26,6 @@ export const PacketEventsPage: FC = () => {
         { header: "Событие", accessor: "event_name" },
         { header: "Департамент", accessor: "department" },
         { header: "Email", accessor: "email" },
-        { header: "Период с", accessor: "period_from" },
-        { header: "Период по", accessor: "period_to" },
         { header: "Категория", accessor: "category" },
         { header: "Цена (KZT)", accessor: "price_display" },
         { header: "Цена (USD)", accessor: "price_usd_display" },

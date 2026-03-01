@@ -8,7 +8,6 @@ import {
 } from "@heroicons/react/24/outline";
 import { CustomModal } from "@/ui/CustomModal.tsx";
 import { CustomInput } from "@/ui/CustomInput.tsx";
-import { Calendar } from "primereact/calendar";
 import { CustomSelect } from "@/ui/CustomSelect.tsx";
 import { getDepartments } from "@/api/endpoints/departments.ts";
 import { Department } from "@/types/departments.ts";
@@ -28,7 +27,6 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
     const [price, setPrice] = useState(0);
     const [priceUsd, setPriceUsd] = useState(0);
     const [category, setCategory] = useState("");
-    const [dates, setDates] = useState<Date[] | null>(null);
 
     const [departments, setDepartments] = useState<{ label: string; value: string }[]>([]);
     const [events, setEvents] = useState<{ label: string; value: string }[]>([]);
@@ -69,7 +67,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
     }, [department]);
 
     const handleSubmit = async () => {
-        if (!email || !department || !selectedEvent || !dates || dates.length < 2) {
+        if (!email || !department || !selectedEvent) {
             toast.error("Пожалуйста, заполните все обязательные поля");
             return;
         }
@@ -81,8 +79,6 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                 event_id: selectedEvent,
                 department: department,
                 email: email,
-                period_from: dates[0].toISOString().split('T')[0],
-                period_to: dates[1].toISOString().split('T')[0],
                 category: category,
                 price: price,
                 price_usd: priceUsd
@@ -92,7 +88,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
             setIsOpen(false);
             onRefresh(); // Обновляем таблицу
             // Очистка полей
-            setEmail(""); setDepartment(""); setSelectedEvent(""); setPrice(0); setPriceUsd(0); setCategory(""); setDates(null);
+            setEmail(""); setDepartment(""); setSelectedEvent(""); setPrice(0); setPriceUsd(0); setCategory("");
         } catch (error) {
             toast.error("Ошибка при создании");
         }
@@ -159,18 +155,6 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                             value={String(priceUsd)} 
                             onChange={(e) => setPriceUsd(Number(e.target.value))}
                             icon={<CurrencyDollarIcon className="text-[#6B9AB0]" />} 
-                        />
-                    </div>
-
-                    <div className="flex flex-col gap-2">
-                        <label className="text-sm font-medium">Период проведения:</label>
-                        <Calendar 
-                            value={dates} 
-                            onChange={(e) => setDates(e.value as Date[])} 
-                            selectionMode="range" 
-                            readOnlyInput 
-                            className="w-full h-[40px] border border-[#6B9AB0] rounded-md"
-                            placeholder="Выберите даты"
                         />
                     </div>
 

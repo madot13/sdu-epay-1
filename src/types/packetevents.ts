@@ -4,8 +4,6 @@ export interface IEventRecord {
     event_id?: string;
     department: string;
     email: string;
-    period_from: string;
-    period_to: string;
     category: string;
     price: number;
     price_usd: number;
