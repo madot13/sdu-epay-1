@@ -13,7 +13,7 @@ import { packetEventsApi } from "@/api/endpoints/packet-events";
 import { AddDepartmentModal } from "./AddDepartmentModal";
 import { AddEventModal } from "./AddEventModal";
 import { AddCategoryModal } from "./AddCategoryModal";
-import { AddAdditionalFields } from "./AddAdditionalFields";
+import { CustomFieldsModal } from "./CustomFieldsModal";
 import { CustomField } from "@/types/packetevents";
 
 export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }) => {
@@ -37,6 +37,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
     const [isDepartmentModalOpen, setIsDepartmentModalOpen] = useState(false);
     const [isEventModalOpen, setIsEventModalOpen] = useState(false);
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+    const [isCustomFieldsModalOpen, setIsCustomFieldsModalOpen] = useState(false);
     // Обработчики для модалок
     const handleDepartmentSuccess = (newDepartment: { label: string; value: string }) => {
         setDepartments([...departments, newDepartment]);
@@ -50,6 +51,10 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
 
     const handleCategorySuccess = (newCategory: string) => {
         setCategory(newCategory);
+    };
+
+    const handleCustomFieldsSuccess = (fields: CustomField[]) => {
+        setCustomFields(fields);
     };
 
     useEffect(() => {
@@ -230,10 +235,13 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                         </label>
                     </div>
 
-                    <AddAdditionalFields 
-                        value={customFields}
-                        onChange={setCustomFields}
-                    />
+                    <button
+                        onClick={() => setIsCustomFieldsModalOpen(true)}
+                        className="w-full py-2 px-4 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
+                    >
+                        <PlusIcon className="w-4 h-4" />
+                        Дополнительные поля ({customFields.length})
+                    </button>
 
                     <CustomButton onClick={handleSubmit} className="w-full mt-2">
                         Создать запись
@@ -259,6 +267,13 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                 isOpen={isCategoryModalOpen}
                 onClose={() => setIsCategoryModalOpen(false)}
                 onSuccess={handleCategorySuccess}
+            />
+            
+            <CustomFieldsModal
+                isOpen={isCustomFieldsModalOpen}
+                onClose={() => setIsCustomFieldsModalOpen(false)}
+                onSave={handleCustomFieldsSuccess}
+                initialFields={customFields}
             />
         </>
     );

@@ -1,11 +1,12 @@
-import { FC, useEffect, useState } from "react";
+import { FC, useState, useEffect } from "react";
 import { CustomModal } from "@/ui/CustomModal.tsx";
 import { CustomInput } from "@/ui/CustomInput.tsx";
 import { CustomButton } from "@/ui/CustomButton.tsx";
+import { PlusIcon } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
 import { packetEventsApi } from "@/api/endpoints/packet-events";
 import { IEventRecord, CustomField } from "@/types/packetevents";
-import { AddAdditionalFields } from "./AddAdditionalFields";
+import { CustomFieldsModal } from "./CustomFieldsModal";
 
 interface Props {
     isOpen: boolean;
@@ -18,12 +19,13 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
     const [form, setForm] = useState<IEventRecord>({} as IEventRecord);
     const [withoutFixedPrice, setWithoutFixedPrice] = useState(false);
     const [customFields, setCustomFields] = useState<CustomField[]>([]);
+    const [isCustomFieldsModalOpen, setIsCustomFieldsModalOpen] = useState(false);
 
     useEffect(() => {
         setForm({ ...eventData });
         // Устанавливаем чекбокс если цены 0 или не заданы
         setWithoutFixedPrice((eventData.price || 0) === 0 && (eventData.price_usd || 0) === 0);
-        // Устанавливаем дополнительные поля
+        // Устанавливаем дополнительные поля если есть
         setCustomFields(eventData.custom_fields || []);
     }, [eventData, isOpen]);
 
@@ -61,6 +63,10 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
             console.error(error);
             toast.error("Ошибка обновления");
         }
+    };
+
+    const handleCustomFieldsSuccess = (fields: CustomField[]) => {
+        setCustomFields(fields);
     };
 
     return (
@@ -129,10 +135,13 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
                     </label>
                 </div>
 
-                <AddAdditionalFields 
-                    value={customFields}
-                    onChange={setCustomFields}
-                />
+                <button
+                    onClick={() => setIsCustomFieldsModalOpen(true)}
+                    className="w-full py-2 px-4 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
+                >
+                    <PlusIcon className="w-4 h-4" />
+                    Дополнительные поля ({customFields.length})
+                </button>
 
                 <div className="flex gap-3 pt-2">
                     <CustomButton onClick={handleSave} className="flex-1">
@@ -144,6 +153,13 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
                 </div>
             </div>
         </CustomModal>
+        
+        <CustomFieldsModal
+            isOpen={isCustomFieldsModalOpen}
+            onClose={() => setIsCustomFieldsModalOpen(false)}
+            onSave={handleCustomFieldsSuccess}
+            initialFields={customFields}
+        />
         </>
     );
 };
