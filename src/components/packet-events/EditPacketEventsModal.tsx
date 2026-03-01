@@ -5,7 +5,6 @@ import { CustomButton } from "@/ui/CustomButton.tsx";
 import { IEventRecord } from "@/types/packetevents";
 import { packetEventsApi } from "@/api/endpoints/packet-events";
 import { toast } from "react-hot-toast";
-import { Calendar } from "primereact/calendar";
 
 interface Props {
     isOpen: boolean;
@@ -16,13 +15,9 @@ interface Props {
 
 export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, onSuccess }) => {
     const [form, setForm] = useState<IEventRecord>({ ...eventData });
-    const [dates, setDates] = useState<Date[] | null>(null);
 
     useEffect(() => {
         setForm({ ...eventData });
-        if (eventData.period_from && eventData.period_to) {
-            setDates([new Date(eventData.period_from), new Date(eventData.period_to)]);
-        }
     }, [eventData, isOpen]);
 
     const handleSave = async () => {
@@ -33,13 +28,7 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
         }
 
         try {
-            const payload = {
-                ...form,
-                period_from: dates?.[0]?.toISOString().split('T')[0] || form.period_from,
-                period_to: dates?.[1]?.toISOString().split('T')[0] || form.period_to,
-            };
-            
-            await packetEventsApi.update(eventData.id, payload);
+            await packetEventsApi.update(eventData.id, form);
             toast.success("Данные успешно обновлены");
             onSuccess();
             onClose();
@@ -50,7 +39,7 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
     };
 
     return (
-        <CustomModal title="Редактировать пакет" isOpen={isOpen} onClose={onClose}>
+        <CustomModal title="Редактировать тип оплаты" isOpen={isOpen} onClose={onClose}>
             <div className="flex flex-col gap-5 mt-2">
                 {/* Исправляем ошибку 2322: выносим label наружу */}
                 <div className="flex flex-col gap-2">
@@ -72,15 +61,33 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
                 </div>
 
                 <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium">Период</label>
-                    <Calendar 
-                        value={dates} 
-                        onChange={(e) => setDates(e.value as Date[])} 
-                        selectionMode="range" 
-                        readOnlyInput 
-                        className="w-full h-[40px] border border-[#6B9AB0] rounded-md"
-                        placeholder="Выберите даты"
+                    <label className="text-sm font-medium">Категория</label>
+                    <CustomInput 
+                        value={form.category} 
+                        onChange={(e) => setForm({...form, category: e.target.value})} 
+                        placeholder="Категория платежа"
                     />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-2">
+                        <label className="text-sm font-medium">Цена KZT</label>
+                        <CustomInput 
+                            type="number"
+                            value={String(form.price)} 
+                            onChange={(e) => setForm({...form, price: Number(e.target.value)})} 
+                            placeholder="0"
+                        />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                        <label className="text-sm font-medium">Цена USD</label>
+                        <CustomInput 
+                            type="number"
+                            value={String(form.price_usd)} 
+                            onChange={(e) => setForm({...form, price_usd: Number(e.target.value)})} 
+                            placeholder="0"
+                        />
+                    </div>
                 </div>
 
                 <div className="flex gap-3 pt-2">
