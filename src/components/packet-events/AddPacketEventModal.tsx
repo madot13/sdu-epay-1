@@ -3,7 +3,7 @@ import { CustomModal } from "@/ui/CustomModal.tsx";
 import { CustomInput } from "@/ui/CustomInput.tsx";
 import { CustomSelect } from "@/ui/CustomSelect.tsx";
 import { CustomButton } from "@/ui/CustomButton.tsx";
-import { PlusIcon, EnvelopeIcon, UserCircleIcon, TengeIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline";
+import { PlusIcon, EnvelopeIcon, UserCircleIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
 import { getDepartments } from "@/api/endpoints/departments.ts";
 import { getPublicEventsById } from "@/api/endpoints/events.ts";
@@ -63,7 +63,6 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
             if (department) {
                 try {
                     const eventsData = await getPublicEventsById(department);
-                    setEventsData(eventsData);
                     setEvents(eventsData
                         .filter((event: IEvent) => event.title && event.id)
                         .map((event: IEvent) => ({ 
@@ -76,7 +75,6 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                 }
             } else {
                 setEvents([]);
-                setEventsData([]);
             }
         };
         fetchEvents();
@@ -89,16 +87,14 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
         }
 
         try {
-            const selectedEventData = eventsData.find(event => event.id === selectedEvent);
             await packetEventsApi.create({
-                event_name: selectedEventData?.title || '',
-                event_id: selectedEvent,
-                department: department,
+                event_id: selectedEvent, // ← event_id, не event_name
                 email: email,
                 category: category,
                 price: price,
                 price_usd: priceUsd,
                 active: active
+                // ← department не нужен, он уже есть в event
             });
 
             toast.success("Запись успешно добавлена");
@@ -192,7 +188,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                             placeholder="Сумма KZT" 
                             value={String(price)} 
                             onChange={(e) => setPrice(Number(e.target.value))}
-                            icon={<TengeIcon color="#6B9AB0" />} 
+                            icon={<span className="text-[#6B9AB0]">₸</span>} 
                         />
                         <CustomInput 
                             type="number" 
