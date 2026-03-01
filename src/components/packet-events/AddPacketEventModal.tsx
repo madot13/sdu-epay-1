@@ -156,6 +156,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                             onChange={(e) => setPriceUsd(Number(e.target.value))}
                             icon={<CurrencyDollarIcon className="text-[#6B9AB0]" />} 
                         />
+                        </div>
                     <CustomButton onClick={handleSubmit} className="w-full mt-2">
                         Создать запись
                     </CustomButton>
