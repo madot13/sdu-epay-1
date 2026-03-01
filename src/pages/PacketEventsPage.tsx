@@ -104,10 +104,12 @@ export const PacketEventsPage: FC = () => {
                         columns={columns}
                         data={data.map((item) => ({
                             ...item,
+                            event_name: item.title || item.event_name || '',
                             price_display: `${item.price?.toLocaleString() || 0} ₸`,
                             price_usd_display: item.price_usd ? `$${item.price_usd}` : "—",
                             category: item.category || "—",
-                            active_display: item.active ? "Да" : "Нет"
+                            active_display: item.active || item.event_active ? "Да" : "Нет",
+                            department: item.department_name || item.department || ''
                         }))}
                         actions={(row: any) => (
                             <div className="flex gap-3">
