@@ -35,6 +35,14 @@ export const PacketEventsPage: FC = () => {
         setLoading(true);
         try {
             const result = await packetEventsApi.getAll({});
+            if (result && typeof result === 'object' && 'detail' in result) {
+                // Бэкенд еще не готов - показывает ошибку API
+                toast.error(`Ошибка API: ${result.detail}`);
+                setData([]);
+                setTotal(0);
+                return;
+            }
+            
             setData(Array.isArray(result) ? result : (result as any).data || []);
             setTotal((result as any).total || (Array.isArray(result) ? result.length : 0));
         } catch (err) {
