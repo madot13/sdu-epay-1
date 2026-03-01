@@ -32,7 +32,7 @@ export const PacketEventsPage: FC = () => {
         { header: "Активный", accessor: "active_display" },
     ];
 
-    const loadData = async (currentFilters = filters, page = first / rows, size = rows) => {
+    const loadData = async (currentFilters = filters, pageParam = first / rows, sizeParam = rows) => {
         setLoading(true);
         try {
             // Временно отключено до исправления бэкенда
@@ -41,7 +41,7 @@ export const PacketEventsPage: FC = () => {
             setTotal(0);
             return;
             
-            // const result = await packetEventsApi.getAll({ ...currentFilters, page, size });
+            // const result = await packetEventsApi.getAll({ ...currentFilters, page: pageParam, size: sizeParam });
             // setData(Array.isArray(result) ? result : (result as any).data || []);
             // setTotal((result as any).total || (Array.isArray(result) ? result.length : 0));
         } catch (err) {
@@ -65,6 +65,7 @@ export const PacketEventsPage: FC = () => {
     const onPageChange = (event: any) => {
         setFirst(event.first);
         setRows(event.rows);
+        loadData(filters, event.first, event.rows);
     };
 
     const handleEditClick = (item: any) => {
