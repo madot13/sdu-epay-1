@@ -20,7 +20,6 @@ export const PacketEventsPage: FC = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedItem, setSelectedItem] = useState<IEventRecord | null>(null);
-    const [filters, setFilters] = useState({});
 
     const columns = [
         { header: "Событие", accessor: "event_name" },
@@ -56,9 +55,7 @@ export const PacketEventsPage: FC = () => {
         loadData();
     }, [first, rows]);
 
-    const handleSearch = (newFilters: any) => {
-        setFilters(newFilters);
-        setFirst(0);
+    const handleSearch = () => {
         loadData();
     };
 
