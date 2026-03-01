@@ -101,7 +101,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                 className="h-[38px] font-bold gap-2 px-4 flex items-center"
                 onClick={() => setIsOpen(true)}
             >
-                <PlusIcon width={18}/> Добавить
+                Добавить
             </CustomButton>
 
             <CustomModal title="Добавить тип оплаты" isOpen={isOpen} onClose={() => setIsOpen(false)} className="max-w-md w-full">
