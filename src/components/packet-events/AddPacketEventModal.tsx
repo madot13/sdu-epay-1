@@ -26,6 +26,9 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
     const [category, setCategory] = useState("");
     const [active] = useState(true); // ← Убрали setActive, оставили по умолчанию true
     const [withoutFixedPrice, setWithoutFixedPrice] = useState(false); // ← Чекбокс без фиксированной цены
+    
+    // Дополнительные поля
+    const [additionalFields, setAdditionalFields] = useState<{ key: string; value: string }[]>([]);
 
     const [departments, setDepartments] = useState<{ label: string; value: string }[]>([]);
     const [events, setEvents] = useState<{ label: string; value: string }[]>([]);
@@ -47,6 +50,21 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
 
     const handleCategorySuccess = (newCategory: string) => {
         setCategory(newCategory);
+    };
+
+    // Обработчики для дополнительных полей
+    const addAdditionalField = () => {
+        setAdditionalFields([...additionalFields, { key: '', value: '' }]);
+    };
+
+    const updateAdditionalField = (index: number, field: 'key' | 'value', value: string) => {
+        const updatedFields = [...additionalFields];
+        updatedFields[index] = { ...updatedFields[index], [field]: value };
+        setAdditionalFields(updatedFields);
+    };
+
+    const removeAdditionalField = (index: number) => {
+        setAdditionalFields(additionalFields.filter((_, i) => i !== index));
     };
 
     useEffect(() => {
@@ -101,13 +119,22 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
         }
 
         try {
+            // Формируем дополнительные поля как объект
+            const additionalFieldsObject = additionalFields.reduce((acc, field) => {
+                if (field.key && field.value) {
+                    acc[field.key] = field.value;
+                }
+                return acc;
+            }, {} as Record<string, string>);
+
             await packetEventsApi.create({
                 event_id: selectedEvent, // ← event_id, не event_name
                 email: email,
                 category: category,
                 price: withoutFixedPrice ? 0 : price,
                 price_usd: withoutFixedPrice ? 0 : priceUsd,
-                active: active
+                active: active,
+                ...additionalFieldsObject // ← Добавляем дополнительные поля
                 // ← department не нужен, он уже есть в event
             });
 
@@ -115,7 +142,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
             setIsOpen(false);
             onRefresh(); // Обновляем таблицу
             // Очистка полей
-            setEmail(""); setDepartment(""); setSelectedEvent(""); setPrice(1000); setPriceUsd(5); setCategory(""); setWithoutFixedPrice(false);
+            setEmail(""); setDepartment(""); setSelectedEvent(""); setPrice(1000); setPriceUsd(5); setCategory(""); setWithoutFixedPrice(false); setAdditionalFields([]);
         } catch (error) {
             toast.error("Ошибка при создании");
         }
@@ -224,6 +251,44 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                         <label htmlFor="without-fixed-price" className="text-sm font-medium text-gray-700">
                             Без фиксированной цены
                         </label>
+                    </div>
+
+                    {/* Дополнительные поля */}
+                    <div className="flex flex-col gap-3">
+                        <div className="flex items-center justify-between">
+                            <label className="text-sm font-medium text-gray-700">Дополнительные поля</label>
+                            <button
+                                onClick={addAdditionalField}
+                                className="p-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                                title="Добавить поле"
+                            >
+                                <PlusIcon className="w-3 h-3" />
+                            </button>
+                        </div>
+                        
+                        {additionalFields.map((field, index) => (
+                            <div key={index} className="flex gap-2 items-center">
+                                <CustomInput
+                                    placeholder="Название поля"
+                                    value={field.key}
+                                    onChange={(e) => updateAdditionalField(index, 'key', e.target.value)}
+                                    className="flex-1"
+                                />
+                                <CustomInput
+                                    placeholder="Значение"
+                                    value={field.value}
+                                    onChange={(e) => updateAdditionalField(index, 'value', e.target.value)}
+                                    className="flex-1"
+                                />
+                                <button
+                                    onClick={() => removeAdditionalField(index)}
+                                    className="p-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                                    title="Удалить поле"
+                                >
+                                    <PlusIcon className="w-3 h-3 rotate-45" />
+                                </button>
+                            </div>
+                        ))}
                     </div>
 
                     <CustomButton onClick={handleSubmit} className="w-full mt-2">
