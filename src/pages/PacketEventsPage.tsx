@@ -34,15 +34,9 @@ export const PacketEventsPage: FC = () => {
     const loadData = async () => {
         setLoading(true);
         try {
-            // Временно отключено до исправления бэкенда
-            toast.error("Функция временно недоступна. Эндпоинт не найден на сервере.");
-            setData([]);
-            setTotal(0);
-            return;
-            
-            // const result = await packetEventsApi.getAll({});
-            // setData(Array.isArray(result) ? result : (result as any).data || []);
-            // setTotal((result as any).total || (Array.isArray(result) ? result.length : 0));
+            const result = await packetEventsApi.getAll({});
+            setData(Array.isArray(result) ? result : (result as any).data || []);
+            setTotal((result as any).total || (Array.isArray(result) ? result.length : 0));
         } catch (err) {
             console.error("Ошибка загрузки:", err);
             toast.error("Не удалось загрузить данные");
