@@ -13,6 +13,8 @@ import { packetEventsApi } from "@/api/endpoints/packet-events";
 import { AddDepartmentModal } from "./AddDepartmentModal";
 import { AddEventModal } from "./AddEventModal";
 import { AddCategoryModal } from "./AddCategoryModal";
+import { CustomFieldsModal } from "./CustomFieldsModal";
+import { CustomField } from "@/types/packetevents";
 
 export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -26,6 +28,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
     const [category, setCategory] = useState("");
     const [active] = useState(true); // ← Убрали setActive, оставили по умолчанию true
     const [withoutFixedPrice, setWithoutFixedPrice] = useState(false); // ← Чекбокс без фиксированной цены
+    const [customFields, setCustomFields] = useState<CustomField[]>([]); // ← Дополнительные поля
 
     const [departments, setDepartments] = useState<{ label: string; value: string }[]>([]);
     const [events, setEvents] = useState<{ label: string; value: string }[]>([]);
@@ -34,6 +37,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
     const [isDepartmentModalOpen, setIsDepartmentModalOpen] = useState(false);
     const [isEventModalOpen, setIsEventModalOpen] = useState(false);
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+    const [isCustomFieldsModalOpen, setIsCustomFieldsModalOpen] = useState(false);
     // Обработчики для модалок
     const handleDepartmentSuccess = (newDepartment: { label: string; value: string }) => {
         setDepartments([...departments, newDepartment]);
@@ -47,6 +51,10 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
 
     const handleCategorySuccess = (newCategory: string) => {
         setCategory(newCategory);
+    };
+
+    const handleCustomFieldsSuccess = (fields: CustomField[]) => {
+        setCustomFields(fields);
     };
 
     useEffect(() => {
@@ -105,9 +113,10 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                 event_id: selectedEvent, // ← event_id, не event_name
                 email: email,
                 category: category,
-                price: withoutFixedPrice ? 0 : price,
-                price_usd: withoutFixedPrice ? 0 : priceUsd,
-                active: active
+                price: withoutFixedPrice ? 0.01 : price, // ← Минимальное значение > 0
+                price_usd: withoutFixedPrice ? 0.01 : priceUsd, // ← Минимальное значение > 0
+                active: active,
+                custom_fields: customFields // ← Дополнительные поля
                 // ← department не нужен, он уже есть в event
             });
 
@@ -115,7 +124,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
             setIsOpen(false);
             onRefresh(); // Обновляем таблицу
             // Очистка полей
-            setEmail(""); setDepartment(""); setSelectedEvent(""); setPrice(1000); setPriceUsd(5); setCategory(""); setWithoutFixedPrice(false);
+            setEmail(""); setDepartment(""); setSelectedEvent(""); setPrice(1000); setPriceUsd(5); setCategory(""); setWithoutFixedPrice(false); setCustomFields([]);
         } catch (error) {
             toast.error("Ошибка при создании");
         }
@@ -226,6 +235,14 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                         </label>
                     </div>
 
+                    <button
+                        onClick={() => setIsCustomFieldsModalOpen(true)}
+                        className="w-full py-2 px-4 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
+                    >
+                        <PlusIcon className="w-4 h-4" />
+                        Дополнительные поля ({customFields.length})
+                    </button>
+
                     <CustomButton onClick={handleSubmit} className="w-full mt-2">
                         Создать запись
                     </CustomButton>
@@ -250,6 +267,13 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                 isOpen={isCategoryModalOpen}
                 onClose={() => setIsCategoryModalOpen(false)}
                 onSuccess={handleCategorySuccess}
+            />
+            
+            <CustomFieldsModal
+                isOpen={isCustomFieldsModalOpen}
+                onClose={() => setIsCustomFieldsModalOpen(false)}
+                onSave={handleCustomFieldsSuccess}
+                initialFields={customFields}
             />
         </>
     );

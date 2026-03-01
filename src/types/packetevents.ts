@@ -1,3 +1,10 @@
+export interface CustomField {
+    id: string;
+    name: string;
+    value: string;
+    type: 'text' | 'number' | 'email';
+}
+
 export interface IEventRecord {
     id?: string;
     event_name?: string;
@@ -15,6 +22,7 @@ export interface IEventRecord {
     period_from?: string;
     period_till?: string; // API может возвращать period_till
     without_period?: boolean;
+    custom_fields?: CustomField[]; // Дополнительные поля
 }
 
 export type CreateEventPayload = Omit<IEventRecord, 'id'>;
