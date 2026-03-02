@@ -118,7 +118,7 @@ export const EventFilters:FC = () => {
                 </div>
                 <CustomButton
                     onClick={handleSearch}
-                    className="h-[37px]  px-4 mt-auto text-white rounded-[4px] transition w-full sm:w-auto"
+                    className="h-[37px] px-6 mt-auto"
                 >
                     Поиск
                 </CustomButton>
