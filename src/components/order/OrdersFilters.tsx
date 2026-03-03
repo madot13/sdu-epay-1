@@ -152,16 +152,17 @@ export const OrdersFilters: FC = () => {
                     />
                 </div>
                 <CustomButton
+                    variant="submit"
                     onClick={handleSearch}
-                    className="h-[37px] px-6 mt-auto bg-[#6B9AB0] hover:bg-[#5a8296] text-white transition-colors border-none"                
+                    className="h-[37px] px-6 mt-auto"
                 >
                     Поиск
                 </CustomButton>
                 <CustomButton
                     onClick={handleExport}
                     disabled={isExporting}
-                    variant="default"
-                    className="h-[37px] px-4 justify-center mt-auto rounded-[4px] transition w-full sm:w-auto flex items-center gap-2"
+                    variant="submit"
+                    className="h-[37px] px-4 justify-center mt-auto flex items-center gap-2"
                 >
                     {isExporting ? (
                         <>Загрузка...</>

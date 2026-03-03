@@ -16,8 +16,8 @@ export const FileViewerPage:FC = () => {
                    </span>
                </div>
                <div className={"flex flex-col sm:flex-row gap-3 lg:gap-5 mt-6 lg:mt-[50px]"}>
-                   <CustomButton onClick={() => setSelect(1)} className="w-full sm:w-auto">SDU University</CustomButton>
-                   <CustomButton onClick={() => setSelect(2)} className="w-full sm:w-auto">Dormitory</CustomButton>
+                   <CustomButton variant="submit" onClick={() => setSelect(1)} className="w-full sm:w-auto">SDU University</CustomButton>
+                   <CustomButton variant="submit" onClick={() => setSelect(2)} className="w-full sm:w-auto">Dormitory</CustomButton>
                </div>
                <div className="mt-6 lg:mt-8">
                    {select === 1 && <SduReader />}
