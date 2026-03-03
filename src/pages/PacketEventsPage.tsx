@@ -1,4 +1,4 @@
-import { FC, useEffect, useState, useCallback } from "react";
+import { FC, useEffect, useState, useCallback, useMemo } from "react";
 import { AdminLayout } from "@/layouts/AdminLayout.tsx";
 import { CustomTable } from "@/ui/CustomTable.tsx";
 import { PacketEventsFilter } from "@/components/packet-events/PacketEventsFilter";
@@ -20,14 +20,16 @@ export const PacketEventsPage: FC = () => {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedItem, setSelectedItem] = useState<IEventRecord | null>(null);
     const [filters, setFilters] = useState<any>({});
+    // ✅ ДОБАВЛЕНО: стейт сортировки
+    const [sort, setSort] = useState<{ column: string; direction: 'asc' | 'desc' } | null>(null);
 
     const columns = [
-        { header: "Событие", accessor: "event_name" },
-        { header: "Департамент", accessor: "department" },
-        { header: "Email", accessor: "email" },
-        { header: "Категория", accessor: "category" },
-        { header: "Период с", accessor: "period_from_display" },
-        { header: "Период по", accessor: "period_till_display" },
+        { header: "Событие", accessor: "event_name", sortable: true },
+        { header: "Департамент", accessor: "department", sortable: true },
+        { header: "Email", accessor: "email", sortable: true },
+        { header: "Категория", accessor: "category", sortable: true },
+        { header: "Период с", accessor: "period_from_display", sortable: true },
+        { header: "Период по", accessor: "period_till_display", sortable: true },
         { 
             header: "Цена (KZT)", 
             accessor: (item: Record<string, any>) => {
@@ -48,14 +50,10 @@ export const PacketEventsPage: FC = () => {
         },
     ];
 
-    // ✅ ИСПРАВЛЕНИЕ: loadData принимает актуальные фильтры как аргумент,
-    // не зависит от стейта через замыкание
     const loadData = useCallback(async (currentFilters: any = filters) => {
         setLoading(true);
         try {
-            console.log("🔍 Filters sent to API:", currentFilters);
             const result = await packetEventsApi.getAll(currentFilters);
-            console.log("📡 API response:", result);
 
             let items: any[] = [];
             if (result && typeof result === 'object') {
@@ -83,11 +81,53 @@ export const PacketEventsPage: FC = () => {
         loadData(filters);
     }, [first, rows, filters]);
 
-    // ✅ ИСПРАВЛЕНИЕ: сохраняем фильтры в стейт, и сразу передаём их в loadData
-    // не вызываем loadData() отдельно — это сделает useEffect выше
+    // ✅ ДОБАВЛЕНО: обработчик сортировки
+    const handleSort = (column: string, direction: 'asc' | 'desc') => {
+        setSort({ column, direction });
+    };
+
+    // ✅ ДОБАВЛЕНО: маппинг + клиентская сортировка через useMemo
+    const mappedData = useMemo(() => {
+        const mapped = data.map((item) => ({
+            ...item,
+            event_name: item.title || item.event_name || '',
+            price_display: `${item.price?.toLocaleString() || 0} ₸`,
+            price_usd_display: item.price_usd ? `$${item.price_usd}` : "—",
+            category: item.category || "—",
+            department: item.department_name || item.department || '',
+            period_from_display: item.period_from ? new Date(item.period_from).toLocaleDateString('ru-RU') : "—",
+            period_till_display: item.period_till ? new Date(item.period_till).toLocaleDateString('ru-RU') : "—"
+        }));
+
+        if (!sort) return mapped;
+
+        return [...mapped].sort((a: any, b: any) => {
+            let aValue = a[sort.column] ?? '';
+            let bValue = b[sort.column] ?? '';
+
+            // Для дат используем оригинальные значения, а не отформатированные строки
+            if (sort.column === 'period_from_display') {
+                aValue = a.period_from ? new Date(a.period_from).getTime() : 0;
+                bValue = b.period_from ? new Date(b.period_from).getTime() : 0;
+            } else if (sort.column === 'period_till_display') {
+                aValue = a.period_till ? new Date(a.period_till).getTime() : 0;
+                bValue = b.period_till ? new Date(b.period_till).getTime() : 0;
+            }
+
+            if (typeof aValue === 'string' && typeof bValue === 'string') {
+                const cmp = aValue.localeCompare(bValue, 'ru');
+                return sort.direction === 'asc' ? cmp : -cmp;
+            }
+
+            if (aValue < bValue) return sort.direction === 'asc' ? -1 : 1;
+            if (aValue > bValue) return sort.direction === 'asc' ? 1 : -1;
+            return 0;
+        });
+    }, [data, sort]);
+
     const handleSearch = (params: any) => {
         setFirst(0);
-        setFilters(params); // useEffect сам вызовет loadData с новыми filters
+        setFilters(params);
     };
 
     const onPageChange = (event: any) => {
@@ -132,16 +172,9 @@ export const PacketEventsPage: FC = () => {
                 <div className="overflow-x-auto bg-white rounded-lg shadow-sm border border-gray-100 mt-4">
                     <CustomTable
                         columns={columns}
-                        data={data.map((item) => ({
-                            ...item,
-                            event_name: item.title || item.event_name || '',
-                            price_display: `${item.price?.toLocaleString() || 0} ₸`,
-                            price_usd_display: item.price_usd ? `$${item.price_usd}` : "—",
-                            category: item.category || "—",
-                            department: item.department_name || item.department || '',
-                            period_from_display: item.period_from ? new Date(item.period_from).toLocaleDateString('ru-RU') : "—",
-                            period_till_display: item.period_till ? new Date(item.period_till).toLocaleDateString('ru-RU') : "—"
-                        }))}
+                        data={mappedData}
+                        onSort={handleSort}
+                        currentSort={sort || undefined}
                         actions={(row: any) => (
                             <div className="flex gap-3">
                                 <button 
