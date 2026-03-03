@@ -24,8 +24,8 @@ export const EventsPage:FC = () => {
         { header: "Email", accessor: "manager_email" },
         { header: "Период с", accessor: "period_from" },
         { header: "Период по", accessor: "period_till" },
-        { header: "Цена (Resident)", accessor: "price_kzt_display" },
-        { header: "Цена (Non-resident)", accessor: "price_usd_display" },
+        { header: "Цена KZT", accessor: "price_kzt_display" },
+        { header: "Цена USD", accessor: "price_usd_display" },
     ];
 
 
