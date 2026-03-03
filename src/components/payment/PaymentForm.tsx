@@ -168,7 +168,11 @@ export const PaymentForm: FC = () => {
 
             try {
                 console.log("Fetching payment categories for event:", currentEventId);
-                const paymentTypes = await packetEventsApi.getAll({ event_id: currentEventId });
+                const response = await packetEventsApi.getAll({ event_id: currentEventId });
+                console.log("Payment types response:", response);
+                
+                // Обрабатываем ответ API - может быть массив или объект с data
+                const paymentTypes = Array.isArray(response) ? response : (response as any).data || [];
                 console.log("Payment types for event:", paymentTypes);
                 
                 const categories = paymentTypes
