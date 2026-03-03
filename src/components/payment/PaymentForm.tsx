@@ -586,7 +586,6 @@ export const PaymentForm: FC = () => {
                             {eventAdditionalFields.length > 0 && (
                                 <div className="flex flex-col gap-2">
                                     <div className="flex items-center justify-between">
-                                        <label className="text-sm font-medium text-gray-700">Дополнительные поля события</label>
                                         <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
                                             {eventAdditionalFields.length} полей
                                         </span>
@@ -651,7 +650,6 @@ export const PaymentForm: FC = () => {
                                             {paymentCategoryAdditionalFields.length > 0 && (
                                                 <div className="flex flex-col gap-2 mt-4">
                                                     <div className="flex items-center justify-between">
-                                                        <label className="text-sm font-medium text-gray-700">Дополнительные поля типа платежа</label>
                                                         <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
                                                             {paymentCategoryAdditionalFields.length} полей
                                                         </span>

@@ -116,7 +116,6 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
                 {/* Дополнительные поля типа платежа */}
                 <div className="flex flex-col gap-2">
                     <div className="flex items-center justify-between">
-                        <label className="text-sm font-medium text-gray-700">Дополнительные поля типа платежа</label>
                         <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
                             {customFields.length} полей
                         </span>
