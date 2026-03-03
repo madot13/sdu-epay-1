@@ -80,13 +80,16 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
             
             // Загружаем дополнительные поля из eventData
             if (eventData.additional_fields) {
+                console.log("Loading additional fields from eventData:", eventData.additional_fields);
                 const fields = Object.entries(eventData.additional_fields).map(([key, config]) => ({
                     name: key,
                     type: config.type || 'text',
                     value: config.value
                 }));
+                console.log("Parsed fields for AddAdditionalFields:", fields);
                 setAdditionalFields(fields);
             } else {
+                console.log("No additional_fields in eventData");
                 setAdditionalFields([]);
             }
         }
@@ -154,6 +157,8 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
         try {
             // Подготавливаем additional_fields
             const additional_fields: Record<string, any> = {};
+            console.log("Current additionalFields state:", additionalFields);
+            
             additionalFields.forEach((field) => {
                 if (field.type === 'file' && field.value) {
                     // Для файлов копируем весь объект с value
@@ -162,10 +167,15 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
                         value: field.value
                     };
                 } else {
-                    // Для других типов только type
-                    additional_fields[field.name] = { type: field.type };
+                    // Для других типов отправляем type и value (пустое для новых полей)
+                    additional_fields[field.name] = { 
+                        type: field.type,
+                        value: field.value || ''
+                    };
                 }
             });
+            
+            console.log("Prepared additional_fields for API:", additional_fields);
 
             await updateEvent(eventData.id, {
                 title,
