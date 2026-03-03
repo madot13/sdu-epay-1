@@ -77,6 +77,7 @@ export const PaymentForm: FC = () => {
     const [departmentOptions, setDepartmentOptions] = useState<Option[]>([]);
     const [eventOptions, setEventOptions] = useState<Option[]>([]);
     const [paymentCategoryOptions, setPaymentCategoryOptions] = useState<Option[]>([]);
+    const [currentEventId, setCurrentEventId] = useState<string | null>(null);
     const [departments, setDepartments] = useState<any[]>([]); // store all data
     const [additionalFields, setAdditionalFields] = useState<any[]>([]);
     const [additionalFieldValues, setAdditionalFieldValues] = useState<Record<string, string | boolean>>({});
@@ -160,15 +161,14 @@ export const PaymentForm: FC = () => {
 
     useEffect(() => {
         const fetchPaymentCategories = async () => {
-            const eventId = watch("event_id");
-            if (!eventId) {
+            if (!currentEventId) {
                 setPaymentCategoryOptions([]);
                 return;
             }
 
             try {
-                console.log("Fetching payment categories for event:", eventId);
-                const paymentTypes = await packetEventsApi.getAll({ event_id: eventId });
+                console.log("Fetching payment categories for event:", currentEventId);
+                const paymentTypes = await packetEventsApi.getAll({ event_id: currentEventId });
                 console.log("Payment types for event:", paymentTypes);
                 
                 const categories = paymentTypes
@@ -188,7 +188,7 @@ export const PaymentForm: FC = () => {
         };
 
         fetchPaymentCategories();
-    }, [watch("event_id")]);
+    }, [currentEventId]);
 
     const watchShowInUsd = watch("showInUsd");
     const watchPaymentMethod = watch("paymentMethod");
@@ -476,6 +476,7 @@ export const PaymentForm: FC = () => {
                                                 onChange={(val) => {
                                                     field.onChange(val);
                                                     setOrderField("event_id", val);
+                                                    setCurrentEventId(val);
 
                                                     // Reset promo code when event changes
                                                     if (discount > 0) {
