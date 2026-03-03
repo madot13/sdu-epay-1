@@ -266,40 +266,44 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                         triggerClassName="bg-white border-[#6B9AB0] h-[45px]"
                     />
 
-                    {department && (
-                        <CustomSelect 
-                            placeholder="Выберите событие"
-                            options={events}
-                            value={selectedEvent}
-                            onChange={setSelectedEvent}
-                            triggerClassName="bg-white border-[#6B9AB0] h-[45px]"
-                        />
-                    )}
-
-                    <CustomInput 
-                        placeholder="Категория платежа" 
-                        value={category} 
-                        onChange={(e) => setCategory(e.target.value)}
-                        icon={<UserCircleIcon className="text-[#6B9AB0]" />} 
-                    />
-
                     {/* Дополнительные поля департамента */}
-                    <PaymentFormAdditionalFields
-                        departmentId={department}
-                        values={departmentFieldsValues}
-                        onChange={setDepartmentFieldsValues}
-                        onFieldsLoad={setDepartmentFields}
-                    />
+                    {department && (
+                        <>
+                            <PaymentFormAdditionalFields
+                                departmentId={department}
+                                values={departmentFieldsValues}
+                                onChange={setDepartmentFieldsValues}
+                                onFieldsLoad={setDepartmentFields}
+                            />
+
+                            <CustomSelect 
+                                placeholder="Выберите событие"
+                                options={events}
+                                value={selectedEvent}
+                                onChange={setSelectedEvent}
+                                triggerClassName="bg-white border-[#6B9AB0] h-[45px]"
+                            />
+                        </>
+                    )}
 
                     {/* Дополнительные поля события */}
                     {selectedEvent && (
-                        <div className="flex flex-col gap-2">
-                            <label className="text-sm font-medium text-gray-700">Дополнительные поля события</label>
-                            <AddAdditionalFields 
-                                value={eventCustomFields} 
-                                onChange={setEventCustomFields} 
+                        <>
+                            <div className="flex flex-col gap-2">
+                                <label className="text-sm font-medium text-gray-700">Дополнительные поля события</label>
+                                <AddAdditionalFields 
+                                    value={eventCustomFields} 
+                                    onChange={setEventCustomFields} 
+                                />
+                            </div>
+
+                            <CustomInput 
+                                placeholder="Категория платежа" 
+                                value={category} 
+                                onChange={(e) => setCategory(e.target.value)}
+                                icon={<UserCircleIcon className="text-[#6B9AB0]" />} 
                             />
-                        </div>
+                        </>
                     )}
 
                     <div className="grid grid-cols-2 gap-4">
