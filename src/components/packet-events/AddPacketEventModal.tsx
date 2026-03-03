@@ -25,7 +25,6 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
     const [active] = useState(true);
 
     // Дополнительные поля на каждом уровне
-    const [eventFields, setEventFields] = useState<Record<string, { type: string }>>({});
     const [paymentTypeCustomFields, setPaymentTypeCustomFields] = useState<{name:string; type:string; value?: any}[]>([]);
     
     const [category, setCategory] = useState("");
@@ -66,26 +65,6 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
         fetchEvents();
     }, [department]);
 
-    useEffect(() => {
-        // Загружаем поля события
-        if (selectedEvent) {
-            // Здесь нужно будет загрузить данные события включая additional_fields
-            // Временно заглушка
-            setEventFields({});
-        } else {
-            setEventFields({});
-        }
-    }, [selectedEvent]);
-
-    useEffect(() => {
-        // Загружаем категории если у события есть категории
-        if (selectedEvent && eventFields) {
-            // Здесь нужно будет загрузить категории для события
-            // Временно заглушка - категории пока не реализованы
-            console.log("Categories for event will be loaded here");
-        }
-    }, [selectedEvent, eventFields]);
-
     const handleSubmit = async () => {
         if (!email || !department || !selectedEvent) {
             toast.error("Пожалуйста, заполните все обязательные поля");
@@ -124,9 +103,9 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                 event_id: selectedEvent,
                 email: email,
                 category: category || undefined,
-                priced: priced,
-                price: priced ? 0 : price,
-                price_usd: priced ? 0 : (priceUsd > 0 ? priceUsd : undefined),
+                priced: !withoutFixedPrice,
+                price: withoutFixedPrice ? 0 : price,
+                price_usd: withoutFixedPrice ? 0 : (priceUsd > 0 ? priceUsd : undefined),
                 active: active,
                 additional_fields: Object.keys(allAdditionalFields).length > 0 ? allAdditionalFields : undefined
             });
