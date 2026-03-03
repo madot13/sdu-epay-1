@@ -9,6 +9,7 @@ export interface IEvent {
     period_from?: string,
     period_till?: string,
     department_id?: string;
+    additional_fields?: Record<string, any>;
 }
 
 export type EventQuery = {

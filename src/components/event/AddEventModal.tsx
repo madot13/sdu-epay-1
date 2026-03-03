@@ -16,6 +16,7 @@ import { useEventsStore } from "@/store/useEventsStore.ts";
 import { toast } from "react-hot-toast";
 import {formatLocalDate} from "@/utils/formatLocalDate.ts";
 import {TengeIcon} from "@/assets/TengeIcon.tsx";
+import { AddAdditionalFields } from "@/components/department/AddAdditionalFields.tsx";
 
 export const AddEventModal: FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -28,6 +29,7 @@ export const AddEventModal: FC = () => {
     const [withoutPeriod, setWithoutPeriod] = useState(false);
     const [selectedDepartment, setSelectedDepartment] = useState("");
     const [departments, setDepartments] = useState<{ label: string; value: string }[]>([]);
+    const [additionalFields, setAdditionalFields] = useState<{name:string; type:string; value?: any}[]>([]);
     const [errors, setErrors] = useState({
         name: false,
         email: false,
@@ -94,6 +96,21 @@ export const AddEventModal: FC = () => {
 
 
         try {
+            // Подготавливаем additional_fields
+            const additional_fields: Record<string, any> = {};
+            additionalFields.forEach((field) => {
+                if (field.type === 'file' && field.value) {
+                    // Для файлов копируем весь объект с value
+                    additional_fields[field.name] = {
+                        type: field.type,
+                        value: field.value
+                    };
+                } else {
+                    // Для других типов только type
+                    additional_fields[field.name] = { type: field.type };
+                }
+            });
+
             await addEvent({
                 title: name,
                 manager_email: email,
@@ -102,6 +119,7 @@ export const AddEventModal: FC = () => {
                 price: priced ? price : 0,
                 price_usd: priced && priceUsd > 0 ? priceUsd : undefined,
                 without_period: withoutPeriod,
+                additional_fields: Object.keys(additional_fields).length > 0 ? additional_fields : undefined,
                 ...(withoutPeriod
                     ? {}
                     : { period_from: periodFrom!, period_till: periodTo! }
@@ -120,6 +138,7 @@ export const AddEventModal: FC = () => {
             setWithoutPeriod(false);
             setSelectedDepartment("");
             setDates(null);
+            setAdditionalFields([]);
             setErrors({
                 name: false,
                 email: false,
@@ -234,6 +253,15 @@ export const AddEventModal: FC = () => {
                             />
                         </div>
                     )}
+
+                    {/* Дополнительные поля */}
+                    <div className="flex flex-col gap-2">
+                        <label className="text-sm font-medium text-gray-700">Дополнительные поля</label>
+                        <AddAdditionalFields 
+                            value={additionalFields} 
+                            onChange={setAdditionalFields} 
+                        />
+                    </div>
 
                     <CustomButton onClick={handleSubmit} className="w-full">
                         Добавить
