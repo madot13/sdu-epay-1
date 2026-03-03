@@ -44,14 +44,19 @@ export const OrdersPage: FC = () => {
 
     // Update sorted orders when original orders or sort changes
     useEffect(() => {
-        const ordersWithDisplay = orders.map((order: any) => ({
-            ...order,
-            type_display: getTypeText(order.type),
-            status_display: getStatusText(order.status),
-            amount_display: `${order.amount} ₸`,
-            final_amount_display: `${order.final_amount} ₸`,
-            created_at_display: formatDate(order.created_at),
-        }));
+        const ordersWithDisplay = orders.map((order: any) => {
+            console.log('Order type:', order.type, 'type_display:', getTypeText(order.type));
+            return {
+                ...order,
+                type_display: getTypeText(order.type),
+                status_display: getStatusText(order.status),
+                amount_display: `${order.amount} ₸`,
+                final_amount_display: `${order.final_amount} ₸`,
+                created_at_display: formatDate(order.created_at),
+            };
+        });
+
+        console.log('Orders with display:', ordersWithDisplay);
 
         if (!sort) {
             setSortedOrders(ordersWithDisplay);
@@ -61,6 +66,8 @@ export const OrdersPage: FC = () => {
         const sorted = [...ordersWithDisplay].sort((a, b) => {
             let aValue: any = a[sort.column as keyof typeof ordersWithDisplay[0]];
             let bValue: any = b[sort.column as keyof typeof ordersWithDisplay[0]];
+            
+            console.log('Sorting by:', sort.column, 'aValue:', aValue, 'bValue:', bValue);
             
             // Handle numeric values for amounts - use original numeric values
             if (sort.column === 'amount_display' || sort.column === 'final_amount_display') {
