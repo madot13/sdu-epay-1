@@ -31,6 +31,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
     
     const [eventFields, setEventFields] = useState<Record<string, { type: string }>>({});
     const [eventFieldsValues, setEventFieldsValues] = useState<Record<string, any>>({});
+    const [eventCustomFields, setEventCustomFields] = useState<{name:string; type:string; value?: any}[]>([]);
     
     const [category, setCategory] = useState("");
     const [categoryFields, setCategoryFields] = useState<Record<string, { type: string }>>({});
@@ -169,6 +170,20 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                 }
             });
             
+            // Кастомные поля события
+            eventCustomFields.forEach((field) => {
+                if (field.type === 'file' && field.value) {
+                    // Для файлов копируем весь объект с value
+                    allAdditionalFields[field.name] = {
+                        type: field.type,
+                        value: field.value
+                    };
+                } else {
+                    // Для других типов только type
+                    allAdditionalFields[field.name] = { type: field.type };
+                }
+            });
+            
             // Поля категории
             Object.entries(categoryFieldsValues).forEach(([key, value]) => {
                 const fieldType = categoryFields[key]?.type || 'text';
@@ -213,6 +228,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
             setShowInUsd(false);
             setDepartmentFieldsValues({});
             setEventFieldsValues({});
+            setEventCustomFields([]);
             setCategoryFieldsValues({});
         } catch (error) {
             toast.error("Ошибка при создании");
@@ -275,14 +291,16 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                         onFieldsLoad={setDepartmentFields}
                     />
 
-                    {/* Кастомные дополнительные поля */}
-                    <div className="flex flex-col gap-2">
-                        <label className="text-sm font-medium text-gray-700">Дополнительные поля события</label>
-                        <AddAdditionalFields 
-                            value={[]} 
-                            onChange={() => {}} 
-                        />
-                    </div>
+                    {/* Дополнительные поля события */}
+                    {selectedEvent && (
+                        <div className="flex flex-col gap-2">
+                            <label className="text-sm font-medium text-gray-700">Дополнительные поля события</label>
+                            <AddAdditionalFields 
+                                value={eventCustomFields} 
+                                onChange={setEventCustomFields} 
+                            />
+                        </div>
+                    )}
 
                     <div className="grid grid-cols-2 gap-4">
                         <CustomInput 
