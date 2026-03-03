@@ -58,7 +58,7 @@ export const PacketEventsPage: FC = () => {
             
             // Добавляем детальный лог каждого элемента
             let items: any[] = [];
-            if (Array.isArray(result)) {
+            if (result && typeof result === 'object') {
                 // Результат может быть как массив так и объектом с data
                 items = Array.isArray(result) ? result : (result as any).data || [];
                 console.log("📋 Processing items:", items);
