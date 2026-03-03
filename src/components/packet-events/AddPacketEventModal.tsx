@@ -35,6 +35,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
     const [category, setCategory] = useState("");
     const [categoryFields, setCategoryFields] = useState<Record<string, { type: string }>>({});
     const [categoryFieldsValues, setCategoryFieldsValues] = useState<Record<string, any>>({});
+    const [paymentCustomFields, setPaymentCustomFields] = useState<{name:string; type:string; value?: any}[]>([]);
 
     // Данные для селектов
     const [departments, setDepartments] = useState<{ label: string; value: string }[]>([]);
@@ -180,6 +181,20 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                     };
                 }
             });
+            
+            // Кастомные поля типов платежей
+            paymentCustomFields.forEach((field) => {
+                if (field.type === 'file' && field.value) {
+                    // Для файлов копируем весь объект с value
+                    allAdditionalFields[field.name] = {
+                        type: field.type,
+                        value: field.value
+                    };
+                } else {
+                    // Для других типов только type
+                    allAdditionalFields[field.name] = { type: field.type };
+                }
+            });
 
             await packetEventsApi.create({
                 event_id: selectedEvent,
@@ -205,6 +220,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
             setDepartmentFieldsValues({});
             setEventCustomFields([]);
             setCategoryFieldsValues({});
+            setPaymentCustomFields([]);
         } catch (error) {
             toast.error("Ошибка при создании");
         }
@@ -277,6 +293,17 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                                 icon={<UserCircleIcon className="text-[#6B9AB0]" />} 
                             />
                         </>
+                    )}
+
+                    {/* Дополнительные поля категории платежа */}
+                    {category && (
+                        <div className="flex flex-col gap-2">
+                            <label className="text-sm font-medium text-gray-700">Дополнительные поля типа оплаты</label>
+                            <AddAdditionalFields 
+                                value={paymentCustomFields} 
+                                onChange={setPaymentCustomFields} 
+                            />
+                        </div>
                     )}
 
                     <div className="grid grid-cols-2 gap-4">

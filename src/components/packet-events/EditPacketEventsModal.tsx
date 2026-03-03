@@ -6,6 +6,7 @@ import { EnvelopeIcon, UserCircleIcon, CurrencyDollarIcon, TagIcon } from "@hero
 import { toast } from "react-hot-toast";
 import { packetEventsApi } from "@/api/endpoints/packet-events";
 import { IEventRecord } from "@/types/packetevents";
+import { AddAdditionalFields } from "@/components/department/AddAdditionalFields.tsx";
 
 interface Props {
     isOpen: boolean;
@@ -17,11 +18,24 @@ interface Props {
 export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, onSuccess }) => {
     const [form, setForm] = useState<IEventRecord>({} as IEventRecord);
     const [withoutFixedPrice, setWithoutFixedPrice] = useState(false);
+    const [additionalFields, setAdditionalFields] = useState<{name:string; type:string; value?: any}[]>([]);
 
     useEffect(() => {
         setForm({ ...eventData });
         // Устанавливаем чекбокс если цены 0 или не заданы
         setWithoutFixedPrice((eventData.price || 0) === 0 && (eventData.price_usd || 0) === 0);
+        
+        // Загружаем дополнительные поля из eventData
+        if (eventData.additional_fields) {
+            const fields = Object.entries(eventData.additional_fields).map(([key, config]) => ({
+                name: key,
+                type: config.type || 'text',
+                value: config.value
+            }));
+            setAdditionalFields(fields);
+        } else {
+            setAdditionalFields([]);
+        }
     }, [eventData, isOpen]);
 
     const handleSave = async () => {
@@ -45,10 +59,29 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
         }
 
         try {
+            // Подготавливаем additional_fields
+            const additional_fields: Record<string, any> = {};
+            additionalFields.forEach((field) => {
+                if (field.type === 'file' && field.value) {
+                    // Для файлов копируем весь объект с value
+                    additional_fields[field.name] = {
+                        type: field.type,
+                        value: field.value
+                    };
+                } else {
+                    // Для других типов отправляем type и value (пустое для новых полей)
+                    additional_fields[field.name] = { 
+                        type: field.type,
+                        value: field.value || ''
+                    };
+                }
+            });
+
             await packetEventsApi.update(eventData.id, {
                 ...form,
                 price: withoutFixedPrice ? 0 : (form.price || 0),
-                price_usd: withoutFixedPrice ? 0 : (form.price_usd || 0)
+                price_usd: withoutFixedPrice ? 0 : (form.price_usd || 0),
+                additional_fields: Object.keys(additional_fields).length > 0 ? additional_fields : undefined
             });
             toast.success("Данные успешно обновлены");
             onSuccess();
@@ -113,6 +146,15 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
                         />
                     </>
                 )}
+
+                {/* Дополнительные поля */}
+                <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium text-gray-700">Дополнительные поля</label>
+                    <AddAdditionalFields 
+                        value={additionalFields} 
+                        onChange={setAdditionalFields} 
+                    />
+                </div>
 
                 <CustomButton onClick={handleSave} className="w-full">
                     Сохранить
