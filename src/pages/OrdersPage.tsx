@@ -16,28 +16,82 @@ export const OrdersPage: FC = () => {
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
     const [isTransactionsModalOpen, setIsTransactionsModalOpen] = useState(false);
+    const [sort, setSort] = useState<{ column: string; direction: 'asc' | 'desc' } | null>(null);
+    const [sortedOrders, setSortedOrders] = useState<any[]>([]);
 
     const columns = [
-        { header: "ID", accessor: "id" },
-        { header: "Имя", accessor: "fullname" },
-        { header: "Email", accessor: "email" },
-        { header: "Телефон", accessor: "cellphone" },
-        { header: "Тип", accessor: "type_display" },
+        { header: "ID", accessor: "id", sortable: true },
+        { header: "Имя", accessor: "fullname", sortable: true },
+        { header: "Email", accessor: "email", sortable: true },
+        { header: "Телефон", accessor: "cellphone", sortable: true },
+        { header: "Тип", accessor: "type_display", sortable: true },
         { 
             header: "Статус", 
             accessor: "status_display",
+            sortable: true,
             cellClassName: (_value: any, row: any) => {
                 return `font-semibold ${getStatusColor(row.status)}`;
             }
         },
-        { header: "Сумма", accessor: "amount_display" },
-        { header: "Итого", accessor: "final_amount_display" },
-        { header: "Дата создания", accessor: "created_at_display" },
+        { header: "Сумма", accessor: "amount_display", sortable: true },
+        { header: "Итого", accessor: "final_amount_display", sortable: true },
+        { header: "Дата создания", accessor: "created_at_display", sortable: true },
     ];
 
     useEffect(() => {
         fetchOrders({ page: 0, size: 10 });
     }, []);
+
+    // Update sorted orders when original orders or sort changes
+    useEffect(() => {
+        const ordersWithDisplay = orders.map((order: any) => ({
+            ...order,
+            type_display: getTypeText(order.type),
+            status_display: getStatusText(order.status),
+            amount_display: `${order.amount} ₸`,
+            final_amount_display: `${order.final_amount} ₸`,
+            created_at_display: formatDate(order.created_at),
+        }));
+
+        if (!sort) {
+            setSortedOrders(ordersWithDisplay);
+            return;
+        }
+
+        const sorted = [...ordersWithDisplay].sort((a, b) => {
+            let aValue: any = a[sort.column as keyof typeof ordersWithDisplay[0]];
+            let bValue: any = b[sort.column as keyof typeof ordersWithDisplay[0]];
+            
+            // Handle numeric values for amounts and ID
+            if (sort.column === 'id' || sort.column === 'amount' || sort.column === 'final_amount') {
+                aValue = Number(aValue) || 0;
+                bValue = Number(bValue) || 0;
+            } else if (sort.column === 'created_at') {
+                // Handle date sorting
+                aValue = aValue ? new Date(aValue).getTime() : 0;
+                bValue = bValue ? new Date(bValue).getTime() : 0;
+            }
+            
+            if (aValue == null) aValue = '';
+            if (bValue == null) bValue = '';
+            
+            // Use localeCompare for string sorting (supports Cyrillic)
+            if (typeof aValue === 'string' && typeof bValue === 'string') {
+                const cmp = aValue.localeCompare(bValue, 'ru');
+                return sort.direction === 'asc' ? cmp : -cmp;
+            }
+            
+            if (aValue < bValue) return sort.direction === 'asc' ? -1 : 1;
+            if (aValue > bValue) return sort.direction === 'asc' ? 1 : -1;
+            return 0;
+        });
+        
+        setSortedOrders(sorted);
+    }, [orders, sort]);
+
+    const handleSort = (column: string, direction: 'asc' | 'desc') => {
+        setSort({ column, direction });
+    };
 
     useEffect(() => {
         const load = async () => {
@@ -128,14 +182,9 @@ export const OrdersPage: FC = () => {
                 <div className="overflow-x-auto">
                     <CustomTable
                         columns={columns}
-                        data={orders.map((order: any) => ({
-                            ...order,
-                            type_display: getTypeText(order.type),
-                            status_display: getStatusText(order.status),
-                            amount_display: `${order.amount} ₸`,
-                            final_amount_display: `${order.final_amount} ₸`,
-                            created_at_display: formatDate(order.created_at),
-                        }))}
+                        data={sortedOrders}
+                        onSort={handleSort}
+                        currentSort={sort || undefined}
                         actions={(row) => (
                             <div className="flex gap-2 flex-wrap">
                                 <CustomButton
