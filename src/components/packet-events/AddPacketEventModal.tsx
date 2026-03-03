@@ -10,7 +10,6 @@ import { getPublicEventsById } from "@/api/endpoints/events.ts";
 import { Department } from "@/types/departments.ts";
 import { IEvent } from "@/types/events.ts";
 import { packetEventsApi } from "@/api/endpoints/packet-events";
-import { PaymentFormAdditionalFields } from "./PaymentFormAdditionalFields.tsx";
 import { AddAdditionalFields } from "@/components/department/AddAdditionalFields.tsx";
 
 export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }) => {
@@ -26,15 +25,10 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
     const [active] = useState(true);
 
     // Дополнительные поля на каждом уровне
-    const [departmentFields, setDepartmentFields] = useState<Record<string, { type: string }>>({});
-    const [departmentFieldsValues, setDepartmentFieldsValues] = useState<Record<string, any>>({});
-    
     const [eventFields, setEventFields] = useState<Record<string, { type: string }>>({});
     const [eventCustomFields, setEventCustomFields] = useState<{name:string; type:string; value?: any}[]>([]);
     
     const [category, setCategory] = useState("");
-    const [categoryFields, setCategoryFields] = useState<Record<string, { type: string }>>({});
-    const [categoryFieldsValues, setCategoryFieldsValues] = useState<Record<string, any>>({});
 
     // Данные для селектов
     const [departments, setDepartments] = useState<{ label: string; value: string }[]>([]);
@@ -92,19 +86,6 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
         }
     }, [selectedEvent, eventFields]);
 
-    useEffect(() => {
-        // Загружаем поля категории
-        if (category) {
-            // Здесь нужно будет загрузить поля категории
-            // Временно заглушка
-            setCategoryFields({});
-            setCategoryFieldsValues({});
-        } else {
-            setCategoryFields({});
-            setCategoryFieldsValues({});
-        }
-    }, [category]);
-
     const handleSubmit = async () => {
         if (!email || !department || !selectedEvent) {
             toast.error("Пожалуйста, заполните все обязательные поля");
@@ -125,27 +106,6 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
             // Объединяем все дополнительные поля
             const allAdditionalFields: Record<string, any> = {};
             
-            // Поля департамента
-            Object.entries(departmentFieldsValues).forEach(([key, value]) => {
-                const fieldType = departmentFields[key]?.type || 'text';
-                if (fieldType === 'file' && value && typeof value === 'object' && (value as any).file) {
-                    allAdditionalFields[key] = {
-                        type: 'file',
-                        value: {
-                            name: (value as any).file.name,
-                            size: (value as any).file.size,
-                            type: (value as any).file.type,
-                            url: (value as any).url
-                        }
-                    };
-                } else {
-                    allAdditionalFields[key] = {
-                        type: fieldType,
-                        value: value
-                    };
-                }
-            });
-            
             // Кастомные поля события
             eventCustomFields.forEach((field) => {
                 if (field.type === 'file' && field.value) {
@@ -157,27 +117,6 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                 } else {
                     // Для других типов только type
                     allAdditionalFields[field.name] = { type: field.type };
-                }
-            });
-            
-            // Поля категории
-            Object.entries(categoryFieldsValues).forEach(([key, value]) => {
-                const fieldType = categoryFields[key]?.type || 'text';
-                if (fieldType === 'file' && value && typeof value === 'object' && (value as any).file) {
-                    allAdditionalFields[key] = {
-                        type: 'file',
-                        value: {
-                            name: (value as any).file.name,
-                            size: (value as any).file.size,
-                            type: (value as any).file.type,
-                            url: (value as any).url
-                        }
-                    };
-                } else {
-                    allAdditionalFields[key] = {
-                        type: fieldType,
-                        value: value
-                    };
                 }
             });
 
@@ -202,9 +141,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
             setPriceUsd(0); 
             setCategory(""); 
             setShowInUsd(false);
-            setDepartmentFieldsValues({});
             setEventCustomFields([]);
-            setCategoryFieldsValues({});
         } catch (error) {
             toast.error("Ошибка при создании");
         }
@@ -239,14 +176,6 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                             setSelectedEvent(""); // Reset event on department change
                         }}
                         triggerClassName="bg-white border-[#6B9AB0] h-[45px]"
-                    />
-
-                    {/* Дополнительные поля департамента - всегда под селектом */}
-                    <PaymentFormAdditionalFields
-                        departmentId={department}
-                        values={departmentFieldsValues}
-                        onChange={setDepartmentFieldsValues}
-                        onFieldsLoad={setDepartmentFields}
                     />
 
                     {department && (
