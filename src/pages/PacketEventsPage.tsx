@@ -29,8 +29,24 @@ export const PacketEventsPage: FC = () => {
         { header: "Категория", accessor: "category" },
         { header: "Период с", accessor: "period_from_display" },
         { header: "Период по", accessor: "period_till_display" },
-        { header: "Цена (KZT)", accessor: "price_display" },
-        { header: "Цена (USD)", accessor: "price_usd_display" },
+        { 
+            header: "Цена (KZT)", 
+            accessor: (item: Record<string, any>) => {
+                const priced = item.priced;
+                const price = item.price;
+                return priced ? (price || 0) + " ₸" : "—";
+            }
+        },
+        { 
+            header: "Цена (USD)", 
+            accessor: (item: Record<string, any>) => {
+                const priced = item.priced;
+                const priceUsd = item.price_usd;
+                if (!priced) return "—";
+                if (priceUsd) return priceUsd + " $";
+                return "—";
+            }
+        },
     ];
 
     const loadData = async () => {
