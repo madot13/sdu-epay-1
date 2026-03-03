@@ -6,6 +6,7 @@ import { EnvelopeIcon, UserCircleIcon, CurrencyDollarIcon, TagIcon } from "@hero
 import { toast } from "react-hot-toast";
 import { packetEventsApi } from "@/api/endpoints/packet-events";
 import { IEventRecord } from "@/types/packetevents";
+import { AddAdditionalFields } from "@/components/department/AddAdditionalFields.tsx";
 
 interface Props {
     isOpen: boolean;
@@ -89,7 +90,7 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
     };
 
     return (
-        <CustomModal title="Редактировать тип оплаты" isOpen={isOpen} className={"max-w-md w-full"} onClose={onClose}>
+        <CustomModal title="Редактировать тип платежа" isOpen={isOpen} className={"max-w-md w-full"} onClose={onClose}>
             <div className="flex flex-col gap-[21px]">
                 <CustomInput
                     icon={<EnvelopeIcon className="text-[#6B9AB0]" />}
@@ -102,6 +103,7 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
                     icon={<UserCircleIcon className="text-[#6B9AB0]" />}
                     placeholder="Событие"
                     value={form.title || ""}
+                    onChange={(e) => setForm({...form, title: e.target.value})}
                 />
                 
                 <CustomInput
@@ -119,47 +121,10 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
                             {customFields.length} полей
                         </span>
                     </div>
-                    <div className="space-y-2">
-                        {customFields.map((field, index) => (
-                            <div key={index} className="flex items-center gap-2">
-                                <input
-                                    type="text"
-                                    placeholder="Название поля"
-                                    value={field.name}
-                                    onChange={(e) => {
-                                        const newFields = [...customFields];
-                                        newFields[index].name = e.target.value;
-                                        setCustomFields(newFields);
-                                    }}
-                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
-                                />
-                                <select
-                                    value={field.type}
-                                    onChange={(e) => {
-                                        const newFields = [...customFields];
-                                        newFields[index].type = e.target.value;
-                                        setCustomFields(newFields);
-                                    }}
-                                    className="px-3 py-2 border border-gray-300 rounded-md"
-                                >
-                                    <option value="text">Текст</option>
-                                    <option value="number">Число</option>
-                                    <option value="date">Дата</option>
-                                    <option value="file">Файл</option>
-                                </select>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        const newFields = customFields.filter((_, i) => i !== index);
-                                        setCustomFields(newFields);
-                                    }}
-                                    className="px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
-                                >
-                                    Удалить
-                                </button>
-                            </div>
-                        ))}
-                    </div>
+                    <AddAdditionalFields 
+                        value={customFields} 
+                        onChange={setCustomFields} 
+                    />
                     <div className="flex gap-2">
                         <button
                             type="button"
