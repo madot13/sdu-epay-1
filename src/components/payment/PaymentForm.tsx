@@ -487,7 +487,7 @@ export const PaymentForm: FC = () => {
                 {selectedDepartmentId && (
                     <>
                         {/* Дополнительные поля департамента */}
-                        {selectedDepartmentType === "SELF_PAY" && additionalFields.map((field) => {
+                        {additionalFields.map((field) => {
                             const key = field.name;
 
                             if (field.type === "checkbox") {
