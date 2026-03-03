@@ -81,8 +81,12 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
         try {
             // Подготавливаем additional_fields в правильном формате для бэкенда
             const formattedAdditionalFields: Record<string, any> = {};
+            console.log("additionalFieldsValues:", additionalFieldsValues);
+            console.log("departmentFields:", departmentFields);
+            
             Object.entries(additionalFieldsValues).forEach(([key, value]) => {
                 const fieldType = departmentFields[key]?.type || 'text';
+                console.log(`Processing field ${key} with type ${fieldType}:`, value);
                 
                 if (fieldType === 'file' && value && typeof value === 'object' && value.file) {
                     // Для файлов отправляем информацию о файле
@@ -103,6 +107,8 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                     };
                 }
             });
+            
+            console.log("Formatted additional_fields:", formattedAdditionalFields);
 
             await packetEventsApi.create({
                 event_id: selectedEvent,
