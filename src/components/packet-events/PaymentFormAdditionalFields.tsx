@@ -49,6 +49,11 @@ export const PaymentFormAdditionalFields: FC<PaymentFormAdditionalFieldsProps> =
     }, [departmentId]);
 
     const handleFieldChange = (fieldName: string, fieldType: string, value: any) => {
+        console.log(`PaymentFormAdditionalFields handleFieldChange:`);
+        console.log(`  - fieldName: ${fieldName}`);
+        console.log(`  - fieldType: ${fieldType}`);
+        console.log(`  - value:`, value);
+        
         const newValues = { ...values };
         
         // Конвертируем значение в зависимости от типа поля
@@ -61,10 +66,12 @@ export const PaymentFormAdditionalFields: FC<PaymentFormAdditionalFieldsProps> =
         } else if (fieldType === "file") {
             // Для файлов храним объект с информацией о файле
             newValues[fieldName] = value;
+            console.log(`  - stored file value:`, newValues[fieldName]);
         } else {
             newValues[fieldName] = value;
         }
         
+        console.log(`  - newValues:`, newValues);
         onChange(newValues);
     };
 

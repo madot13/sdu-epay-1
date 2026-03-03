@@ -92,7 +92,10 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                     fieldType = 'file';
                 }
                 
-                console.log(`Processing field ${key} with type ${fieldType}:`, value);
+                console.log(`Processing field ${key}:`);
+                console.log(`  - departmentFields[${key}]:`, departmentFields[key]);
+                console.log(`  - value:`, value);
+                console.log(`  - detected type: ${fieldType}`);
                 
                 if (fieldType === 'file' && value && typeof value === 'object' && value.file) {
                     // Для файлов отправляем информацию о файле
@@ -105,12 +108,14 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                             url: value.url
                         }
                     };
+                    console.log(`  - formatted as file:`, formattedAdditionalFields[key]);
                 } else {
                     // Для других типов полей
                     formattedAdditionalFields[key] = {
                         type: fieldType,
                         value: value
                     };
+                    console.log(`  - formatted as ${fieldType}:`, formattedAdditionalFields[key]);
                 }
             });
             
