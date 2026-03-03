@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { FC, useState, useEffect } from "react";
 import { CustomSelect } from "@/ui/CustomSelect.tsx";
 import { CustomButton } from "@/ui/CustomButton.tsx";
 import { useOrdersStore } from "@/store/useOrdersStore.ts";
@@ -33,6 +33,25 @@ export const OrdersFilters: FC = () => {
         if (!date) return null;
         return date.toISOString().split('T')[0];
     };
+
+    // Auto-search when filters change
+    useEffect(() => {
+        const searchWithFilters = async () => {
+            await fetchOrders({
+                id: orderId ? Number(orderId) : null,
+                type: (type as "KASPI" | "EPAY") || null,
+                status: (status as "PENDING" | "SUCCESS" | "FAILURE") || null,
+                start_date: formatDate(startDate),
+                end_date: formatDate(endDate),
+                page: 0,
+                size: 10,
+            });
+        };
+
+        // Debounce search to avoid too many requests
+        const timeoutId = setTimeout(searchWithFilters, 300);
+        return () => clearTimeout(timeoutId);
+    }, [orderId, type, status, startDate, endDate, fetchOrders]);
 
     const handleSearch = async () => {
         await fetchOrders({
