@@ -8,7 +8,7 @@ export const packetEventsApi = {
     create: (data: CreateEventPayload) => api.post('event-payment-types', data),
     delete: (id: string) => api.delete(`event-payment-types/${id}`),
     update: async (id: string, data: Partial<IEventRecord>) => {
-        const response = await api.put(`event-payment-types/${id}`, data);
+        const response = await api.patch(`event-payment-types/${id}`, data);
         return response.data;
     },
 };
