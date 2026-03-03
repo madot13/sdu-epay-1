@@ -466,6 +466,54 @@ export const PaymentForm: FC = () => {
 
                 {selectedDepartmentId && (
                     <>
+                        {/* Дополнительные поля департамента */}
+                        {selectedDepartmentType === "SELF_PAY" && additionalFields.map((field) => {
+                            const key = field.name;
+
+                            if (field.type === "checkbox") {
+                                return (
+                                    <label key={key} className="flex items-center gap-2 ml-2">
+                                        <input
+                                            type="checkbox"
+                                            checked={Boolean(additionalFieldValues[key])}
+                                            onChange={(e) => handleAdditionalChange(key, e.target.checked)}
+                                        />
+                                        <span>{field.label}</span>
+                                    </label>
+                                );
+                            }else if (field.type === "date") {
+                                return (
+                                    <div key={key} className="ml-2">
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            {field.label}
+                                        </label>
+                                        <input
+                                            type="date"
+                                            value={
+                                                typeof additionalFieldValues[key] === "string" ||
+                                                typeof additionalFieldValues[key] === "number"
+                                                    ? new Date(additionalFieldValues[key])
+                                                    : null
+                                            }
+                                            dateFormat="yy-mm-dd"
+                                            placeholder={field.label}
+                                            onChange={(e) => handleAdditionalChange(key, e.value)}
+                                        />
+                                    </div>
+                                );
+                            }
+
+                            return (
+                                <CustomInput
+                                    key={key}
+                                    icon={<UserIcon className="text-[#6B9AB0]" />}
+                                    type={field.type}
+                                    value={additionalFieldValues[key] || ""}
+                                    onChange={(e) => handleAdditionalChange(key, e.target.value)}
+                                    placeholder={field.label}
+                                />
+                            );
+                        })}
                         {selectedDepartmentType==="EVENT_BASED" ? (
                             <>
                                 <Controller
