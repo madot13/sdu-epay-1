@@ -4,7 +4,6 @@ import {PencilIcon, TrashIcon} from "lucide-react";
 import {CustomTable} from "@/ui/CustomTable.tsx";
 import {EventFilters} from "@/components/event/EventsFilters.tsx";
 import {useEventsStore} from "@/store/useEventsStore.ts";
-import {useDepartmentsStore} from "@/store/useDepartmentsStore.ts";
 import {EditEventsModal} from "@/components/event/EditEventsModal.tsx";
 import {DeleteModal} from "@/ui/DeleteModal.tsx";
 import {toast} from "react-hot-toast";
