@@ -58,10 +58,17 @@ export const EventsPage:FC = () => {
                 bValue = b.department_id || '';
             }
             
-            // Handle numeric values for prices
-            if (sort.column.includes('price') || sort.column.includes('period')) {
-                aValue = Number(aValue) || 0;
-                bValue = Number(bValue) || 0;
+            // Handle numeric values for prices - use original numeric values
+            if (sort.column === 'price_kzt_display') {
+                aValue = a.priced ? (a.price || 0) : -1; // "Произвольная" gets -1
+                bValue = b.priced ? (b.price || 0) : -1;
+            } else if (sort.column === 'price_usd_display') {
+                aValue = a.priced && a.price_usd ? a.price_usd : -1;
+                bValue = b.priced && b.price_usd ? b.price_usd : -1;
+            } else if (sort.column === 'period_from' || sort.column === 'period_till') {
+                // Use original date values for sorting
+                aValue = a[sort.column] ? new Date(a[sort.column]).getTime() : 0;
+                bValue = b[sort.column] ? new Date(b[sort.column]).getTime() : 0;
             }
             
             if (aValue == null) aValue = '';
