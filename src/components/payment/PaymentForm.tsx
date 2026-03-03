@@ -176,12 +176,12 @@ export const PaymentForm: FC = () => {
                 console.log("Payment types for event:", paymentTypes);
                 
                 const categories = paymentTypes
-                    .filter(pt => pt.category && pt.active)
-                    .map(pt => ({
+                    .filter((pt: any) => pt.category && pt.active)
+                    .map((pt: any) => ({
                         label: pt.category || '',
                         value: pt.id || ''
                     }))
-                    .filter(cat => cat.label && cat.value);
+                    .filter((cat: any) => cat.label && cat.value);
                 
                 console.log("Mapped categories:", categories);
                 setPaymentCategoryOptions(categories);
