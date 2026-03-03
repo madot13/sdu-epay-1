@@ -514,7 +514,7 @@ export const PaymentForm: FC = () => {
                                     )}
                                 />
                                 
-                                {/* Селект категорий платежей */}
+                                {/* Селект типа платежа */}
                                 {currentEventId && paymentCategoryOptions.length > 0 && (
                                     <Controller
                                         name="payment_category_id"
@@ -530,7 +530,7 @@ export const PaymentForm: FC = () => {
                                                         setOrderField("payment_category_id", val);
                                                     }}
                                                     triggerClassName={"text-white"}
-                                                    placeholder={t('paymentPage.inputs.selectCategoryPH')}
+                                                    placeholder={t('paymentPage.inputs.selectPaymentTypePH')}
                                                     error={errors.payment_category_id?.message}
                                                 />
                                                 {errors.payment_category_id && (
