@@ -32,4 +32,5 @@ export interface UpdateEventPayload {
     period_from?: string | null;
     period_till?: string | null;
     department_id: string;
+    additional_fields?: Record<string, any>;
 }

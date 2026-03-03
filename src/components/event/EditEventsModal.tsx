@@ -14,6 +14,7 @@ import {CustomSelect} from "@/ui/CustomSelect.tsx";
 import { toast } from "react-hot-toast";
 import {TengeIcon} from "@/assets/TengeIcon.tsx";
 import {CurrencyDollarIcon} from "@heroicons/react/24/outline";
+import { AddAdditionalFields } from "@/components/department/AddAdditionalFields.tsx";
 
 interface EditEventsModalProps {
     isOpen: boolean;
@@ -31,7 +32,8 @@ interface EditEventsModalProps {
         department: {
             id: string;
             name: string;
-        }
+        };
+        additional_fields?: Record<string, any>;
     };
 }
 
@@ -48,6 +50,7 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
             ? null
             : [new Date(eventData.period_from), new Date(eventData.period_till)]
     );
+    const [additionalFields, setAdditionalFields] = useState<{name:string; type:string; value?: any}[]>([]);
     const [errors, setErrors] = useState({
         title: false,
         email: false,
@@ -74,6 +77,18 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
                     ? null
                     : [new Date(eventData.period_from), new Date(eventData.period_till)]
             );
+            
+            // Загружаем дополнительные поля из eventData
+            if (eventData.additional_fields) {
+                const fields = Object.entries(eventData.additional_fields).map(([key, config]) => ({
+                    name: key,
+                    type: config.type || 'text',
+                    value: config.value
+                }));
+                setAdditionalFields(fields);
+            } else {
+                setAdditionalFields([]);
+            }
         }
     }, [isOpen, eventData]);
 
@@ -137,6 +152,21 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
         }
 
         try {
+            // Подготавливаем additional_fields
+            const additional_fields: Record<string, any> = {};
+            additionalFields.forEach((field) => {
+                if (field.type === 'file' && field.value) {
+                    // Для файлов копируем весь объект с value
+                    additional_fields[field.name] = {
+                        type: field.type,
+                        value: field.value
+                    };
+                } else {
+                    // Для других типов только type
+                    additional_fields[field.name] = { type: field.type };
+                }
+            });
+
             await updateEvent(eventData.id, {
                 title,
                 manager_email: email,
@@ -145,6 +175,7 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
                 price: priced ? price : 0,
                 price_usd: priced && priceUsd > 0 ? priceUsd : undefined,
                 without_period: withoutPeriod,
+                additional_fields: Object.keys(additional_fields).length > 0 ? additional_fields : undefined,
                 ...(withoutPeriod
                     ? {}
                     : { period_from: from!, period_till: till! }
@@ -244,6 +275,15 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
                         hideOnRangeSelection
                     />
                 )}
+
+                {/* Дополнительные поля */}
+                <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium text-gray-700">Дополнительные поля</label>
+                    <AddAdditionalFields 
+                        value={additionalFields} 
+                        onChange={setAdditionalFields} 
+                    />
+                </div>
 
                 <CustomButton onClick={handleSubmit} className="w-full">
                     Сохранить
