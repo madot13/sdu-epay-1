@@ -1,13 +1,10 @@
 import { FC, useEffect, useState } from "react";
 import { CustomModal } from "@/ui/CustomModal.tsx";
 import { CustomInput } from "@/ui/CustomInput.tsx";
-import { CustomSelect } from "@/ui/CustomSelect.tsx";
 import { CustomButton } from "@/ui/CustomButton.tsx";
 import { EnvelopeIcon, UserCircleIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
 import { packetEventsApi } from "@/api/endpoints/packet-events";
-import { getPublicEventsById } from "@/api/endpoints/events.ts";
-import { IEvent } from "@/types/events.ts";
 import { IEventRecord } from "@/types/packetevents";
 
 interface Props {
@@ -19,7 +16,6 @@ interface Props {
 
 export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, onSuccess }) => {
     const [form, setForm] = useState<IEventRecord>({} as IEventRecord);
-    const [events, setEvents] = useState<{ label: string; value: string }[]>([]);
     const [withoutFixedPrice, setWithoutFixedPrice] = useState(false);
 
     useEffect(() => {
@@ -73,15 +69,10 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
                     onChange={(e) => setForm({...form, email: e.target.value})}
                 />
                 
-                <CustomSelect
-                    placeholder="Выберите событие"
-                    options={events}
-                    value={form.event_id || ""}
-                    onChange={(value: string) => setForm({...form, event_id: value})}
-                    triggerClassName="bg-white h-[50px] text-black"
-                    dropdownClassName="bg-gray-100"
-                    optionClassName="text-sm"
-                    activeOptionClassName="bg-blue-200"
+                <CustomInput
+                    icon={<UserCircleIcon className="text-[#6B9AB0]" />}
+                    placeholder="Событие"
+                    value={form.title || ""}
                 />
                 
                 <CustomInput
