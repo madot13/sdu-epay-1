@@ -31,10 +31,18 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
     }, []);
 
     const handleSearch = () => {
-        onSearch({
-            category: name || undefined, 
-            department_id: selectedDepartment !== "" ? selectedDepartment : undefined, // ← Бэкенд ожидает 'department_id'
-        });
+        const filters: any = {};
+        
+        if (name && name.trim()) {
+            filters.category = name.trim();
+        }
+        
+        if (selectedDepartment && selectedDepartment.trim()) {
+            filters.department_id = selectedDepartment.trim();
+        }
+        
+        console.log("🔍 Prepared filters:", filters);
+        onSearch(filters);
     };
 
     return (
