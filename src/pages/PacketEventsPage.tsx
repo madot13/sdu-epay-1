@@ -20,6 +20,7 @@ export const PacketEventsPage: FC = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedItem, setSelectedItem] = useState<IEventRecord | null>(null);
+    const [filters, setFilters] = useState<any>({}); // ← Состояние для фильтров
 
     const columns = [
         { header: "Событие", accessor: "event_name" },
@@ -33,7 +34,7 @@ export const PacketEventsPage: FC = () => {
     const loadData = async () => {
         setLoading(true);
         try {
-            const result = await packetEventsApi.getAll({});
+            const result = await packetEventsApi.getAll(filters); // ← Передаем фильтры в API
             if (result && typeof result === 'object' && 'detail' in result) {
                 // Бэкенд еще не готов - показывает ошибку API
                 toast.error(`Ошибка API: ${result.detail}`);
@@ -54,9 +55,11 @@ export const PacketEventsPage: FC = () => {
 
     useEffect(() => {
         loadData();
-    }, [first, rows]);
+    }, [first, rows, filters]); // ← Добавляем filters в зависимости
 
-    const handleSearch = () => {
+    const handleSearch = (params: any) => {
+        setFilters(params); // ← Сохраняем фильтры
+        setFirst(0); // ← Сбрасываем пагинацию при новом поиске
         loadData();
     };
 
