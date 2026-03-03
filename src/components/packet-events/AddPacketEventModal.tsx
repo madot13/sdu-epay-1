@@ -3,7 +3,7 @@ import { CustomModal } from "@/ui/CustomModal.tsx";
 import { CustomInput } from "@/ui/CustomInput.tsx";
 import { CustomSelect } from "@/ui/CustomSelect.tsx";
 import { CustomButton } from "@/ui/CustomButton.tsx";
-import { EnvelopeIcon, UserCircleIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline";
+import { PlusIcon, EnvelopeIcon, UserCircleIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
 import { getDepartments } from "@/api/endpoints/departments.ts";
 import { getPublicEventsById } from "@/api/endpoints/events.ts";
@@ -98,9 +98,10 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
         <>
             <CustomButton 
                 variant="submit" 
-                className="h-[38px] font-bold gap-2 px-4 flex items-center"
+                className="h-[38px] font-bold gap-[5px] px-[20px] flex rounded-[4px]"
                 onClick={() => setIsOpen(true)}
             >
+                <PlusIcon />
                 Добавить
             </CustomButton>
 
