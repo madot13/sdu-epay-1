@@ -11,7 +11,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { PulseLoader } from "react-spinners";
 import {getPublicDepartments} from "@/api/endpoints/departments.ts";
-import {getPublicEventsById} from "@/api/endpoints/events.ts";
+import {getPublicEventsById, getEventById} from "@/api/endpoints/events.ts";
 import {packetEventsApi} from "@/api/endpoints/packet-events";
 import {IEvent} from "@/types/events.ts";
 import {usePaymentStore} from "@/store/usePaymentStore.ts";
@@ -81,6 +81,10 @@ export const PaymentForm: FC = () => {
     const [departments, setDepartments] = useState<any[]>([]); // store all data
     const [additionalFields, setAdditionalFields] = useState<any[]>([]);
     const [additionalFieldValues, setAdditionalFieldValues] = useState<Record<string, string | boolean>>({});
+    const [eventAdditionalFields, setEventAdditionalFields] = useState<any[]>([]);
+    const [eventAdditionalFieldValues, setEventAdditionalFieldValues] = useState<Record<string, string | boolean>>({});
+    const [paymentCategoryAdditionalFields, setPaymentCategoryAdditionalFields] = useState<any[]>([]);
+    const [paymentCategoryAdditionalFieldValues, setPaymentCategoryAdditionalFieldValues] = useState<Record<string, string | boolean>>({});
     const [selectedDepartmentType, setSelectedDepartmentType] = useState<DepartmentType | null>(null);
     const [selectedEventPriced, setSelectedEventPriced] = useState<boolean | null>(null);
     const [selectedEventPriceUsd, setSelectedEventPriceUsd] = useState<number | null>(null);
@@ -173,20 +177,37 @@ export const PaymentForm: FC = () => {
                 
                 // Обрабатываем ответ API - может быть массив или объект с data
                 const paymentTypes = Array.isArray(response) ? response : (response as any).data || [];
-                console.log("Payment types for event:", paymentTypes);
                 
-                const categories = paymentTypes
-                    .filter((pt: any) => pt.category && pt.active)
-                    .map((pt: any) => ({
-                        label: pt.category || '',
-                        value: pt.id || ''
-                    }))
-                    .filter((cat: any) => cat.label && cat.value);
+                // Загружаем дополнительные поля события
+                const selectedEvent = eventOptions.find(opt => opt.value === currentEventId);
+                if (selectedEvent) {
+                    // Получаем данные о событии из API
+                    try {
+                        const eventData = await getEventById(currentEventId);
+                        if (eventData.additional_fields) {
+                            const eventFields = Object.entries(eventData.additional_fields).map(([name, config]: [string, any]) => ({
+                                name,
+                                type: config.type,
+                                label: name
+                            }));
+                            setEventAdditionalFields(eventFields);
+                        }
+                    } catch (error) {
+                        console.error("Error fetching event additional fields:", error);
+                    }
+                }
                 
-                console.log("Mapped categories:", categories);
-                setPaymentCategoryOptions(categories);
+                // Загружаем дополнительные полей для каждой категории платежа
+                const paymentCategories = paymentTypes.map((pt: any) => ({
+                    label: pt.category || `Тип платежа ${pt.id}`,
+                    value: pt.id,
+                    additional_fields: pt.additional_fields
+                }));
+                
+                setPaymentCategoryOptions(paymentCategories);
+                console.log("Payment categories with additional fields:", paymentCategories);
             } catch (error) {
-                console.error("Failed to fetch payment categories:", error);
+                console.error("Error fetching payment categories:", error);
                 setPaymentCategoryOptions([]);
             }
         };
@@ -561,6 +582,35 @@ export const PaymentForm: FC = () => {
                                     )}
                                 />
                                 
+                                {/* Дополнительные поля события */}
+                                {eventAdditionalFields.length > 0 && (
+                                    <div className="flex flex-col gap-2">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-sm font-medium text-gray-700">Дополнительные поля события</label>
+                                            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                                {eventAdditionalFields.length} полей
+                                            </span>
+                                        </div>
+                                        {eventAdditionalFields.map((field) => {
+                                            const key = field.name;
+                                            return (
+                                                <CustomInput
+                                                    key={key}
+                                                    icon={<UserIcon className="text-[#6B9AB0]" />}
+                                                    type={field.type}
+                                                    value={eventAdditionalFieldValues[key] || ""}
+                                                    onChange={(e) => {
+                                                        const newValues = {...eventAdditionalFieldValues};
+                                                        newValues[key] = e.target.value;
+                                                        setEventAdditionalFieldValues(newValues);
+                                                    }}
+                                                    placeholder={field.label}
+                                                />
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                                
                                 {/* Селект типа платежа */}
                                 {currentEventId && paymentCategoryOptions.length > 0 && (
                                     <Controller
@@ -575,6 +625,19 @@ export const PaymentForm: FC = () => {
                                                     onChange={(val) => {
                                                         field.onChange(val);
                                                         setOrderField("payment_category_id", val);
+                                                        
+                                                        // Загружаем дополнительные поля категории платежа
+                                                        const selectedCategory = paymentCategoryOptions.find(opt => opt.value === val);
+                                                        if (selectedCategory && (selectedCategory as any).additional_fields) {
+                                                            const categoryFields = Object.entries((selectedCategory as any).additional_fields).map(([name, config]: [string, any]) => ({
+                                                                name,
+                                                                type: config.type,
+                                                                label: name
+                                                            }));
+                                                            setPaymentCategoryAdditionalFields(categoryFields);
+                                                        } else {
+                                                            setPaymentCategoryAdditionalFields([]);
+                                                        }
                                                     }}
                                                     triggerClassName={"text-white"}
                                                     placeholder={t('paymentPage.inputs.selectPaymentTypePH')}
@@ -582,6 +645,35 @@ export const PaymentForm: FC = () => {
                                                 />
                                                 {errors.payment_category_id && (
                                                     <p className="text-red-500 text-sm -mt-2 ml-2">{errors.payment_category_id.message}</p>
+                                                )}
+                                                
+                                                {/* Дополнительные поля категории платежа */}
+                                                {paymentCategoryAdditionalFields.length > 0 && (
+                                                    <div className="flex flex-col gap-2 mt-4">
+                                                        <div className="flex items-center justify-between">
+                                                            <label className="text-sm font-medium text-gray-700">Дополнительные поля типа платежа</label>
+                                                            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                                                {paymentCategoryAdditionalFields.length} полей
+                                                            </span>
+                                                        </div>
+                                                        {paymentCategoryAdditionalFields.map((field) => {
+                                                            const key = field.name;
+                                                            return (
+                                                                <CustomInput
+                                                                    key={key}
+                                                                    icon={<UserIcon className="text-[#6B9AB0]" />}
+                                                                    type={field.type}
+                                                                    value={paymentCategoryAdditionalFieldValues[key] || ""}
+                                                                    onChange={(e) => {
+                                                                        const newValues = {...paymentCategoryAdditionalFieldValues};
+                                                                        newValues[key] = e.target.value;
+                                                                        setPaymentCategoryAdditionalFieldValues(newValues);
+                                                                    }}
+                                                                    placeholder={field.label}
+                                                                />
+                                                            );
+                                                        })}
+                                                    </div>
                                                 )}
                                             </>
                                         )}
