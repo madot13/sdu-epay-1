@@ -511,7 +511,7 @@ export const PaymentForm: FC = () => {
                                 />
                                 
                                 {/* Селект категорий платежей */}
-                                {watch("event_id") && paymentCategoryOptions.length > 0 && (
+                                {currentEventId && paymentCategoryOptions.length > 0 && (
                                     <Controller
                                         name="payment_category_id"
                                         control={control}
