@@ -24,6 +24,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
     const [category, setCategory] = useState("");
     const [active] = useState(true); // ← Убрали setActive, оставили по умолчанию true
     const [additionalFieldsValues, setAdditionalFieldsValues] = useState<Record<string, any>>({});
+    const [departmentFields, setDepartmentFields] = useState<Record<string, { type: string }>>({});
 
     const [departments, setDepartments] = useState<{ label: string; value: string }[]>([]);
     const [events, setEvents] = useState<{ label: string; value: string }[]>([]);
@@ -78,6 +79,31 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
         }
 
         try {
+            // Подготавливаем additional_fields в правильном формате для бэкенда
+            const formattedAdditionalFields: Record<string, any> = {};
+            Object.entries(additionalFieldsValues).forEach(([key, value]) => {
+                const fieldType = departmentFields[key]?.type || 'text';
+                
+                if (fieldType === 'file' && value && typeof value === 'object' && value.file) {
+                    // Для файлов отправляем информацию о файле
+                    formattedAdditionalFields[key] = {
+                        type: 'file',
+                        value: {
+                            name: value.file.name,
+                            size: value.file.size,
+                            type: value.file.type,
+                            url: value.url
+                        }
+                    };
+                } else {
+                    // Для других типов полей
+                    formattedAdditionalFields[key] = {
+                        type: fieldType,
+                        value: value
+                    };
+                }
+            });
+
             await packetEventsApi.create({
                 event_id: selectedEvent,
                 email: email,
@@ -85,7 +111,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                 price: price,
                 price_usd: priceUsd,
                 active: active,
-                additional_fields: additionalFieldsValues // ← Добавляем дополнительные поля
+                additional_fields: formattedAdditionalFields
             });
 
             toast.success("Запись успешно добавлена");
@@ -151,6 +177,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                         departmentId={department}
                         values={additionalFieldsValues}
                         onChange={setAdditionalFieldsValues}
+                        onFieldsLoad={setDepartmentFields}
                     />
 
                     <div className="grid grid-cols-2 gap-4">

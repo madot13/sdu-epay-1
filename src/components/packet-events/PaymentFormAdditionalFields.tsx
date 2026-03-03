@@ -8,12 +8,14 @@ interface PaymentFormAdditionalFieldsProps {
     departmentId: string;
     values: Record<string, any>;
     onChange: (values: Record<string, any>) => void;
+    onFieldsLoad?: (fields: Record<string, { type: string }>) => void;
 }
 
 export const PaymentFormAdditionalFields: FC<PaymentFormAdditionalFieldsProps> = ({
     departmentId,
     values,
-    onChange
+    onChange,
+    onFieldsLoad
 }) => {
     const [additionalFields, setAdditionalFields] = useState<Record<string, { type: string }>>({});
     const [loading, setLoading] = useState(true);
@@ -30,10 +32,13 @@ export const PaymentFormAdditionalFields: FC<PaymentFormAdditionalFieldsProps> =
                 // Получаем департамент по ID с дополнительными полями
                 const department = await getDepartmentById(departmentId);
                 console.log("Department data:", department); // ← Логируем для отладки
-                setAdditionalFields(department?.additional_fields || {});
+                const fields = department?.additional_fields || {};
+                setAdditionalFields(fields);
+                onFieldsLoad?.(fields); // Передаем типы полей наверх
             } catch (error) {
                 console.error("Failed to fetch department fields:", error);
                 setAdditionalFields({});
+                onFieldsLoad?.({});
             } finally {
                 setLoading(false);
             }
