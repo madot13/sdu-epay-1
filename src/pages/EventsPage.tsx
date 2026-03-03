@@ -4,6 +4,7 @@ import {PencilIcon, TrashIcon} from "lucide-react";
 import {CustomTable} from "@/ui/CustomTable.tsx";
 import {EventFilters} from "@/components/event/EventsFilters.tsx";
 import {useEventsStore} from "@/store/useEventsStore.ts";
+import {useDepartmentsStore} from "@/store/useDepartmentsStore.ts";
 import {EditEventsModal} from "@/components/event/EditEventsModal.tsx";
 import {DeleteModal} from "@/ui/DeleteModal.tsx";
 import {toast} from "react-hot-toast";
@@ -11,6 +12,7 @@ import {Paginator} from "primereact/paginator";
 
 export const EventsPage:FC = () => {
     const {events, fetchEvents, deleteEvent, total} = useEventsStore();
+    const {departments, fetchDepartments} = useDepartmentsStore();
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
@@ -21,7 +23,14 @@ export const EventsPage:FC = () => {
 
     const columns = [
         { header: "Событие", accessor: "title", sortable: true },
-        { header: "Департамент", accessor: "department", sortable: true },
+        { 
+            header: "Департамент", 
+            accessor: (row: any) => {
+                const dept = departments.find(d => d.id === row.department_id);
+                return dept?.name || 'Неизвестный департамент';
+            }, 
+            sortable: true 
+        },
         { header: "Email", accessor: "manager_email", sortable: true },
         { header: "Период с", accessor: "period_from", sortable: true },
         { header: "Период по", accessor: "period_till", sortable: true },
@@ -31,17 +40,22 @@ export const EventsPage:FC = () => {
 
     useEffect(() => {
         fetchEvents();
+        fetchDepartments();
     }, []);
 
     // Update sorted events when original events or sort changes
     useEffect(() => {
-        const eventsWithDisplay = events.map((event: any) => ({
-            ...event,
-            price_kzt_display: event.priced ? `${event.price} ₸` : "Произвольная",
-            price_usd_display: event.priced
-                ? (event.price_usd ? `$${event.price_usd}` : "—")
-                : "Произвольная"
-        }));
+        const eventsWithDisplay = events.map((event: any) => {
+            const dept = departments.find(d => d.id === event.department_id);
+            return {
+                ...event,
+                department_name: dept?.name || 'Неизвестный департамент',
+                price_kzt_display: event.priced ? `${event.price} ₸` : "Произвольная",
+                price_usd_display: event.priced
+                    ? (event.price_usd ? `$${event.price_usd}` : "—")
+                    : "Произвольная"
+            };
+        });
 
         if (!sort) {
             setSortedEvents(eventsWithDisplay);
@@ -49,13 +63,16 @@ export const EventsPage:FC = () => {
         }
 
         const sorted = [...eventsWithDisplay].sort((a, b) => {
-            let aValue: any = a[sort.column as keyof typeof eventsWithDisplay[0]];
-            let bValue: any = b[sort.column as keyof typeof eventsWithDisplay[0]];
+            let aValue: any;
+            let bValue: any;
             
-            // Handle department object
-            if (sort.column === 'department') {
-                aValue = a.department_id || '';
-                bValue = b.department_id || '';
+            // Handle department with custom accessor
+            if (sort.column === 'custom-1') { // Index of department column
+                aValue = a.department_name || '';
+                bValue = b.department_name || '';
+            } else {
+                aValue = a[sort.column as keyof typeof eventsWithDisplay[0]];
+                bValue = b[sort.column as keyof typeof eventsWithDisplay[0]];
             }
             
             // Handle numeric values for prices - use original numeric values
@@ -80,7 +97,7 @@ export const EventsPage:FC = () => {
         });
         
         setSortedEvents(sorted);
-    }, [events, sort]);
+    }, [events, departments, sort]);
 
     const handleSort = (column: string, direction: 'asc' | 'desc') => {
         const newSort = { column, direction };
