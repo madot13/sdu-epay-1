@@ -2,6 +2,7 @@ import { FC, useEffect, useState } from "react";
 import { CustomInput } from "@/ui/CustomInput.tsx";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { getDepartmentById } from "@/api/endpoints/departments.ts";
+import { FileUpload } from "@/ui/FileUpload.tsx";
 
 interface PaymentFormAdditionalFieldsProps {
     departmentId: string;
@@ -50,6 +51,9 @@ export const PaymentFormAdditionalFields: FC<PaymentFormAdditionalFieldsProps> =
         } else if (fieldType === "date") {
             newValues[fieldName] = value;
         } else if (fieldType === "checkbox") {
+            newValues[fieldName] = value;
+        } else if (fieldType === "file") {
+            // Для файлов храним объект с информацией о файле
             newValues[fieldName] = value;
         } else {
             newValues[fieldName] = value;
@@ -111,6 +115,20 @@ export const PaymentFormAdditionalFields: FC<PaymentFormAdditionalFieldsProps> =
                         <label htmlFor={fieldName} className="text-sm text-gray-700">
                             {fieldName}
                         </label>
+                    </div>
+                );
+            
+            case "file":
+                return (
+                    <div key={fieldName} className="flex flex-col gap-[10px]">
+                        <label className="text-sm font-medium">{fieldName}</label>
+                        <FileUpload
+                            value={currentValue?.url || null}
+                            onChange={(file: File | null, url?: string) => handleFieldChange(fieldName, fieldConfig.type, { file, url })}
+                            placeholder={`Выберите файл для ${fieldName}`}
+                            accept="*/*"
+                            maxSize={10}
+                        />
                     </div>
                 );
             

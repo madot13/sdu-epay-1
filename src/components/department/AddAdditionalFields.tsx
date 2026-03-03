@@ -4,7 +4,7 @@ import { CustomButton } from "@/ui/CustomButton.tsx";
 import { CustomInput } from "@/ui/CustomInput.tsx";
 import {InformationCircleIcon} from "@heroicons/react/24/outline";
 
-const fieldTypes = ["text", "number", "date", "checkbox"];
+const fieldTypes = ["text", "number", "date", "checkbox", "file"];
 
 interface AddAdditionalFieldsProps {
     value: { name: string; type: string }[];
