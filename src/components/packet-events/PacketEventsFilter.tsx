@@ -32,7 +32,7 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
 
     const handleSearch = () => {
         onSearch({
-            title: name || undefined, 
+            category: name || undefined, 
             department_id: selectedDepartment !== "" ? selectedDepartment : undefined, // ← Бэкенд ожидает 'department_id'
         });
     };
