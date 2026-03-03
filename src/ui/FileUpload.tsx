@@ -1,5 +1,5 @@
 import { FC, useRef, useState } from "react";
-import { CloudArrowUpIcon } from "@heroicons/react/24/outline";
+import { CloudArrowUpIcon, XMarkIcon } from "@heroicons/react/24/outline";
 
 interface FileUploadProps {
     onChange: (file: File | null, url?: string) => void;
@@ -89,36 +89,50 @@ export const FileUpload: FC<FileUploadProps> = ({
             
             {!fileName ? (
                 <div
-                    className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors ${
+                    className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-all ${
                         isDragging
-                            ? "border-blue-500 bg-blue-50"
-                            : "border-gray-300 hover:border-gray-400"
+                            ? "border-[#6B9AB0] bg-[#F0F7FA]"
+                            : "border-gray-300 hover:border-[#6B9AB0] hover:bg-gray-50"
                     } ${uploading ? "opacity-50 cursor-not-allowed" : ""}`}
                     onDrop={handleDrop}
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
                     onClick={!uploading ? handleClick : undefined}
                 >
-                    <CloudArrowUpIcon className="mx-auto h-8 w-8 text-gray-400" />
-                    <p className="mt-2 text-sm text-gray-600">
+                    <CloudArrowUpIcon className="mx-auto h-12 w-12 text-[#6B9AB0]" />
+                    <p className="mt-3 text-sm font-medium text-gray-700">
                         {uploading ? "Загрузка..." : placeholder}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-500 mt-1">
                         Макс. размер: {maxSize}MB
+                    </p>
+                    <p className="text-xs text-[#6B9AB0] mt-2">
+                        Нажмите или перетащите файл сюда
                     </p>
                 </div>
             ) : (
-                <div className="border rounded-lg p-3 flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                        <CloudArrowUpIcon className="h-5 w-5 text-green-500" />
-                        <span className="text-sm text-gray-700 truncate">{fileName}</span>
+                <div className="border border-[#6B9AB0] rounded-lg p-4 bg-white">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                            <div className="flex-shrink-0">
+                                <CloudArrowUpIcon className="h-6 w-6 text-green-500" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-900 truncate">
+                                    {fileName}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                    Файл загружен
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={handleRemove}
+                            className="flex-shrink-0 p-1 text-red-500 hover:text-red-700 transition-colors"
+                        >
+                            <XMarkIcon className="h-5 w-5" />
+                        </button>
                     </div>
-                    <button
-                        onClick={handleRemove}
-                        className="text-red-500 hover:text-red-700 text-sm"
-                    >
-                        Удалить
-                    </button>
                 </div>
             )}
         </div>
