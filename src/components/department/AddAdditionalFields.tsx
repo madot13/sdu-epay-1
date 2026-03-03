@@ -7,8 +7,8 @@ import {InformationCircleIcon} from "@heroicons/react/24/outline";
 const fieldTypes = ["text", "number", "date", "checkbox", "file"];
 
 interface AddAdditionalFieldsProps {
-    value: { name: string; type: string }[];
-    onChange: (fields: { name: string; type: string }[]) => void;
+    value: { name: string; type: string; value?: any }[];
+    onChange: (fields: { name: string; type: string; value?: any }[]) => void;
 }
 
 export const AddAdditionalFields: FC<AddAdditionalFieldsProps> = ({ value, onChange }) => {
@@ -19,6 +19,22 @@ export const AddAdditionalFields: FC<AddAdditionalFieldsProps> = ({ value, onCha
     const updateField = (index: number, key: "name" | "type", val: string) => {
         const updated = [...value];
         updated[index][key] = val;
+        
+        // Если тип file, добавляем обязательное value поле
+        if (key === "type" && val === "file") {
+            updated[index].value = {
+                url: "",
+                key: "",
+                bucket: "",
+                filename: "",
+                content_type: "",
+                size: 0
+            };
+        } else if (key === "type" && val !== "file") {
+            // Если меняем с file на другой тип, убираем value
+            delete updated[index].value;
+        }
+        
         onChange(updated);
     };
 
