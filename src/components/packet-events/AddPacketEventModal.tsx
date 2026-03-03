@@ -26,7 +26,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
 
     // Дополнительные поля на каждом уровне
     const [eventFields, setEventFields] = useState<Record<string, { type: string }>>({});
-    const [eventCustomFields, setEventCustomFields] = useState<{name:string; type:string; value?: any}[]>([]);
+    const [paymentTypeCustomFields, setPaymentTypeCustomFields] = useState<{name:string; type:string; value?: any}[]>([]);
     
     const [category, setCategory] = useState("");
 
@@ -106,8 +106,8 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
             // Объединяем все дополнительные поля
             const allAdditionalFields: Record<string, any> = {};
             
-            // Кастомные поля события
-            eventCustomFields.forEach((field) => {
+            // Кастомные поля типа платежа
+            paymentTypeCustomFields.forEach((field) => {
                 if (field.type === 'file' && field.value) {
                     // Для файлов копируем весь объект с value
                     allAdditionalFields[field.name] = {
@@ -141,7 +141,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
             setPriceUsd(0); 
             setCategory(""); 
             setShowInUsd(false);
-            setEventCustomFields([]);
+            setPaymentTypeCustomFields([]);
         } catch (error) {
             toast.error("Ошибка при создании");
         }
@@ -188,23 +188,28 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                         />
                     )}
 
-                    {/* Дополнительные поля события - всегда под селектом события */}
+                    {/* Дополнительные поля типа платежа */}
                     {selectedEvent && (
                         <>
-                            <div className="flex flex-col gap-2">
-                                <label className="text-sm font-medium text-gray-700">Дополнительные поля события</label>
-                                <AddAdditionalFields 
-                                    value={eventCustomFields} 
-                                    onChange={setEventCustomFields} 
-                                />
-                            </div>
-
                             <CustomInput 
                                 placeholder="Категория платежа" 
                                 value={category} 
                                 onChange={(e) => setCategory(e.target.value)}
                                 icon={<UserCircleIcon className="text-[#6B9AB0]" />} 
                             />
+                            
+                            <div className="flex flex-col gap-2">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-sm font-medium text-gray-700">Дополнительные поля типа платежа</label>
+                                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                        {paymentTypeCustomFields.length} полей
+                                    </span>
+                                </div>
+                                <AddAdditionalFields 
+                                    value={paymentTypeCustomFields} 
+                                    onChange={setPaymentTypeCustomFields} 
+                                />
+                            </div>
                         </>
                     )}
 
