@@ -33,6 +33,7 @@ export const PaymentFormAdditionalFields: FC<PaymentFormAdditionalFieldsProps> =
                 const department = await getDepartmentById(departmentId);
                 console.log("Department data:", department); // ← Логируем для отладки
                 const fields = department?.additional_fields || {};
+                console.log("Raw fields from API:", fields);
                 setAdditionalFields(fields);
                 onFieldsLoad?.(fields); // Передаем типы полей наверх
             } catch (error) {

@@ -85,7 +85,13 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
             console.log("departmentFields:", departmentFields);
             
             Object.entries(additionalFieldsValues).forEach(([key, value]) => {
-                const fieldType = departmentFields[key]?.type || 'text';
+                let fieldType = departmentFields[key]?.type || 'text';
+                
+                // Fallback: если тип не определен в departmentFields, определяем по значению
+                if (!departmentFields[key] && value && typeof value === 'object' && value.file) {
+                    fieldType = 'file';
+                }
+                
                 console.log(`Processing field ${key} with type ${fieldType}:`, value);
                 
                 if (fieldType === 'file' && value && typeof value === 'object' && value.file) {
