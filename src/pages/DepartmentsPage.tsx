@@ -16,9 +16,10 @@ export const DepartmentsPage:FC = () => {
     const [selectedDepartment, setSelectedDepartment] = useState<any | null>(null);
     const [first, setFirst] = useState(0);
     const [rows, setRows] = useState(10);
+    const [sort, setSort] = useState<{ column: string; direction: 'asc' | 'desc' } | null>(null);
 
     const columns = [
-        {header: "Департамент", accessor: "name"}
+        {header: "Департамент", accessor: "name", sortable: true}
     ]
 
     useEffect(() => {
@@ -33,6 +34,23 @@ export const DepartmentsPage:FC = () => {
             page: event.first / event.rows,
             size: event.rows,
         });
+    };
+
+    const handleSort = (column: string, direction: 'asc' | 'desc') => {
+        const newSort = { column, direction };
+        setSort(newSort);
+        
+        // Client-side sorting
+        const sortedDepartments = [...departments].sort((a, b) => {
+            const aValue = a[column as keyof typeof departments[0]] || '';
+            const bValue = b[column as keyof typeof departments[0]] || '';
+            
+            if (aValue < bValue) return direction === 'asc' ? -1 : 1;
+            if (aValue > bValue) return direction === 'asc' ? 1 : -1;
+            return 0;
+        });
+        
+        console.log('Sorted departments:', sortedDepartments);
     };
 
     const handleEditClick = (dep: any) => {
@@ -79,6 +97,8 @@ export const DepartmentsPage:FC = () => {
                     <CustomTable
                         columns={columns}
                         data={departments}
+                        onSort={handleSort}
+                        currentSort={sort || undefined}
                         actions={(row) => (
                             <div className="flex gap-2">
                                 <button onClick={() => handleEditClick(row)} className="text-blue-600 hover:text-blue-800">

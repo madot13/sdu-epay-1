@@ -16,22 +16,55 @@ export const EventsPage:FC = () => {
     const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
     const [first, setFirst] = useState(0);
     const [rows, setRows] = useState(10);
+    const [sort, setSort] = useState<{ column: string; direction: 'asc' | 'desc' } | null>(null);
 
 
     const columns = [
-        { header: "Событие", accessor: "title" },
-        { header: "Департамент", accessor: "department" },
-        { header: "Email", accessor: "manager_email" },
-        { header: "Период с", accessor: "period_from" },
-        { header: "Период по", accessor: "period_till" },
-        { header: "Цена KZT", accessor: "price_kzt_display" },
-        { header: "Цена USD", accessor: "price_usd_display" },
+        { header: "Событие", accessor: "title", sortable: true },
+        { header: "Департамент", accessor: "department", sortable: true },
+        { header: "Email", accessor: "manager_email", sortable: true },
+        { header: "Период с", accessor: "period_from", sortable: true },
+        { header: "Период по", accessor: "period_till", sortable: true },
+        { header: "Цена KZT", accessor: "price_kzt_display", sortable: true },
+        { header: "Цена USD", accessor: "price_usd_display", sortable: true },
     ];
 
 
     useEffect(() => {
         fetchEvents();
     }, []);
+
+    const handleSort = (column: string, direction: 'asc' | 'desc') => {
+        const newSort = { column, direction };
+        setSort(newSort);
+        
+        // Client-side sorting
+        const sortedEvents = [...events].sort((a, b) => {
+            let aValue: any = a[column as keyof typeof events[0]];
+            let bValue: any = b[column as keyof typeof events[0]];
+            
+            // Handle department object
+            if (column === 'department') {
+                aValue = a.department_id || '';
+                bValue = b.department_id || '';
+            }
+            
+            // Handle numeric values for prices
+            if (column.includes('price') || column.includes('period')) {
+                aValue = Number(aValue) || 0;
+                bValue = Number(bValue) || 0;
+            }
+            
+            if (aValue == null) aValue = '';
+            if (bValue == null) bValue = '';
+            
+            if (aValue < bValue) return direction === 'asc' ? -1 : 1;
+            if (aValue > bValue) return direction === 'asc' ? 1 : -1;
+            return 0;
+        });
+        
+        console.log('Sorted events:', sortedEvents);
+    };
 
 
     const onPageChange = async (event: any) => {
@@ -96,6 +129,8 @@ export const EventsPage:FC = () => {
                             ? (event.price_usd ? `$${event.price_usd}` : "—")
                             : "Произвольная"
                     }))}
+                    onSort={handleSort}
+                    currentSort={sort || undefined}
                     actions={(row) => (
                         <div className="flex gap-2">
                             <button onClick={() => handleEditClick(row)} className="text-blue-600 hover:text-blue-800">
