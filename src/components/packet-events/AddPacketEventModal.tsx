@@ -237,8 +237,8 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                 Добавить
             </CustomButton>
 
-            <CustomModal title="Добавить тип оплаты" isOpen={isOpen} onClose={() => setIsOpen(false)} className="max-w-md w-full">
-                <div className="flex flex-col gap-5">
+            <CustomModal title="Добавить тип оплаты" isOpen={isOpen} onClose={() => setIsOpen(false)} className="max-w-2xl w-full max-h-[90vh] overflow-hidden">
+                <div className="flex flex-col gap-5 max-h-[calc(90vh-120px)] overflow-y-auto pr-2">
                     <CustomInput 
                         placeholder="Email ответственного" 
                         value={email} 
@@ -297,7 +297,12 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
 
                     {/* Дополнительные поля категории платежа */}
                     <div className="flex flex-col gap-2">
-                        <label className="text-sm font-medium text-gray-700">Дополнительные поля типа оплаты</label>
+                        <div className="flex items-center justify-between">
+                            <label className="text-sm font-medium text-gray-700">Дополнительные поля типа оплаты</label>
+                            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                {paymentCustomFields.length} полей
+                            </span>
+                        </div>
                         <AddAdditionalFields 
                             value={paymentCustomFields} 
                             onChange={setPaymentCustomFields} 
@@ -335,9 +340,12 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                             icon={<CurrencyDollarIcon className="text-[#6B9AB0]" />} 
                         />
                     )}
-                    <CustomButton onClick={handleSubmit} className="w-full mt-2">
-                        Создать запись
-                    </CustomButton>
+                    
+                    <div className="sticky bottom-0 bg-white border-t border-gray-200 pt-4 mt-4">
+                        <CustomButton onClick={handleSubmit} className="w-full">
+                            Создать запись
+                        </CustomButton>
+                    </div>
                 </div>
             </CustomModal>
         </>
