@@ -5,7 +5,7 @@ interface FileUploadProps {
     onChange: (file: File | null, url?: string) => void;
     placeholder?: string;
     accept?: string;
-    maxSize?: number; // in MB
+    maxSize?: number;
 }
 
 export const FileUpload: FC<FileUploadProps> = ({
@@ -20,7 +20,6 @@ export const FileUpload: FC<FileUploadProps> = ({
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleFileSelect = async (file: File) => {
-        // Check file size
         if (file.size > maxSize * 1024 * 1024) {
             alert(`Файл слишком большой. Максимальный размер: ${maxSize}MB`);
             return;
@@ -30,8 +29,6 @@ export const FileUpload: FC<FileUploadProps> = ({
         setUploading(true);
 
         try {
-            // Здесь будет загрузка в MiniO
-            // Временно создаем локальный URL
             const url = URL.createObjectURL(file);
             onChange(file, url);
         } catch (error) {

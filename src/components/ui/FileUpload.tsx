@@ -2,7 +2,6 @@ import { FC, useRef, useState } from "react";
 import { CloudArrowUpIcon } from "@heroicons/react/24/outline";
 
 interface FileUploadProps {
-    value?: string | null;
     onChange: (file: File | null, url?: string) => void;
     placeholder?: string;
     accept?: string;
@@ -10,7 +9,6 @@ interface FileUploadProps {
 }
 
 export const FileUpload: FC<FileUploadProps> = ({
-    value,
     onChange,
     placeholder = "Выберите файл",
     accept = "*/*",
