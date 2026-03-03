@@ -126,6 +126,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                 category: category || undefined,
                 price: withoutFixedPrice ? 0 : price,
                 price_usd: withoutFixedPrice ? 0 : (priceUsd > 0 ? priceUsd : undefined),
+                priced: !withoutFixedPrice,
                 active: active,
                 additional_fields: Object.keys(allAdditionalFields).length > 0 ? allAdditionalFields : undefined
             });

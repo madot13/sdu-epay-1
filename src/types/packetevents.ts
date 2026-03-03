@@ -10,6 +10,7 @@ export interface IEventRecord {
     category?: string;
     price?: number;
     price_usd?: number;
+    priced?: boolean;
     active?: boolean;
     event_active?: boolean; // API может возвращать event_active
     period_from?: string;
