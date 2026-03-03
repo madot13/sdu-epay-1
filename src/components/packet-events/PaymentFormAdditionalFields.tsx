@@ -123,7 +123,6 @@ export const PaymentFormAdditionalFields: FC<PaymentFormAdditionalFieldsProps> =
                     <div key={fieldName} className="flex flex-col gap-[10px]">
                         <label className="text-sm font-medium">{fieldName}</label>
                         <FileUpload
-                            value={currentValue?.url || null}
                             onChange={(file: File | null, url?: string) => handleFieldChange(fieldName, fieldConfig.type, { file, url })}
                             placeholder={`Выберите файл для ${fieldName}`}
                             accept="*/*"
