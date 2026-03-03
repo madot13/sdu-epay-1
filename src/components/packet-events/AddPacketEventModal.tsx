@@ -266,27 +266,25 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                         triggerClassName="bg-white border-[#6B9AB0] h-[45px]"
                     />
 
-                    {/* Дополнительные поля департамента */}
-                    {department && (
-                        <>
-                            <PaymentFormAdditionalFields
-                                departmentId={department}
-                                values={departmentFieldsValues}
-                                onChange={setDepartmentFieldsValues}
-                                onFieldsLoad={setDepartmentFields}
-                            />
+                    {/* Дополнительные поля департамента - всегда под селектом */}
+                    <PaymentFormAdditionalFields
+                        departmentId={department}
+                        values={departmentFieldsValues}
+                        onChange={setDepartmentFieldsValues}
+                        onFieldsLoad={setDepartmentFields}
+                    />
 
-                            <CustomSelect 
-                                placeholder="Выберите событие"
-                                options={events}
-                                value={selectedEvent}
-                                onChange={setSelectedEvent}
-                                triggerClassName="bg-white border-[#6B9AB0] h-[45px]"
-                            />
-                        </>
+                    {department && (
+                        <CustomSelect 
+                            placeholder="Выберите событие"
+                            options={events}
+                            value={selectedEvent}
+                            onChange={setSelectedEvent}
+                            triggerClassName="bg-white border-[#6B9AB0] h-[45px]"
+                        />
                     )}
 
-                    {/* Дополнительные поля события */}
+                    {/* Дополнительные поля события - всегда под селектом события */}
                     {selectedEvent && (
                         <>
                             <div className="flex flex-col gap-2">
