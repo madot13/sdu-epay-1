@@ -62,20 +62,20 @@ export const OrdersPage: FC = () => {
             let aValue: any = a[sort.column as keyof typeof ordersWithDisplay[0]];
             let bValue: any = b[sort.column as keyof typeof ordersWithDisplay[0]];
             
-            // Handle numeric values for amounts and ID
-            if (sort.column === 'id' || sort.column === 'amount' || sort.column === 'final_amount') {
-                aValue = Number(aValue) || 0;
-                bValue = Number(bValue) || 0;
-            } else if (sort.column === 'created_at') {
-                // Handle date sorting
-                aValue = aValue ? new Date(aValue).getTime() : 0;
-                bValue = bValue ? new Date(bValue).getTime() : 0;
+            // Handle numeric values for amounts - use original numeric values
+            if (sort.column === 'amount_display' || sort.column === 'final_amount_display') {
+                aValue = a.amount || 0;
+                bValue = b.amount || 0;
+            } else if (sort.column === 'created_at_display') {
+                // Use original date values for sorting
+                aValue = a.created_at ? new Date(a.created_at).getTime() : 0;
+                bValue = b.created_at ? new Date(b.created_at).getTime() : 0;
             }
             
             if (aValue == null) aValue = '';
             if (bValue == null) bValue = '';
             
-            // Use localeCompare for string sorting (supports Cyrillic)
+            // Use localeCompare for proper string sorting (including Cyrillic)
             if (typeof aValue === 'string' && typeof bValue === 'string') {
                 const cmp = aValue.localeCompare(bValue, 'ru');
                 return sort.direction === 'asc' ? cmp : -cmp;
@@ -88,10 +88,6 @@ export const OrdersPage: FC = () => {
         
         setSortedOrders(sorted);
     }, [orders, sort]);
-
-    const handleSort = (column: string, direction: 'asc' | 'desc') => {
-        setSort({ column, direction });
-    };
 
     useEffect(() => {
         const load = async () => {
@@ -112,6 +108,10 @@ export const OrdersPage: FC = () => {
             page: event.first / event.rows,
             size: event.rows,
         });
+    };
+
+    const handleSort = (column: string, direction: 'asc' | 'desc') => {
+        setSort({ column, direction });
     };
 
     const getStatusColor = (status: string) => {
