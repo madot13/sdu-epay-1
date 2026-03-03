@@ -2,7 +2,7 @@ import { FC, useEffect, useState } from "react";
 import { CustomModal } from "@/ui/CustomModal.tsx";
 import { CustomInput } from "@/ui/CustomInput.tsx";
 import { CustomButton } from "@/ui/CustomButton.tsx";
-import { EnvelopeIcon, UserCircleIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline";
+import { EnvelopeIcon, UserCircleIcon, CurrencyDollarIcon, TagIcon } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
 import { packetEventsApi } from "@/api/endpoints/packet-events";
 import { IEventRecord } from "@/types/packetevents";
@@ -76,7 +76,7 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
                 />
                 
                 <CustomInput
-                    icon={<UserCircleIcon className="text-[#6B9AB0]" />}
+                    icon={<TagIcon className="text-[#6B9AB0]" />}
                     placeholder="Категория платежа"
                     value={form.category}
                     onChange={(e) => setForm({...form, category: e.target.value})}

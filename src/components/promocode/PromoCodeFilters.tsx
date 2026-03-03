@@ -62,7 +62,7 @@ export const PromoCodeFilters: FC = () => {
                         }}
                         onFocus={() => setShowSuggestions(true)}
                         className="bg-[#FFFFFF] h-[37px] p-2 border border-[#6B9AB0] rounded-[4px] text-sm"
-                        placeholder="Введите Название события"
+                        placeholder="Введите название события"
                     />
                     {showSuggestions && eventSuggestions.length > 0 && (
                         <AnimatePresence>
