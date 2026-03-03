@@ -644,11 +644,6 @@ export const PaymentForm: FC = () => {
                                             {/* Дополнительные поля категории платежа */}
                                             {paymentCategoryAdditionalFields.length > 0 && (
                                                 <div className="flex flex-col gap-2 mt-4">
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                                                            {paymentCategoryAdditionalFields.length} полей
-                                                        </span>
-                                                    </div>
                                                     {paymentCategoryAdditionalFields.map((field) => {
                                                         const key = field.name;
                                                         return (
