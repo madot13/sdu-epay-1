@@ -125,21 +125,6 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
                         value={customFields} 
                         onChange={setCustomFields} 
                     />
-                    <div className="flex gap-2">
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setCustomFields([...customFields, {
-                                    name: '',
-                                    type: 'text',
-                                    value: ''
-                                }]);
-                            }}
-                            className="px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-                        >
-                            Добавить поле
-                        </button>
-                    </div>
                 </div>
                 
                 <div className="flex items-center gap-2">
