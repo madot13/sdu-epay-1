@@ -27,6 +27,8 @@ export const PacketEventsPage: FC = () => {
         { header: "Департамент", accessor: "department" },
         { header: "Email", accessor: "email" },
         { header: "Категория", accessor: "category" },
+        { header: "Период с", accessor: "period_from_display" },
+        { header: "Период по", accessor: "period_till_display" },
         { header: "Цена (KZT)", accessor: "price_display" },
         { header: "Цена (USD)", accessor: "price_usd_display" },
     ];
@@ -118,7 +120,9 @@ export const PacketEventsPage: FC = () => {
                             price_display: `${item.price?.toLocaleString() || 0} ₸`,
                             price_usd_display: item.price_usd ? `$${item.price_usd}` : "—",
                             category: item.category || "—",
-                            department: item.department_name || item.department || ''
+                            department: item.department_name || item.department || '',
+                            period_from_display: item.period_from ? new Date(item.period_from).toLocaleDateString('ru-RU') : "—",
+                            period_till_display: item.period_till ? new Date(item.period_till).toLocaleDateString('ru-RU') : "—"
                         }))}
                         actions={(row: any) => (
                             <div className="flex gap-3">
