@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from "react";
+import { FC, useEffect, useState, useCallback } from "react";
 import { AdminLayout } from "@/layouts/AdminLayout.tsx";
 import { CustomTable } from "@/ui/CustomTable.tsx";
 import { PacketEventsFilter } from "@/components/packet-events/PacketEventsFilter";
@@ -16,11 +16,10 @@ export const PacketEventsPage: FC = () => {
     const [total, setTotal] = useState(0);
     const [first, setFirst] = useState(0);
     const [rows, setRows] = useState(10);
-
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedItem, setSelectedItem] = useState<IEventRecord | null>(null);
-    const [filters, setFilters] = useState<any>({}); // ← Состояние для фильтров
+    const [filters, setFilters] = useState<any>({});
 
     const columns = [
         { header: "Событие", accessor: "event_name" },
@@ -49,41 +48,27 @@ export const PacketEventsPage: FC = () => {
         },
     ];
 
-    const loadData = async () => {
+    // ✅ ИСПРАВЛЕНИЕ: loadData принимает актуальные фильтры как аргумент,
+    // не зависит от стейта через замыкание
+    const loadData = useCallback(async (currentFilters: any = filters) => {
         setLoading(true);
         try {
-            console.log("🔍 Filters sent to API:", filters); // ← Логируем фильтры
-            const result = await packetEventsApi.getAll(filters); // ← Передаем фильтры в API
-            console.log("📡 API response:", result); // ← Логируем ответ
-            
-            // Добавляем детальный лог каждого элемента
+            console.log("🔍 Filters sent to API:", currentFilters);
+            const result = await packetEventsApi.getAll(currentFilters);
+            console.log("📡 API response:", result);
+
             let items: any[] = [];
             if (result && typeof result === 'object') {
-                // Результат может быть как массив так и объектом с data
                 items = Array.isArray(result) ? result : (result as any).data || [];
-                console.log("📋 Processing items:", items);
-                
-                items.forEach((item: any, index: number) => {
-                    console.log(`📋 Item ${index}:`, {
-                        id: item.id,
-                        event_name: item.event_name,
-                        category: item.category,
-                        priced: item.priced,
-                        price: item.price,
-                        price_usd: item.price_usd,
-                        active: item.active
-                    });
-                });
             }
-            
+
             if (result && typeof result === 'object' && 'detail' in result) {
-                // Бэкенд еще не готов - показывает ошибку API
                 toast.error(`Ошибка API: ${result.detail}`);
                 setData([]);
                 setTotal(0);
                 return;
             }
-            
+
             setData(items);
             setTotal((result as any).total || items.length);
         } catch (err) {
@@ -92,22 +77,22 @@ export const PacketEventsPage: FC = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
-        loadData();
-    }, [first, rows, filters]); // ← Добавляем filters в зависимости
+        loadData(filters);
+    }, [first, rows, filters]);
 
+    // ✅ ИСПРАВЛЕНИЕ: сохраняем фильтры в стейт, и сразу передаём их в loadData
+    // не вызываем loadData() отдельно — это сделает useEffect выше
     const handleSearch = (params: any) => {
-        setFilters(params); // ← Сохраняем фильтры
-        setFirst(0); // ← Сбрасываем пагинацию при новом поиске
-        loadData();
+        setFirst(0);
+        setFilters(params); // useEffect сам вызовет loadData с новыми filters
     };
 
     const onPageChange = (event: any) => {
         setFirst(event.first);
         setRows(event.rows);
-        loadData();
     };
 
     const handleEditClick = (item: any) => {
@@ -121,12 +106,11 @@ export const PacketEventsPage: FC = () => {
     };
 
     const handleConfirmDelete = async () => {
-        // ИСПРАВЛЕНО: проверяем наличие ID и удаляем return
         if (selectedItem?.id) {
             try {
                 await packetEventsApi.delete(selectedItem.id);
                 toast.success("Запись успешно удалена");
-                loadData();
+                loadData(filters);
                 setIsDeleteModalOpen(false);
                 setSelectedItem(null);
             } catch (err) {
@@ -142,12 +126,9 @@ export const PacketEventsPage: FC = () => {
                     <h1 className="text-2xl lg:text-[32px] font-bold text-[#1A1A1A]">
                         Информация о типах оплаты
                     </h1>
-                    {/* Используем loading, чтобы убрать Warning */}
                     {loading && <Loader2 className="w-6 h-6 animate-spin text-blue-500" />}
                 </div>
-                
                 <PacketEventsFilter onSearch={handleSearch} />
-
                 <div className="overflow-x-auto bg-white rounded-lg shadow-sm border border-gray-100 mt-4">
                     <CustomTable
                         columns={columns}
@@ -179,7 +160,6 @@ export const PacketEventsPage: FC = () => {
                         )}
                     />
                 </div>
-
                 <div className="mt-6 flex justify-center">
                     <Paginator
                         first={first}
@@ -200,10 +180,9 @@ export const PacketEventsPage: FC = () => {
                         setSelectedItem(null);
                     }}
                     eventData={selectedItem}
-                    onSuccess={() => loadData()}
+                    onSuccess={() => loadData(filters)}
                 />
             )}
-
             <DeleteModal 
                 isOpen={isDeleteModalOpen} 
                 onDeleteClick={handleConfirmDelete} 
