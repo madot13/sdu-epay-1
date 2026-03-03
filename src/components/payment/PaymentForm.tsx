@@ -108,7 +108,10 @@ export const PaymentForm: FC = () => {
         const fetchEvents = async () => {
             if (!selectedDepartmentId) return;
             try {
+                console.log("Fetching events for department:", selectedDepartmentId);
                 const data = await getPublicEventsById(selectedDepartmentId);
+                console.log("Raw events data from API:", data);
+                
                 const mapped = data.map((event: IEvent) => ({
                     label: event.title || '',
                     value: event.id || '',
@@ -116,6 +119,8 @@ export const PaymentForm: FC = () => {
                     price_usd: event.price_usd ? Number(event.price_usd) : null,
                     priced: event.priced ?? true,
                 })).filter(event => event.label && event.value);
+                
+                console.log("Mapped events for select:", mapped);
                 setEventOptions(mapped);
             } catch (error) {
                 console.error("Failed to fetch events:", error);
