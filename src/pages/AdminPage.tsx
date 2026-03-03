@@ -16,6 +16,8 @@ export const AdminPage: FC = () => {
     const [selectedAdmin, setSelectedAdmin] = useState<any | null>(null);
     const [first, setFirst] = useState(0);
     const [rows, setRows] = useState(10);
+    const [filters, setFilters] = useState<Record<string, string>>({});
+    
     useEffect(() => {
         fetchUsers();
     }, [fetchUsers]);
@@ -27,6 +29,35 @@ export const AdminPage: FC = () => {
         await fetchUsers({
             page: event.first / event.rows,
             size: event.rows,
+            ...filters,
+        });
+    };
+
+    const handleFilter = (column: string, value: string) => {
+        const newFilters = { ...filters };
+        
+        if (value.trim() === '') {
+            delete newFilters[column];
+        } else {
+            // Map column names to API parameters
+            if (column === 'username') {
+                newFilters.username = value;
+            } else if (column === 'department') {
+                newFilters.department = value;
+            } else if (column === 'role') {
+                newFilters.role = value;
+            } else {
+                newFilters[column] = value;
+            }
+        }
+        
+        setFilters(newFilters);
+        
+        // Fetch users with new filters
+        fetchUsers({
+            page: first / rows,
+            size: rows,
+            ...newFilters,
         });
     };
 
@@ -67,9 +98,9 @@ export const AdminPage: FC = () => {
 
 
     const columns = [
-        { header: "Почта", accessor: "username" },
-        { header: "Департамент", accessor: "department" },
-        { header: "Роль", accessor: "role" },
+        { header: "Почта", accessor: "username", filterable: true },
+        { header: "Департамент", accessor: "department", filterable: true },
+        { header: "Роль", accessor: "role", filterable: true },
     ];
 
 
@@ -82,6 +113,7 @@ export const AdminPage: FC = () => {
                     <CustomTable
                         columns={columns}
                         data={users.filter((user) => user.active)}
+                        onFilter={handleFilter}
                         actions={(row) => (
                             <div className="flex gap-2">
                                 <button
