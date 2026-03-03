@@ -2,7 +2,9 @@ import { FC, useState, useEffect } from "react";
 import { CustomButton } from "@/ui/CustomButton.tsx";
 import { CustomSelect } from "@/ui/CustomSelect.tsx";
 import { getDepartments } from "@/api/endpoints/departments.ts";
+import { getPublicEventsById } from "@/api/endpoints/events.ts";
 import { Department } from "@/types/departments.ts";
+import { IEvent } from "@/types/events.ts";
 import { AddPacketEventModal } from "./AddPacketEventModal"; 
 
 interface PacketEventsFilterProps {
@@ -31,6 +33,21 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
         };
         fetchDepartments();
     }, []);
+
+    // Загружаем события при смене департамента
+    useEffect(() => {
+        if (selectedDepartment) {
+            const fetchEvents = async () => {
+                try {
+                    const eventsData = await getPublicEventsById(selectedDepartment);
+                    console.log("Events loaded for department:", selectedDepartment, eventsData);
+                } catch (error) {
+                    console.error("Failed to fetch events:", error);
+                }
+            };
+            fetchEvents();
+        }
+    }, [selectedDepartment]);
 
     const handleSearch = () => {
         const filters: any = {};
