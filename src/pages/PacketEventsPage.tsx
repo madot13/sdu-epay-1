@@ -55,6 +55,27 @@ export const PacketEventsPage: FC = () => {
             console.log("🔍 Filters sent to API:", filters); // ← Логируем фильтры
             const result = await packetEventsApi.getAll(filters); // ← Передаем фильтры в API
             console.log("📡 API response:", result); // ← Логируем ответ
+            
+            // Добавляем детальный лог каждого элемента
+            let items: any[] = [];
+            if (Array.isArray(result)) {
+                // Результат может быть как массив так и объектом с data
+                items = Array.isArray(result) ? result : (result as any).data || [];
+                console.log("📋 Processing items:", items);
+                
+                items.forEach((item: any, index: number) => {
+                    console.log(`📋 Item ${index}:`, {
+                        id: item.id,
+                        event_name: item.event_name,
+                        category: item.category,
+                        priced: item.priced,
+                        price: item.price,
+                        price_usd: item.price_usd,
+                        active: item.active
+                    });
+                });
+            }
+            
             if (result && typeof result === 'object' && 'detail' in result) {
                 // Бэкенд еще не готов - показывает ошибку API
                 toast.error(`Ошибка API: ${result.detail}`);
@@ -63,8 +84,8 @@ export const PacketEventsPage: FC = () => {
                 return;
             }
             
-            setData(Array.isArray(result) ? result : (result as any).data || []);
-            setTotal((result as any).total || (Array.isArray(result) ? result.length : 0));
+            setData(items);
+            setTotal((result as any).total || items.length);
         } catch (err) {
             console.error("Ошибка загрузки:", err);
             toast.error("Не удалось загрузить данные");
