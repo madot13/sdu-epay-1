@@ -18,8 +18,8 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
     const [email, setEmail] = useState("");
     const [department, setDepartment] = useState("");
     const [selectedEvent, setSelectedEvent] = useState("");
-    const [price, setPrice] = useState(1000); // ← По умолчанию > 0
-    const [priceUsd, setPriceUsd] = useState(5); // ← По умолчанию > 0
+    const [price, setPrice] = useState(0); // ← По умолчанию 0
+    const [priceUsd, setPriceUsd] = useState(0); // ← По умолчанию 0
     const [category, setCategory] = useState("");
     const [active] = useState(true); // ← Убрали setActive, оставили по умолчанию true
 
@@ -64,13 +64,14 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
             return;
         }
 
-        if (price <= 0) {
-            toast.error("Цена в KZT должна быть больше 0");
+        // Разрешаем цены >= 0 (включая 0)
+        if (price < 0) {
+            toast.error("Цена в KZT не может быть отрицательной");
             return;
         }
 
-        if (priceUsd <= 0) {
-            toast.error("Цена в USD должна быть больше 0");
+        if (priceUsd < 0) {
+            toast.error("Цена в USD не может быть отрицательной");
             return;
         }
 
@@ -88,7 +89,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
             setIsOpen(false);
             onRefresh(); // Обновляем таблицу
             // Очистка полей
-            setEmail(""); setDepartment(""); setSelectedEvent(""); setPrice(1000); setPriceUsd(5); setCategory("");
+            setEmail(""); setDepartment(""); setSelectedEvent(""); setPrice(0); setPriceUsd(0); setCategory("");
         } catch (error) {
             toast.error("Ошибка при создании");
         }
