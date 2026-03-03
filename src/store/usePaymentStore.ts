@@ -29,7 +29,8 @@ const initialOrder: IOrder = {
     email: '',
     cellphone: '',
     additional: '',
-    additional_fields: null
+    additional_fields: null,
+    payment_category_id: ''
 }
 
 

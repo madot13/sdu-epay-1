@@ -6,8 +6,18 @@ export const CheckOut: FC = () => {
     const { price, discount, order, finalPrice, currency } = usePaymentStore();
     const { t } = useTranslation();
 
+    // Получаем информацию о выбранном типе платежа
+    const getPaymentTypeLabel = () => {
+        if (!order.payment_category_id) return null;
+        
+        // Здесь можно получить название типа платежа из order или из API
+        // Временно возвращаем ID, в реальном приложении нужно будет получать название
+        return `Тип платежа: ${order.payment_category_id}`;
+    };
+
     const discountAmount = Math.round(price * (discount / 100));
     const currencySymbol = currency === "USD" ? "$" : "₸";
+    const paymentTypeLabel = getPaymentTypeLabel();
 
     return (
         <div>
@@ -17,6 +27,11 @@ export const CheckOut: FC = () => {
                     <p>{t('paymentPage.check.summ')}</p>
                     <p>{price} {currencySymbol}</p>
                 </div>
+                {paymentTypeLabel && (
+                    <div className="flex justify-between text-blue-600">
+                        <p>{paymentTypeLabel}</p>
+                    </div>
+                )}
                 {discount > 0 && (
                     <div className="flex justify-between text-green-600">
                         <p>{t('paymentPage.check.promo')} ({order.promo_code})</p>
