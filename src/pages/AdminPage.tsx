@@ -18,10 +18,39 @@ export const AdminPage: FC = () => {
     const [first, setFirst] = useState(0);
     const [rows, setRows] = useState(10);
     const [sort, setSort] = useState<{ column: string; direction: 'asc' | 'desc' } | null>(null);
+    const [sortedUsers, setSortedUsers] = useState<any[]>([]);
     
     useEffect(() => {
         fetchUsers();
     }, [fetchUsers]);
+
+    // Update sorted users when original users or sort changes
+    useEffect(() => {
+        if (!sort) {
+            setSortedUsers(users.filter((user) => user.active));
+            return;
+        }
+
+        const sorted = [...users].sort((a, b) => {
+            let aValue: any = a[sort.column as keyof IUser];
+            let bValue: any = b[sort.column as keyof IUser];
+            
+            // Handle department object
+            if (sort.column === 'department') {
+                aValue = a.department?.name || '';
+                bValue = b.department?.name || '';
+            }
+            
+            if (aValue == null) aValue = '';
+            if (bValue == null) bValue = '';
+            
+            if (aValue < bValue) return sort.direction === 'asc' ? -1 : 1;
+            if (aValue > bValue) return sort.direction === 'asc' ? 1 : -1;
+            return 0;
+        });
+        
+        setSortedUsers(sorted.filter((user) => user.active));
+    }, [users, sort]);
 
     const onPageChange = async (event: any) => {
         setFirst(event.first);
@@ -37,29 +66,6 @@ export const AdminPage: FC = () => {
     const handleSort = (column: string, direction: 'asc' | 'desc') => {
         const newSort = { column, direction };
         setSort(newSort);
-        
-        // Client-side sorting for now
-        const sortedUsers = [...users].sort((a, b) => {
-            let aValue: any = a[column as keyof IUser];
-            let bValue: any = b[column as keyof IUser];
-            
-            // Handle department object
-            if (column === 'department') {
-                aValue = a.department?.name || '';
-                bValue = b.department?.name || '';
-            }
-            
-            if (aValue == null) aValue = '';
-            if (bValue == null) bValue = '';
-            
-            if (aValue < bValue) return direction === 'asc' ? -1 : 1;
-            if (aValue > bValue) return direction === 'asc' ? 1 : -1;
-            return 0;
-        });
-        
-        // Update store with sorted data (temporary solution)
-        // In real implementation, this should be done on backend
-        console.log('Sorted users:', sortedUsers);
     };
 
     const handleEditClick = (admin: any) => {
@@ -113,7 +119,7 @@ export const AdminPage: FC = () => {
                 <div className="overflow-x-auto -mx-4 px-4 lg:mx-0 lg:px-0">
                     <CustomTable
                         columns={columns}
-                        data={users.filter((user) => user.active)}
+                        data={sortedUsers}
                         onSort={handleSort}
                         currentSort={sort || undefined}
                         actions={(row) => (

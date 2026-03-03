@@ -17,6 +17,7 @@ export const DepartmentsPage:FC = () => {
     const [first, setFirst] = useState(0);
     const [rows, setRows] = useState(10);
     const [sort, setSort] = useState<{ column: string; direction: 'asc' | 'desc' } | null>(null);
+    const [sortedDepartments, setSortedDepartments] = useState<any[]>([]);
 
     const columns = [
         {header: "Департамент", accessor: "name", sortable: true}
@@ -25,6 +26,25 @@ export const DepartmentsPage:FC = () => {
     useEffect(() => {
         fetchDepartments()
     }, []);
+
+    // Update sorted departments when original departments or sort changes
+    useEffect(() => {
+        if (!sort) {
+            setSortedDepartments(departments);
+            return;
+        }
+
+        const sorted = [...departments].sort((a, b) => {
+            const aValue = a[sort.column as keyof typeof departments[0]] || '';
+            const bValue = b[sort.column as keyof typeof departments[0]] || '';
+            
+            if (aValue < bValue) return sort.direction === 'asc' ? -1 : 1;
+            if (aValue > bValue) return sort.direction === 'asc' ? 1 : -1;
+            return 0;
+        });
+        
+        setSortedDepartments(sorted);
+    }, [departments, sort]);
 
     const onPageChange = async (event: any) => {
         setFirst(event.first);
@@ -39,18 +59,6 @@ export const DepartmentsPage:FC = () => {
     const handleSort = (column: string, direction: 'asc' | 'desc') => {
         const newSort = { column, direction };
         setSort(newSort);
-        
-        // Client-side sorting
-        const sortedDepartments = [...departments].sort((a, b) => {
-            const aValue = a[column as keyof typeof departments[0]] || '';
-            const bValue = b[column as keyof typeof departments[0]] || '';
-            
-            if (aValue < bValue) return direction === 'asc' ? -1 : 1;
-            if (aValue > bValue) return direction === 'asc' ? 1 : -1;
-            return 0;
-        });
-        
-        console.log('Sorted departments:', sortedDepartments);
     };
 
     const handleEditClick = (dep: any) => {
@@ -96,7 +104,7 @@ export const DepartmentsPage:FC = () => {
                 <div className="overflow-x-auto -mx-4 px-4 lg:mx-0 lg:px-0">
                     <CustomTable
                         columns={columns}
-                        data={departments}
+                        data={sortedDepartments}
                         onSort={handleSort}
                         currentSort={sort || undefined}
                         actions={(row) => (

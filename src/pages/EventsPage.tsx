@@ -17,7 +17,7 @@ export const EventsPage:FC = () => {
     const [first, setFirst] = useState(0);
     const [rows, setRows] = useState(10);
     const [sort, setSort] = useState<{ column: string; direction: 'asc' | 'desc' } | null>(null);
-
+    const [sortedEvents, setSortedEvents] = useState<any[]>([]);
 
     const columns = [
         { header: "Событие", accessor: "title", sortable: true },
@@ -29,28 +29,37 @@ export const EventsPage:FC = () => {
         { header: "Цена USD", accessor: "price_usd_display", sortable: true },
     ];
 
-
     useEffect(() => {
         fetchEvents();
     }, []);
 
-    const handleSort = (column: string, direction: 'asc' | 'desc') => {
-        const newSort = { column, direction };
-        setSort(newSort);
-        
-        // Client-side sorting
-        const sortedEvents = [...events].sort((a, b) => {
-            let aValue: any = a[column as keyof typeof events[0]];
-            let bValue: any = b[column as keyof typeof events[0]];
+    // Update sorted events when original events or sort changes
+    useEffect(() => {
+        const eventsWithDisplay = events.map((event: any) => ({
+            ...event,
+            price_kzt_display: event.priced ? `${event.price} ₸` : "Произвольная",
+            price_usd_display: event.priced
+                ? (event.price_usd ? `$${event.price_usd}` : "—")
+                : "Произвольная"
+        }));
+
+        if (!sort) {
+            setSortedEvents(eventsWithDisplay);
+            return;
+        }
+
+        const sorted = [...eventsWithDisplay].sort((a, b) => {
+            let aValue: any = a[sort.column as keyof typeof eventsWithDisplay[0]];
+            let bValue: any = b[sort.column as keyof typeof eventsWithDisplay[0]];
             
             // Handle department object
-            if (column === 'department') {
+            if (sort.column === 'department') {
                 aValue = a.department_id || '';
                 bValue = b.department_id || '';
             }
             
             // Handle numeric values for prices
-            if (column.includes('price') || column.includes('period')) {
+            if (sort.column.includes('price') || sort.column.includes('period')) {
                 aValue = Number(aValue) || 0;
                 bValue = Number(bValue) || 0;
             }
@@ -58,12 +67,17 @@ export const EventsPage:FC = () => {
             if (aValue == null) aValue = '';
             if (bValue == null) bValue = '';
             
-            if (aValue < bValue) return direction === 'asc' ? -1 : 1;
-            if (aValue > bValue) return direction === 'asc' ? 1 : -1;
+            if (aValue < bValue) return sort.direction === 'asc' ? -1 : 1;
+            if (aValue > bValue) return sort.direction === 'asc' ? 1 : -1;
             return 0;
         });
         
-        console.log('Sorted events:', sortedEvents);
+        setSortedEvents(sorted);
+    }, [events, sort]);
+
+    const handleSort = (column: string, direction: 'asc' | 'desc') => {
+        const newSort = { column, direction };
+        setSort(newSort);
     };
 
 
@@ -122,13 +136,7 @@ export const EventsPage:FC = () => {
                 <div className="overflow-x-auto">
                 <CustomTable
                     columns={columns}
-                    data={events.map((event: any) => ({
-                        ...event,
-                        price_kzt_display: event.priced ? `${event.price} ₸` : "Произвольная",
-                        price_usd_display: event.priced
-                            ? (event.price_usd ? `$${event.price_usd}` : "—")
-                            : "Произвольная"
-                    }))}
+                    data={sortedEvents}
                     onSort={handleSort}
                     currentSort={sort || undefined}
                     actions={(row) => (
