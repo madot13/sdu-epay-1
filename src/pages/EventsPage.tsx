@@ -12,7 +12,6 @@ import {Paginator} from "primereact/paginator";
 
 export const EventsPage:FC = () => {
     const {events, fetchEvents, deleteEvent, total} = useEventsStore();
-    const {departments, fetchDepartments} = useDepartmentsStore();
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
@@ -23,14 +22,7 @@ export const EventsPage:FC = () => {
 
     const columns = [
         { header: "Событие", accessor: "title", sortable: true },
-        { 
-            header: "Департамент", 
-            accessor: (row: any) => {
-                const dept = departments.find(d => d.id === row.department_id);
-                return dept?.name || 'Неизвестный департамент';
-            }, 
-            sortable: true 
-        },
+        { header: "Департамент", accessor: "department", sortable: true },
         { header: "Email", accessor: "manager_email", sortable: true },
         { header: "Период с", accessor: "period_from", sortable: true },
         { header: "Период по", accessor: "period_till", sortable: true },
@@ -40,22 +32,16 @@ export const EventsPage:FC = () => {
 
     useEffect(() => {
         fetchEvents();
-        fetchDepartments();
     }, []);
 
-    // Update sorted events when original events or sort changes
     useEffect(() => {
-        const eventsWithDisplay = events.map((event: any) => {
-            const dept = departments.find(d => d.id === event.department_id);
-            return {
-                ...event,
-                department_name: dept?.name || 'Неизвестный департамент',
-                price_kzt_display: event.priced ? `${event.price} ₸` : "Произвольная",
-                price_usd_display: event.priced
-                    ? (event.price_usd ? `$${event.price_usd}` : "—")
-                    : "Произвольная"
-            };
-        });
+        const eventsWithDisplay = events.map((event: any) => ({
+            ...event,
+            price_kzt_display: event.priced ? `${event.price} ₸` : "Произвольная",
+            price_usd_display: event.priced
+                ? (event.price_usd ? `$${event.price_usd}` : "—")
+                : "Произвольная"
+        }));
 
         if (!sort) {
             setSortedEvents(eventsWithDisplay);
@@ -63,27 +49,22 @@ export const EventsPage:FC = () => {
         }
 
         const sorted = [...eventsWithDisplay].sort((a, b) => {
-            let aValue: any;
-            let bValue: any;
+            let aValue: any = a[sort.column as keyof typeof eventsWithDisplay[0]];
+            let bValue: any = b[sort.column as keyof typeof eventsWithDisplay[0]];
             
-            // Handle department with custom accessor
-            if (sort.column === 'custom-1') { // Index of department column
-                aValue = a.department_name || '';
-                bValue = b.department_name || '';
-            } else {
-                aValue = a[sort.column as keyof typeof eventsWithDisplay[0]];
-                bValue = b[sort.column as keyof typeof eventsWithDisplay[0]];
+            // ✅ ИЗМЕНЕНИЕ 2: сортировка по названию департамента вместо department_id
+            if (sort.column === 'department') {
+                aValue = a.department?.name || '';
+                bValue = b.department?.name || '';
             }
             
-            // Handle numeric values for prices - use original numeric values
             if (sort.column === 'price_kzt_display') {
-                aValue = a.priced ? (a.price || 0) : -1; // "Произвольная" gets -1
+                aValue = a.priced ? (a.price || 0) : -1;
                 bValue = b.priced ? (b.price || 0) : -1;
             } else if (sort.column === 'price_usd_display') {
                 aValue = a.priced && a.price_usd ? a.price_usd : -1;
                 bValue = b.priced && b.price_usd ? b.price_usd : -1;
             } else if (sort.column === 'period_from' || sort.column === 'period_till') {
-                // Use original date values for sorting
                 aValue = a[sort.column] ? new Date(a[sort.column]).getTime() : 0;
                 bValue = b[sort.column] ? new Date(b[sort.column]).getTime() : 0;
             }
@@ -91,19 +72,23 @@ export const EventsPage:FC = () => {
             if (aValue == null) aValue = '';
             if (bValue == null) bValue = '';
             
+            // ✅ ИЗМЕНЕНИЕ 3: используем localeCompare для корректной сортировки строк (кириллица)
+            if (typeof aValue === 'string' && typeof bValue === 'string') {
+                const cmp = aValue.localeCompare(bValue, 'ru');
+                return sort.direction === 'asc' ? cmp : -cmp;
+            }
+
             if (aValue < bValue) return sort.direction === 'asc' ? -1 : 1;
             if (aValue > bValue) return sort.direction === 'asc' ? 1 : -1;
             return 0;
         });
         
         setSortedEvents(sorted);
-    }, [events, departments, sort]);
+    }, [events, sort]);
 
     const handleSort = (column: string, direction: 'asc' | 'desc') => {
-        const newSort = { column, direction };
-        setSort(newSort);
+        setSort({ column, direction });
     };
-
 
     const onPageChange = async (event: any) => {
         setFirst(event.first);
@@ -114,7 +99,6 @@ export const EventsPage:FC = () => {
             size: event.rows,
         });
     };
-
 
     const handleEditClick = (event: any) => {
         setSelectedEvent(event);
@@ -150,7 +134,6 @@ export const EventsPage:FC = () => {
             }
         }
     };
-
 
     return (
         <AdminLayout>
