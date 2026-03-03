@@ -1,7 +1,7 @@
 import { FC, useEffect, useState } from "react";
 import { CustomInput } from "@/ui/CustomInput.tsx";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
-import { getDepartments } from "@/api/endpoints/departments.ts";
+import { getDepartmentById } from "@/api/endpoints/departments.ts";
 
 interface PaymentFormAdditionalFieldsProps {
     departmentId: string;
@@ -26,10 +26,9 @@ export const PaymentFormAdditionalFields: FC<PaymentFormAdditionalFieldsProps> =
             }
 
             try {
-                // Получаем все департаменты и находим нужный
-                const departmentsResponse = await getDepartments();
-                const department = departmentsResponse.data.find((dept: any) => dept.id === departmentId);
-                
+                // Получаем департамент по ID с дополнительными полями
+                const department = await getDepartmentById(departmentId);
+                console.log("Department data:", department); // ← Логируем для отладки
                 setAdditionalFields(department?.additional_fields || {});
             } catch (error) {
                 console.error("Failed to fetch department fields:", error);
