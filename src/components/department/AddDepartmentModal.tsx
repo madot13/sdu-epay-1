@@ -10,16 +10,29 @@ import {AddAdditionalFields} from "@/components/department/AddAdditionalFields.t
 
 export const AddDepartmentModal:FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [additionalFields, setAdditionalFields] = useState<{name:string; type:string}[]>([]);
+    const [additionalFields, setAdditionalFields] = useState<{name:string; type:string; value?: any}[]>([]);
     const [name, setName] = useState("");
 
     const {addDepartment} = useDepartmentsStore();
 
     const handleSubmit = async () => {
         const additional_fields: Record<string, any> = {};
+        console.log("additionalFields before processing:", additionalFields);
+        
         additionalFields.forEach((field) => {
-            additional_fields[field.name] = { type: field.type };
+            if (field.type === 'file' && field.value) {
+                // Для файлов копируем весь объект с value
+                additional_fields[field.name] = {
+                    type: field.type,
+                    value: field.value
+                };
+            } else {
+                // Для других типов только type
+                additional_fields[field.name] = { type: field.type };
+            }
         });
+        
+        console.log("additional_fields being sent:", additional_fields);
 
         try{
             await addDepartment({
