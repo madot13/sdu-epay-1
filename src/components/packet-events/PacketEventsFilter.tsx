@@ -33,7 +33,6 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
         fetchDepartments();
     }, []);
 
-    // Загружаем события при смене департамента
     useEffect(() => {
         if (selectedDepartment) {
             const fetchEvents = async () => {
@@ -48,25 +47,39 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
         }
     }, [selectedDepartment]);
 
-    const handleSearch = () => {
+    // ✅ ИСПРАВЛЕНИЕ: принимаем актуальные значения как аргументы,
+    // чтобы не зависеть от стейта который мог не успеть обновиться
+    const handleSearch = (
+        overrides: {
+            name?: string;
+            department?: string;
+            from?: string;
+            to?: string;
+        } = {}
+    ) => {
+        const currentName = overrides.name !== undefined ? overrides.name : name;
+        const currentDepartment = overrides.department !== undefined ? overrides.department : selectedDepartment;
+        const currentFrom = overrides.from !== undefined ? overrides.from : periodFrom;
+        const currentTo = overrides.to !== undefined ? overrides.to : periodTo;
+
         const filters: any = {};
-        
-        if (name && name.trim()) {
-            filters.category = name.trim();
+
+        if (currentName && currentName.trim()) {
+            filters.category = currentName.trim();
         }
-        
-        if (selectedDepartment && selectedDepartment.trim()) {
-            filters.department_id = selectedDepartment.trim();
+
+        if (currentDepartment && currentDepartment.trim()) {
+            filters.department_id = currentDepartment.trim();
         }
-        
-        if (periodFrom && periodFrom.trim()) {
-            filters.period_from = periodFrom.trim();
+
+        if (currentFrom && currentFrom.trim()) {
+            filters.period_from = currentFrom.trim();
         }
-        
-        if (periodTo && periodTo.trim()) {
-            filters.period_to = periodTo.trim();
+
+        if (currentTo && currentTo.trim()) {
+            filters.period_to = currentTo.trim();
         }
-        
+
         console.log("🔍 Prepared filters:", filters);
         onSearch(filters);
     };
@@ -89,7 +102,10 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
                     <CustomSelect
                         options={departments}
                         value={selectedDepartment}
-                        onChange={setSelectedDepartment}
+                        // ✅ ИСПРАВЛЕНИЕ: при смене департамента сразу передаём новое значение в поиск
+                        onChange={(val) => {
+                            setSelectedDepartment(val);
+                        }}
                         triggerClassName="bg-white w-full sm:min-w-[200px] h-[37px] text-black text-sm border-[#6B9AB0]"
                     />
                 </div>
@@ -113,16 +129,16 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
                 </div>
                 <CustomButton
                     variant="submit"
-                    onClick={handleSearch}
+                    // ✅ ИСПРАВЛЕНИЕ: передаём актуальные значения напрямую, минуя стейт
+                    onClick={() => handleSearch({ name, department: selectedDepartment, from: periodFrom, to: periodTo })}
                     className="h-[37px] px-6 mt-auto"
                 >
                     Поиск
                 </CustomButton>
             </div>
-            
-            {/* ШАГ 2: Вставляем модалку вместо старой кнопки */}
+
             <div className="flex items-center gap-5 justify-end lg:justify-start">
-                <AddPacketEventModal onRefresh={handleSearch} />
+                <AddPacketEventModal onRefresh={() => handleSearch()} />
             </div>
         </div>
     );
