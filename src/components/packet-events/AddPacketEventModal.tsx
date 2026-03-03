@@ -11,6 +11,7 @@ import { Department } from "@/types/departments.ts";
 import { IEvent } from "@/types/events.ts";
 import { packetEventsApi } from "@/api/endpoints/packet-events";
 import { PaymentFormAdditionalFields } from "./PaymentFormAdditionalFields.tsx";
+import { AddAdditionalFields } from "@/components/department/AddAdditionalFields.tsx";
 
 export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -25,6 +26,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
     const [active] = useState(true); // ← Убрали setActive, оставили по умолчанию true
     const [additionalFieldsValues, setAdditionalFieldsValues] = useState<Record<string, any>>({});
     const [departmentFields, setDepartmentFields] = useState<Record<string, { type: string }>>({});
+    const [customAdditionalFields, setCustomAdditionalFields] = useState<{name:string; type:string; value?: any}[]>([]);
 
     const [departments, setDepartments] = useState<{ label: string; value: string }[]>([]);
     const [events, setEvents] = useState<{ label: string; value: string }[]>([]);
@@ -119,6 +121,20 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                 }
             });
             
+            // Добавляем кастомные поля
+            customAdditionalFields.forEach((field) => {
+                if (field.type === 'file' && field.value) {
+                    // Для файлов копируем весь объект с value
+                    formattedAdditionalFields[field.name] = {
+                        type: field.type,
+                        value: field.value
+                    };
+                } else {
+                    // Для других типов только type
+                    formattedAdditionalFields[field.name] = { type: field.type };
+                }
+            });
+            
             console.log("Formatted additional_fields:", formattedAdditionalFields);
 
             await packetEventsApi.create({
@@ -135,7 +151,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
             setIsOpen(false);
             onRefresh(); // Обновляем таблицу
             // Очистка полей
-            setEmail(""); setDepartment(""); setSelectedEvent(""); setPrice(0); setPriceUsd(0); setCategory(""); setAdditionalFieldsValues({});
+            setEmail(""); setDepartment(""); setSelectedEvent(""); setPrice(0); setPriceUsd(0); setCategory(""); setAdditionalFieldsValues({}); setCustomAdditionalFields([]);
         } catch (error) {
             toast.error("Ошибка при создании");
         }
@@ -196,6 +212,15 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                         onChange={setAdditionalFieldsValues}
                         onFieldsLoad={setDepartmentFields}
                     />
+
+                    {/* Кастомные дополнительные поля */}
+                    <div className="flex flex-col gap-2">
+                        <label className="text-sm font-medium text-gray-700">Дополнительные поля типа оплаты</label>
+                        <AddAdditionalFields 
+                            value={customAdditionalFields} 
+                            onChange={setCustomAdditionalFields} 
+                        />
+                    </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         <CustomInput 
