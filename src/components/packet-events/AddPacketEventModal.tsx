@@ -30,7 +30,6 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
     const [departmentFieldsValues, setDepartmentFieldsValues] = useState<Record<string, any>>({});
     
     const [eventFields, setEventFields] = useState<Record<string, { type: string }>>({});
-    const [eventFieldsValues, setEventFieldsValues] = useState<Record<string, any>>({});
     const [eventCustomFields, setEventCustomFields] = useState<{name:string; type:string; value?: any}[]>([]);
     
     const [category, setCategory] = useState("");
@@ -79,10 +78,8 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
             // Здесь нужно будет загрузить данные события включая additional_fields
             // Временно заглушка
             setEventFields({});
-            setEventFieldsValues({});
         } else {
             setEventFields({});
-            setEventFieldsValues({});
         }
     }, [selectedEvent]);
 
@@ -131,27 +128,6 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
             // Поля департамента
             Object.entries(departmentFieldsValues).forEach(([key, value]) => {
                 const fieldType = departmentFields[key]?.type || 'text';
-                if (fieldType === 'file' && value && typeof value === 'object' && (value as any).file) {
-                    allAdditionalFields[key] = {
-                        type: 'file',
-                        value: {
-                            name: (value as any).file.name,
-                            size: (value as any).file.size,
-                            type: (value as any).file.type,
-                            url: (value as any).url
-                        }
-                    };
-                } else {
-                    allAdditionalFields[key] = {
-                        type: fieldType,
-                        value: value
-                    };
-                }
-            });
-            
-            // Поля события
-            Object.entries(eventFieldsValues).forEach(([key, value]) => {
-                const fieldType = eventFields[key]?.type || 'text';
                 if (fieldType === 'file' && value && typeof value === 'object' && (value as any).file) {
                     allAdditionalFields[key] = {
                         type: 'file',
@@ -227,7 +203,6 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
             setCategory(""); 
             setShowInUsd(false);
             setDepartmentFieldsValues({});
-            setEventFieldsValues({});
             setEventCustomFields([]);
             setCategoryFieldsValues({});
         } catch (error) {
