@@ -34,7 +34,9 @@ export const PacketEventsPage: FC = () => {
     const loadData = async () => {
         setLoading(true);
         try {
+            console.log("🔍 Filters sent to API:", filters); // ← Логируем фильтры
             const result = await packetEventsApi.getAll(filters); // ← Передаем фильтры в API
+            console.log("📡 API response:", result); // ← Логируем ответ
             if (result && typeof result === 'object' && 'detail' in result) {
                 // Бэкенд еще не готов - показывает ошибку API
                 toast.error(`Ошибка API: ${result.detail}`);
