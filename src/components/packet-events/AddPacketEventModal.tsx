@@ -16,18 +16,27 @@ import { AddAdditionalFields } from "@/components/department/AddAdditionalFields
 export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }) => {
     const [isOpen, setIsOpen] = useState(false);
     
-    // Поля на основе твоего IEventRecord
+    // Обязательные поля
     const [email, setEmail] = useState("");
     const [department, setDepartment] = useState("");
     const [selectedEvent, setSelectedEvent] = useState("");
-    const [price, setPrice] = useState(0); // ← По умолчанию 0
-    const [priceUsd, setPriceUsd] = useState(0); // ← По умолчанию 0
-    const [category, setCategory] = useState("");
-    const [active] = useState(true); // ← Убрали setActive, оставили по умолчанию true
-    const [additionalFieldsValues, setAdditionalFieldsValues] = useState<Record<string, any>>({});
-    const [departmentFields, setDepartmentFields] = useState<Record<string, { type: string }>>({});
-    const [customAdditionalFields, setCustomAdditionalFields] = useState<{name:string; type:string; value?: any}[]>([]);
+    const [price, setPrice] = useState(0);
+    const [priceUsd, setPriceUsd] = useState(0);
+    const [showInUsd, setShowInUsd] = useState(false);
+    const [active] = useState(true);
 
+    // Дополнительные поля на каждом уровне
+    const [departmentFields, setDepartmentFields] = useState<Record<string, { type: string }>>({});
+    const [departmentFieldsValues, setDepartmentFieldsValues] = useState<Record<string, any>>({});
+    
+    const [eventFields, setEventFields] = useState<Record<string, { type: string }>>({});
+    const [eventFieldsValues, setEventFieldsValues] = useState<Record<string, any>>({});
+    
+    const [category, setCategory] = useState("");
+    const [categoryFields, setCategoryFields] = useState<Record<string, { type: string }>>({});
+    const [categoryFieldsValues, setCategoryFieldsValues] = useState<Record<string, any>>({});
+
+    // Данные для селектов
     const [departments, setDepartments] = useState<{ label: string; value: string }[]>([]);
     const [events, setEvents] = useState<{ label: string; value: string }[]>([]);
 
@@ -63,13 +72,47 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
         fetchEvents();
     }, [department]);
 
+    useEffect(() => {
+        // Загружаем поля события
+        if (selectedEvent) {
+            // Здесь нужно будет загрузить данные события включая additional_fields
+            // Временно заглушка
+            setEventFields({});
+            setEventFieldsValues({});
+        } else {
+            setEventFields({});
+            setEventFieldsValues({});
+        }
+    }, [selectedEvent]);
+
+    useEffect(() => {
+        // Загружаем категории если у события есть категории
+        if (selectedEvent && eventFields) {
+            // Здесь нужно будет загрузить категории для события
+            // Временно заглушка - категории пока не реализованы
+            console.log("Categories for event will be loaded here");
+        }
+    }, [selectedEvent, eventFields]);
+
+    useEffect(() => {
+        // Загружаем поля категории
+        if (category) {
+            // Здесь нужно будет загрузить поля категории
+            // Временно заглушка
+            setCategoryFields({});
+            setCategoryFieldsValues({});
+        } else {
+            setCategoryFields({});
+            setCategoryFieldsValues({});
+        }
+    }, [category]);
+
     const handleSubmit = async () => {
         if (!email || !department || !selectedEvent) {
             toast.error("Пожалуйста, заполните все обязательные поля");
             return;
         }
 
-        // Разрешаем цены >= 0 (включая 0)
         if (price < 0) {
             toast.error("Цена в KZT не может быть отрицательной");
             return;
@@ -81,77 +124,96 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
         }
 
         try {
-            // Подготавливаем additional_fields в правильном формате для бэкенда
-            const formattedAdditionalFields: Record<string, any> = {};
-            console.log("additionalFieldsValues:", additionalFieldsValues);
-            console.log("departmentFields:", departmentFields);
+            // Объединяем все дополнительные поля
+            const allAdditionalFields: Record<string, any> = {};
             
-            Object.entries(additionalFieldsValues).forEach(([key, value]) => {
-                let fieldType = departmentFields[key]?.type || 'text';
-                
-                // Fallback: если тип не определен в departmentFields, определяем по значению
-                if (!departmentFields[key] && value && typeof value === 'object' && value.file) {
-                    fieldType = 'file';
-                }
-                
-                console.log(`Processing field ${key}:`);
-                console.log(`  - departmentFields[${key}]:`, departmentFields[key]);
-                console.log(`  - value:`, value);
-                console.log(`  - detected type: ${fieldType}`);
-                
-                if (fieldType === 'file' && value && typeof value === 'object' && value.file) {
-                    // Для файлов отправляем информацию о файле
-                    formattedAdditionalFields[key] = {
+            // Поля департамента
+            Object.entries(departmentFieldsValues).forEach(([key, value]) => {
+                const fieldType = departmentFields[key]?.type || 'text';
+                if (fieldType === 'file' && value && typeof value === 'object' && (value as any).file) {
+                    allAdditionalFields[key] = {
                         type: 'file',
                         value: {
-                            name: value.file.name,
-                            size: value.file.size,
-                            type: value.file.type,
-                            url: value.url
+                            name: (value as any).file.name,
+                            size: (value as any).file.size,
+                            type: (value as any).file.type,
+                            url: (value as any).url
                         }
                     };
-                    console.log(`  - formatted as file:`, formattedAdditionalFields[key]);
                 } else {
-                    // Для других типов полей
-                    formattedAdditionalFields[key] = {
+                    allAdditionalFields[key] = {
                         type: fieldType,
                         value: value
                     };
-                    console.log(`  - formatted as ${fieldType}:`, formattedAdditionalFields[key]);
                 }
             });
             
-            // Добавляем кастомные поля
-            customAdditionalFields.forEach((field) => {
-                if (field.type === 'file' && field.value) {
-                    // Для файлов копируем весь объект с value
-                    formattedAdditionalFields[field.name] = {
-                        type: field.type,
-                        value: field.value
+            // Поля события
+            Object.entries(eventFieldsValues).forEach(([key, value]) => {
+                const fieldType = eventFields[key]?.type || 'text';
+                if (fieldType === 'file' && value && typeof value === 'object' && (value as any).file) {
+                    allAdditionalFields[key] = {
+                        type: 'file',
+                        value: {
+                            name: (value as any).file.name,
+                            size: (value as any).file.size,
+                            type: (value as any).file.type,
+                            url: (value as any).url
+                        }
                     };
                 } else {
-                    // Для других типов только type
-                    formattedAdditionalFields[field.name] = { type: field.type };
+                    allAdditionalFields[key] = {
+                        type: fieldType,
+                        value: value
+                    };
                 }
             });
             
-            console.log("Formatted additional_fields:", formattedAdditionalFields);
+            // Поля категории
+            Object.entries(categoryFieldsValues).forEach(([key, value]) => {
+                const fieldType = categoryFields[key]?.type || 'text';
+                if (fieldType === 'file' && value && typeof value === 'object' && (value as any).file) {
+                    allAdditionalFields[key] = {
+                        type: 'file',
+                        value: {
+                            name: (value as any).file.name,
+                            size: (value as any).file.size,
+                            type: (value as any).file.type,
+                            url: (value as any).url
+                        }
+                    };
+                } else {
+                    allAdditionalFields[key] = {
+                        type: fieldType,
+                        value: value
+                    };
+                }
+            });
 
             await packetEventsApi.create({
                 event_id: selectedEvent,
                 email: email,
-                category: category,
+                category: category || undefined,
                 price: price,
-                price_usd: priceUsd,
+                price_usd: showInUsd ? priceUsd : undefined,
                 active: active,
-                additional_fields: formattedAdditionalFields
+                additional_fields: Object.keys(allAdditionalFields).length > 0 ? allAdditionalFields : undefined
             });
 
             toast.success("Запись успешно добавлена");
             setIsOpen(false);
             onRefresh(); // Обновляем таблицу
             // Очистка полей
-            setEmail(""); setDepartment(""); setSelectedEvent(""); setPrice(0); setPriceUsd(0); setCategory(""); setAdditionalFieldsValues({}); setCustomAdditionalFields([]);
+            setEmail(""); 
+            setDepartment(""); 
+            setSelectedEvent(""); 
+            setPrice(0); 
+            setPriceUsd(0); 
+            setCategory(""); 
+            setShowInUsd(false);
+            setDepartmentFieldsValues({});
+            setEventFieldsValues({});
+            setCategoryFieldsValues({});
         } catch (error) {
             toast.error("Ошибка при создании");
         }
@@ -208,17 +270,17 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                     {/* Дополнительные поля департамента */}
                     <PaymentFormAdditionalFields
                         departmentId={department}
-                        values={additionalFieldsValues}
-                        onChange={setAdditionalFieldsValues}
+                        values={departmentFieldsValues}
+                        onChange={setDepartmentFieldsValues}
                         onFieldsLoad={setDepartmentFields}
                     />
 
                     {/* Кастомные дополнительные поля */}
                     <div className="flex flex-col gap-2">
-                        <label className="text-sm font-medium text-gray-700">Дополнительные поля типа оплаты</label>
+                        <label className="text-sm font-medium text-gray-700">Дополнительные поля события</label>
                         <AddAdditionalFields 
-                            value={customAdditionalFields} 
-                            onChange={setCustomAdditionalFields} 
+                            value={[]} 
+                            onChange={() => {}} 
                         />
                     </div>
 
@@ -230,6 +292,21 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                             onChange={(e) => setPrice(Number(e.target.value))}
                             icon={<span className="text-[#6B9AB0]">₸</span>} 
                         />
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                id="showInUsd"
+                                checked={showInUsd}
+                                onChange={(e) => setShowInUsd(e.target.checked)}
+                                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                            />
+                            <label htmlFor="showInUsd" className="text-sm text-gray-700">
+                                Показать в USD
+                            </label>
+                        </div>
+                    </div>
+
+                    {showInUsd && (
                         <CustomInput 
                             type="number" 
                             placeholder="Сумма USD" 
@@ -237,7 +314,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                             onChange={(e) => setPriceUsd(Number(e.target.value))}
                             icon={<CurrencyDollarIcon className="text-[#6B9AB0]" />} 
                         />
-                        </div>
+                    )}
                     <CustomButton onClick={handleSubmit} className="w-full mt-2">
                         Создать запись
                     </CustomButton>
