@@ -18,7 +18,6 @@ import {usePaymentStore} from "@/store/usePaymentStore.ts";
 import {orderHalyk, orderKaspi, orderSelfHalyk, orderSelfKaspi, orderKaspiCustomPrice, orderHalykCustomPrice} from "@/api/endpoints/order.ts";
 import {PaymentHalyk} from "@/components/payment/PaymentHalyk.tsx";
 import {toast} from "react-hot-toast";
-import {Calendar} from "primereact/calendar";
 import {useTranslation} from "react-i18next";
 import {DepartmentType} from "@/types/payment.ts";
 import {TengeIcon} from "@/assets/TengeIcon.tsx";
@@ -534,228 +533,189 @@ export const PaymentForm: FC = () => {
                                 />
                             );
                         })}
-                        {selectedDepartmentType==="EVENT_BASED" ? (
-                            <>
+
+                        {/* Селект событий — всегда доступен при выбранном департаменте */}
+                        <>
+                            <Controller
+                                name="event_id"
+                                control={control}
+                                render={({ field }) => (
+                                    <>
+                                        <CustomSelect
+                                            {...field}
+                                            options={eventOptions}
+                                            value={field.value || ''}
+                                            onChange={(val) => {
+                                                field.onChange(val);
+                                                setOrderField("event_id", val);
+                                                setCurrentEventId(val);
+
+                                                // Reset promo code when event changes
+                                                if (discount > 0) {
+                                                    setValue("promo_code", null);
+                                                    resetPromo();
+                                                    toast("Промокод сброшен. Событие изменено.", {
+                                                        icon: "ℹ️"
+                                                    });
+                                                }
+
+                                                // Reset residency status when event changes
+                                                setValue("showInUsd", false);
+                                                setCurrency("KZT");
+
+                                                const selectedEvent = eventOptions.find(e => e.value === val);
+                                                if (selectedEvent && "price" in selectedEvent) {
+                                                    setPrice(Number((selectedEvent as IEvent).price));
+                                                    setSelectedEventPriced((selectedEvent as any).priced ?? true);
+                                                    setSelectedEventPriceKzt(Number((selectedEvent as any).price || 0));
+                                                    setSelectedEventPriceUsd((selectedEvent as any).price_usd || null);
+                                                }
+                                            }}
+                                            triggerClassName={"text-white"}
+                                            placeholder={t('paymentPage.inputs.selectEvPH')}
+                                            error={errors.event_id?.message}
+                                        />
+                                        {errors.event_id && (
+                                            <p className="text-red-500 text-sm -mt-2 ml-2">{errors.event_id.message}</p>
+                                        )}
+                                    </>
+                                )}
+                            />
+
+                            {/* Дополнительные поля события */}
+                            {eventAdditionalFields.length > 0 && (
+                                <div className="flex flex-col gap-2">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-sm font-medium text-gray-700">Дополнительные поля события</label>
+                                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                            {eventAdditionalFields.length} полей
+                                        </span>
+                                    </div>
+                                    {eventAdditionalFields.map((field) => {
+                                        const key = field.name;
+                                        return (
+                                            <CustomInput
+                                                key={key}
+                                                icon={<UserIcon className="text-[#6B9AB0]" />}
+                                                type={field.type}
+                                                value={eventAdditionalFieldValues[key] || ""}
+                                                onChange={(e) => {
+                                                    const newValues = {...eventAdditionalFieldValues};
+                                                    newValues[key] = e.target.value;
+                                                    setEventAdditionalFieldValues(newValues);
+                                                }}
+                                                placeholder={field.label}
+                                            />
+                                        );
+                                    })}
+                                </div>
+                            )}
+
+                            {/* Селект типа платежа */}
+                            {currentEventId && paymentCategoryOptions.length > 0 && (
                                 <Controller
-                                    name="event_id"
+                                    name="payment_category_id"
                                     control={control}
                                     render={({ field }) => (
                                         <>
                                             <CustomSelect
                                                 {...field}
-                                                options={eventOptions}
+                                                options={paymentCategoryOptions}
                                                 value={field.value || ''}
                                                 onChange={(val) => {
                                                     field.onChange(val);
-                                                    setOrderField("event_id", val);
-                                                    setCurrentEventId(val);
+                                                    setOrderField("payment_category_id", val);
 
-                                                    // Reset promo code when event changes
-                                                    if (discount > 0) {
-                                                        setValue("promo_code", null);
-                                                        resetPromo();
-                                                        toast("Промокод сброшен. Событие изменено.", {
-                                                            icon: "ℹ️"
-                                                        });
-                                                    }
-
-                                                    // Reset residency status when event changes
-                                                    setValue("showInUsd", false);
-                                                    setCurrency("KZT");
-
-                                                    const selectedEvent = eventOptions.find(e => e.value === val);
-                                                    if (selectedEvent && "price" in selectedEvent) {
-                                                        setPrice(Number((selectedEvent as IEvent).price));
-                                                        setSelectedEventPriced((selectedEvent as any).priced ?? true);
-                                                        setSelectedEventPriceKzt(Number((selectedEvent as any).price || 0));
-                                                        setSelectedEventPriceUsd((selectedEvent as any).price_usd || null);
+                                                    // Загружаем дополнительные поля категории платежа
+                                                    const selectedCategory = paymentCategoryOptions.find(opt => opt.value === val);
+                                                    if (selectedCategory && (selectedCategory as any).additional_fields) {
+                                                        const categoryFields = Object.entries((selectedCategory as any).additional_fields).map(([name, config]: [string, any]) => ({
+                                                            name,
+                                                            type: config.type,
+                                                            label: name
+                                                        }));
+                                                        setPaymentCategoryAdditionalFields(categoryFields);
+                                                    } else {
+                                                        setPaymentCategoryAdditionalFields([]);
                                                     }
                                                 }}
                                                 triggerClassName={"text-white"}
-                                                placeholder={t('paymentPage.inputs.selectEvPH')}
-                                                error={errors.event_id?.message}
+                                                placeholder={t('paymentPage.inputs.selectPaymentTypePH')}
+                                                error={errors.payment_category_id?.message}
                                             />
-                                            {errors.event_id && (
-                                                <p className="text-red-500 text-sm -mt-2 ml-2">{errors.event_id.message}</p>
+                                            {errors.payment_category_id && (
+                                                <p className="text-red-500 text-sm -mt-2 ml-2">{errors.payment_category_id.message}</p>
+                                            )}
+
+                                            {/* Дополнительные поля категории платежа */}
+                                            {paymentCategoryAdditionalFields.length > 0 && (
+                                                <div className="flex flex-col gap-2 mt-4">
+                                                    <div className="flex items-center justify-between">
+                                                        <label className="text-sm font-medium text-gray-700">Дополнительные поля типа платежа</label>
+                                                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                                            {paymentCategoryAdditionalFields.length} полей
+                                                        </span>
+                                                    </div>
+                                                    {paymentCategoryAdditionalFields.map((field) => {
+                                                        const key = field.name;
+                                                        return (
+                                                            <CustomInput
+                                                                key={key}
+                                                                icon={<UserIcon className="text-[#6B9AB0]" />}
+                                                                type={field.type}
+                                                                value={paymentCategoryAdditionalFieldValues[key] || ""}
+                                                                onChange={(e) => {
+                                                                    const newValues = {...paymentCategoryAdditionalFieldValues};
+                                                                    newValues[key] = e.target.value;
+                                                                    setPaymentCategoryAdditionalFieldValues(newValues);
+                                                                }}
+                                                                placeholder={field.label}
+                                                            />
+                                                        );
+                                                    })}
+                                                </div>
                                             )}
                                         </>
                                     )}
                                 />
-                                
-                                {/* Дополнительные поля события */}
-                                {eventAdditionalFields.length > 0 && (
-                                    <div className="flex flex-col gap-2">
-                                        <div className="flex items-center justify-between">
-                                            <label className="text-sm font-medium text-gray-700">Дополнительные поля события</label>
-                                            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                                                {eventAdditionalFields.length} полей
-                                            </span>
-                                        </div>
-                                        {eventAdditionalFields.map((field) => {
-                                            const key = field.name;
-                                            return (
-                                                <CustomInput
-                                                    key={key}
-                                                    icon={<UserIcon className="text-[#6B9AB0]" />}
-                                                    type={field.type}
-                                                    value={eventAdditionalFieldValues[key] || ""}
+                            )}
+
+                            {/* Чекбокс рендерится только если есть цена в USD */}
+                            {selectedEventPriceUsd && (
+                                <Controller
+                                    name="showInUsd"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <div className="flex flex-col gap-2">
+                                            <label className="flex items-center gap-3 ml-2 cursor-pointer group">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={field.value || false}
                                                     onChange={(e) => {
-                                                        const newValues = {...eventAdditionalFieldValues};
-                                                        newValues[key] = e.target.value;
-                                                        setEventAdditionalFieldValues(newValues);
-                                                    }}
-                                                    placeholder={field.label}
-                                                />
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                                
-                                {/* Селект типа платежа */}
-                                {currentEventId && paymentCategoryOptions.length > 0 && (
-                                    <Controller
-                                        name="payment_category_id"
-                                        control={control}
-                                        render={({ field }) => (
-                                            <>
-                                                <CustomSelect
-                                                    {...field}
-                                                    options={paymentCategoryOptions}
-                                                    value={field.value || ''}
-                                                    onChange={(val) => {
-                                                        field.onChange(val);
-                                                        setOrderField("payment_category_id", val);
-                                                        
-                                                        // Загружаем дополнительные поля категории платежа
-                                                        const selectedCategory = paymentCategoryOptions.find(opt => opt.value === val);
-                                                        if (selectedCategory && (selectedCategory as any).additional_fields) {
-                                                            const categoryFields = Object.entries((selectedCategory as any).additional_fields).map(([name, config]: [string, any]) => ({
-                                                                name,
-                                                                type: config.type,
-                                                                label: name
-                                                            }));
-                                                            setPaymentCategoryAdditionalFields(categoryFields);
+                                                        const isChecked = e.target.checked;
+                                                        field.onChange(isChecked);
+                                                        if (isChecked) {
+                                                            setValue("amount", selectedEventPriceUsd);
+                                                            setPrice(selectedEventPriceUsd);
+                                                            setCurrency("USD");
                                                         } else {
-                                                            setPaymentCategoryAdditionalFields([]);
+                                                            setValue("amount", selectedEventPriceKzt);
+                                                            setPrice(selectedEventPriceKzt || 0);
+                                                            setCurrency("KZT");
                                                         }
                                                     }}
-                                                    triggerClassName={"text-white"}
-                                                    placeholder={t('paymentPage.inputs.selectPaymentTypePH')}
-                                                    error={errors.payment_category_id?.message}
+                                                    className="w-4 h-4 rounded accent-[#6B9AB0]"
                                                 />
-                                                {errors.payment_category_id && (
-                                                    <p className="text-red-500 text-sm -mt-2 ml-2">{errors.payment_category_id.message}</p>
-                                                )}
-                                                
-                                                {/* Дополнительные поля категории платежа */}
-                                                {paymentCategoryAdditionalFields.length > 0 && (
-                                                    <div className="flex flex-col gap-2 mt-4">
-                                                        <div className="flex items-center justify-between">
-                                                            <label className="text-sm font-medium text-gray-700">Дополнительные поля типа платежа</label>
-                                                            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                                                                {paymentCategoryAdditionalFields.length} полей
-                                                            </span>
-                                                        </div>
-                                                        {paymentCategoryAdditionalFields.map((field) => {
-                                                            const key = field.name;
-                                                            return (
-                                                                <CustomInput
-                                                                    key={key}
-                                                                    icon={<UserIcon className="text-[#6B9AB0]" />}
-                                                                    type={field.type}
-                                                                    value={paymentCategoryAdditionalFieldValues[key] || ""}
-                                                                    onChange={(e) => {
-                                                                        const newValues = {...paymentCategoryAdditionalFieldValues};
-                                                                        newValues[key] = e.target.value;
-                                                                        setPaymentCategoryAdditionalFieldValues(newValues);
-                                                                    }}
-                                                                    placeholder={field.label}
-                                                                />
-                                                            );
-                                                        })}
-                                                    </div>
-                                                )}
-                                            </>
-                                        )}
-                                    />
-                                )}
-                                {/* Чекбокс рендерится только если есть цена в USD */}
-                        {selectedDepartmentType === "EVENT_BASED" && selectedEventPriceUsd && (
-                            <Controller
-                                name="showInUsd"
-                                control={control}
-                                render={({ field }) => (
-                                    <div className="flex flex-col gap-2">
-                                        <label className="flex items-center gap-3 ml-2 cursor-pointer group">
-                                            <input
-                                                type="checkbox"
-                                                checked={field.value || false}
-                                                onChange={(e) => {
-                                                    const isChecked = e.target.checked;
-                                                    field.onChange(isChecked);  
-                                                    if (isChecked) {
-                                                        setValue("amount", selectedEventPriceUsd);
-                                                        setPrice(selectedEventPriceUsd);
-                                                        setCurrency("USD");
-                                                    } else {
-                                                        setValue("amount", selectedEventPriceKzt);
-                                                        setPrice(selectedEventPriceKzt || 0);
-                                                        setCurrency("KZT");
-                                                    }
-                                                }}
-                                                className="w-4 h-4 rounded accent-[#6B9AB0]"
-                                            />
-                                            <span className="text-black group-hover:text-[#6B9AB0] transition-colors">
-                                                {t('paymentPage.inputs.showInUsd')}
-                                            </span>
-                                        </label>
-                                    </div>
-                                )}
-                            />
-                        )}
-                        </>
-                        ) : null}
-                        {additionalFields.map((field) => {
-                            const key = field.name;
-
-                            if (field.type === "checkbox") {
-                                return (
-                                    <label key={key} className="flex items-center gap-2 ml-2">
-                                        <input
-                                            type="checkbox"
-                                            checked={Boolean(additionalFieldValues[key])}
-                                            onChange={(e) => handleAdditionalChange(key, e.target.checked)}
-                                        />
-                                        <span>{field.label}</span>
-                                    </label>
-                                );
-                            }else if (field.type === "date") {
-                                return (
-                                    <Calendar
-                                        value={
-                                            typeof additionalFieldValues[key] === "string" ||
-                                            typeof additionalFieldValues[key] === "number"
-                                                ? new Date(additionalFieldValues[key])
-                                                : null
-                                        }
-                                        dateFormat="yy-mm-dd"
-                                        placeholder={field.label}
-                                        onChange={(e) => handleAdditionalChange(key, e.value)}
-                                    />
-                                )
-                            }
-
-                            return (
-                                <CustomInput
-                                    key={key}
-                                    icon={<UserIcon className="text-[#6B9AB0]" />}
-                                    type={field.type}
-                                    value={additionalFieldValues[key] || ""}
-                                    onChange={(e) => handleAdditionalChange(key, e.target.value)}
-                                    placeholder={field.label}
+                                                <span className="text-black group-hover:text-[#6B9AB0] transition-colors">
+                                                    {t('paymentPage.inputs.showInUsd')}
+                                                </span>
+                                            </label>
+                                        </div>
+                                    )}
                                 />
-                            );
-                        })}
+                            )}
+                        </>
+
                         <Controller
                             name="paymentMethod"
                             control={control}
