@@ -4,7 +4,6 @@ import { CustomSelect } from "@/ui/CustomSelect.tsx";
 import { getDepartments } from "@/api/endpoints/departments.ts";
 import { getPublicEventsById } from "@/api/endpoints/events.ts";
 import { Department } from "@/types/departments.ts";
-import { IEvent } from "@/types/events.ts";
 import { AddPacketEventModal } from "./AddPacketEventModal"; 
 
 interface PacketEventsFilterProps {
