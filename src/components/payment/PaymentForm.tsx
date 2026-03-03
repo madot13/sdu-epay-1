@@ -492,12 +492,11 @@ export const PaymentForm: FC = () => {
                                             value={
                                                 typeof additionalFieldValues[key] === "string" ||
                                                 typeof additionalFieldValues[key] === "number"
-                                                    ? new Date(additionalFieldValues[key])
-                                                    : null
+                                                    ? new Date(additionalFieldValues[key]).toISOString().split('T')[0]
+                                                    : ''
                                             }
-                                            dateFormat="yy-mm-dd"
                                             placeholder={field.label}
-                                            onChange={(e) => handleAdditionalChange(key, e.value)}
+                                            onChange={(e) => handleAdditionalChange(key, e.target.value)}
                                         />
                                     </div>
                                 );
