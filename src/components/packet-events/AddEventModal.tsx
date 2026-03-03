@@ -3,6 +3,7 @@ import { CustomModal } from "@/ui/CustomModal.tsx";
 import { CustomInput } from "@/ui/CustomInput.tsx";
 import { CustomButton } from "@/ui/CustomButton.tsx";
 import { toast } from "react-hot-toast";
+import { addEvent } from "@/api/endpoints/events.ts"; // ← Исправляем на addEvent
 
 interface Props {
     isOpen: boolean;
@@ -28,13 +29,11 @@ export const AddEventModal: FC<Props> = ({ isOpen, onClose, onSuccess, departmen
 
         setLoading(true);
         try {
-            // TODO: Добавить API вызов для создания события
-            // const response = await eventsApi.create({ title, department_id: departmentId });
+            const response = await addEvent({ title, department_id: departmentId });
             
-            // Временно просто создаем объект
             const newEvent = {
                 label: title,
-                value: Date.now().toString() // Временно используем timestamp как ID
+                value: response.id || Date.now().toString()
             };
             
             onSuccess(newEvent);
