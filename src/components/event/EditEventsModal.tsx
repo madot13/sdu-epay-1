@@ -177,7 +177,7 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
             
             console.log("Prepared additional_fields for API:", additional_fields);
 
-            await updateEvent(eventData.id, {
+            const updatePayload = {
                 title,
                 manager_email: email,
                 department_id: selectedDepartment,
@@ -190,7 +190,11 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
                     ? {}
                     : { period_from: from!, period_till: till! }
                 ),
-            });
+            };
+            
+            console.log("Full update payload:", updatePayload);
+
+            await updateEvent(eventData.id, updatePayload);
 
             await fetchEvents();
 
