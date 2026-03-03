@@ -1,33 +1,41 @@
-import { FC, ReactNode, useState } from "react";
+import { FC, ReactNode } from "react";
 
 interface Column {
     header: string;
     accessor: string | ((row: Record<string, any>) => ReactNode);
     cellClassName?: (value: any, row: Record<string, any>) => string;
-    filterable?: boolean;
+    sortable?: boolean;
 }
 
 interface CustomTableProps {
     columns: Column[];
     data: Record<string, any>[];
     actions?: (row: Record<string, any>) => ReactNode;
-    onFilter?: (column: string, value: string) => void;
+    onSort?: (column: string, direction: 'asc' | 'desc') => void;
+    currentSort?: { column: string; direction: 'asc' | 'desc' };
 }
 
-export const CustomTable: FC<CustomTableProps> = ({ columns, data, actions, onFilter }) => {
-    const [filterValues, setFilterValues] = useState<Record<string, string>>({});
-    const [showFilters, setShowFilters] = useState<Record<string, boolean>>({});
-
-    const handleFilterChange = (column: string, value: string) => {
-        const newFilters = { ...filterValues, [column]: value };
-        setFilterValues(newFilters);
-        if (onFilter) {
-            onFilter(column, value);
+export const CustomTable: FC<CustomTableProps> = ({ columns, data, actions, onSort, currentSort }) => {
+    const handleSort = (column: string) => {
+        if (!onSort) return;
+        
+        let direction: 'asc' | 'desc' = 'asc';
+        
+        // If clicking the same column, toggle direction
+        if (currentSort?.column === column) {
+            direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
         }
+        
+        onSort(column, direction);
     };
 
-    const toggleFilter = (column: string) => {
-        setShowFilters(prev => ({ ...prev, [column]: !prev[column] }));
+    const getSortIcon = (column: string) => {
+        if (!currentSort || currentSort.column !== column) {
+            return <span className="text-xs text-gray-400">⇅</span>;
+        }
+        return currentSort.direction === 'asc' 
+            ? <span className="text-xs text-blue-600">↑</span>
+            : <span className="text-xs text-blue-600">↓</span>;
     };
 
     return (
@@ -37,34 +45,17 @@ export const CustomTable: FC<CustomTableProps> = ({ columns, data, actions, onFi
                 <tr>
                     {columns.map((col, index) => {
                         const columnKey = typeof col.accessor === 'function' ? `custom-${index}` : col.accessor as string;
-                        const isFilterable = col.filterable !== false;
+                        const isSortable = col.sortable !== false;
                         
                         return (
                             <th key={columnKey} className="px-3 lg:px-6 py-2 lg:py-3 text-left">
-                                <div className="flex flex-col gap-1">
-                                    <div 
-                                        className={`whitespace-nowrap flex items-center gap-1 ${isFilterable ? 'cursor-pointer hover:text-blue-600' : ''}`}
-                                        title={col.header}
-                                        onClick={() => isFilterable && toggleFilter(columnKey)}
-                                    >
-                                        {col.header}
-                                        {isFilterable && (
-                                            <span className="text-xs">
-                                                {showFilters[columnKey] ? '▼' : '▶'}
-                                            </span>
-                                        )}
-                                    </div>
-                                    
-                                    {isFilterable && showFilters[columnKey] && (
-                                        <input
-                                            type="text"
-                                            placeholder="Фильтр..."
-                                            value={filterValues[columnKey] || ''}
-                                            onChange={(e) => handleFilterChange(columnKey, e.target.value)}
-                                            className="text-xs px-2 py-1 border border-gray-300 rounded text-gray-700 normal-case"
-                                            onClick={(e) => e.stopPropagation()}
-                                        />
-                                    )}
+                                <div 
+                                    className={`whitespace-nowrap flex items-center gap-1 ${isSortable ? 'cursor-pointer hover:text-blue-600' : ''}`}
+                                    title={col.header}
+                                    onClick={() => isSortable && handleSort(columnKey)}
+                                >
+                                    {col.header}
+                                    {isSortable && getSortIcon(columnKey)}
                                 </div>
                             </th>
                         );

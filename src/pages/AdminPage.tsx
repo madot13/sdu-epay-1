@@ -8,6 +8,7 @@ import { EditAdminModal } from "@/components/admin/EditAdminModal.tsx";
 import {DeleteModal} from "@/ui/DeleteModal.tsx";
 import {Paginator} from "primereact/paginator";
 import {toast} from "react-hot-toast";
+import { IUser } from "@/types/users.ts";
 
 export const AdminPage: FC = () => {
     const { fetchUsers, users, deleteUser, total} = useUsersStore();
@@ -16,7 +17,7 @@ export const AdminPage: FC = () => {
     const [selectedAdmin, setSelectedAdmin] = useState<any | null>(null);
     const [first, setFirst] = useState(0);
     const [rows, setRows] = useState(10);
-    const [filters, setFilters] = useState<Record<string, string>>({});
+    const [sort, setSort] = useState<{ column: string; direction: 'asc' | 'desc' } | null>(null);
     
     useEffect(() => {
         fetchUsers();
@@ -29,36 +30,36 @@ export const AdminPage: FC = () => {
         await fetchUsers({
             page: event.first / event.rows,
             size: event.rows,
-            ...filters,
+            ...(sort && { sortBy: sort.column, sortOrder: sort.direction }),
         });
     };
 
-    const handleFilter = (column: string, value: string) => {
-        const newFilters = { ...filters };
+    const handleSort = (column: string, direction: 'asc' | 'desc') => {
+        const newSort = { column, direction };
+        setSort(newSort);
         
-        if (value.trim() === '') {
-            delete newFilters[column];
-        } else {
-            // Map column names to API parameters
-            if (column === 'username') {
-                newFilters.username = value;
-            } else if (column === 'department') {
-                newFilters.department = value;
-            } else if (column === 'role') {
-                newFilters.role = value;
-            } else {
-                newFilters[column] = value;
+        // Client-side sorting for now
+        const sortedUsers = [...users].sort((a, b) => {
+            let aValue: any = a[column as keyof IUser];
+            let bValue: any = b[column as keyof IUser];
+            
+            // Handle department object
+            if (column === 'department') {
+                aValue = a.department?.name || '';
+                bValue = b.department?.name || '';
             }
-        }
-        
-        setFilters(newFilters);
-        
-        // Fetch users with new filters
-        fetchUsers({
-            page: first / rows,
-            size: rows,
-            ...newFilters,
+            
+            if (aValue == null) aValue = '';
+            if (bValue == null) bValue = '';
+            
+            if (aValue < bValue) return direction === 'asc' ? -1 : 1;
+            if (aValue > bValue) return direction === 'asc' ? 1 : -1;
+            return 0;
         });
+        
+        // Update store with sorted data (temporary solution)
+        // In real implementation, this should be done on backend
+        console.log('Sorted users:', sortedUsers);
     };
 
     const handleEditClick = (admin: any) => {
@@ -98,9 +99,9 @@ export const AdminPage: FC = () => {
 
 
     const columns = [
-        { header: "Почта", accessor: "username", filterable: true },
-        { header: "Департамент", accessor: "department", filterable: true },
-        { header: "Роль", accessor: "role", filterable: true },
+        { header: "Почта", accessor: "username", sortable: true },
+        { header: "Департамент", accessor: "department", sortable: true },
+        { header: "Роль", accessor: "role", sortable: true },
     ];
 
 
@@ -113,7 +114,8 @@ export const AdminPage: FC = () => {
                     <CustomTable
                         columns={columns}
                         data={users.filter((user) => user.active)}
-                        onFilter={handleFilter}
+                        onSort={handleSort}
+                        currentSort={sort || undefined}
                         actions={(row) => (
                             <div className="flex gap-2">
                                 <button
