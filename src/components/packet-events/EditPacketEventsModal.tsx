@@ -17,11 +17,22 @@ interface Props {
 export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, onSuccess }) => {
     const [form, setForm] = useState<IEventRecord>({} as IEventRecord);
     const [withoutFixedPrice, setWithoutFixedPrice] = useState(false);
+    const [customFields, setCustomFields] = useState<{name:string; type:string; value?: any}[]>([]);
 
     useEffect(() => {
         setForm({ ...eventData });
         // Устанавливаем чекбокс если цены 0 или не заданы
         setWithoutFixedPrice((eventData.price || 0) === 0 && (eventData.price_usd || 0) === 0);
+        
+        // Загружаем дополнительные поля если они есть
+        if (eventData.additional_fields) {
+            const fields = Object.entries(eventData.additional_fields).map(([name, config]) => ({
+                name,
+                type: config.type,
+                value: config.value || ''
+            }));
+            setCustomFields(fields);
+        }
     }, [eventData, isOpen]);
 
     const handleSave = async () => {
@@ -45,10 +56,28 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
         }
 
         try {
+            // Объединяем все дополнительные поля
+            const allAdditionalFields: Record<string, any> = {};
+            
+            // Кастомные поля типа платежа
+            customFields.forEach((field) => {
+                if (field.type === 'file' && field.value) {
+                    // Для файлов копируем весь объект с value
+                    allAdditionalFields[field.name] = {
+                        type: field.type,
+                        value: field.value
+                    };
+                } else {
+                    // Для других типов только type
+                    allAdditionalFields[field.name] = { type: field.type };
+                }
+            });
+
             await packetEventsApi.update(eventData.id, {
                 ...form,
                 price: withoutFixedPrice ? 0 : (form.price || 0),
-                price_usd: withoutFixedPrice ? 0 : (form.price_usd || 0)
+                price_usd: withoutFixedPrice ? 0 : (form.price_usd || 0),
+                additional_fields: Object.keys(allAdditionalFields).length > 0 ? allAdditionalFields : undefined
             });
             toast.success("Данные успешно обновлены");
             onSuccess();
@@ -81,6 +110,72 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
                     value={form.category}
                     onChange={(e) => setForm({...form, category: e.target.value})}
                 />
+                
+                {/* Дополнительные поля типа платежа */}
+                <div className="flex flex-col gap-2">
+                    <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium text-gray-700">Дополнительные поля типа платежа</label>
+                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                            {customFields.length} полей
+                        </span>
+                    </div>
+                    <div className="space-y-2">
+                        {customFields.map((field, index) => (
+                            <div key={index} className="flex items-center gap-2">
+                                <input
+                                    type="text"
+                                    placeholder="Название поля"
+                                    value={field.name}
+                                    onChange={(e) => {
+                                        const newFields = [...customFields];
+                                        newFields[index].name = e.target.value;
+                                        setCustomFields(newFields);
+                                    }}
+                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
+                                />
+                                <select
+                                    value={field.type}
+                                    onChange={(e) => {
+                                        const newFields = [...customFields];
+                                        newFields[index].type = e.target.value;
+                                        setCustomFields(newFields);
+                                    }}
+                                    className="px-3 py-2 border border-gray-300 rounded-md"
+                                >
+                                    <option value="text">Текст</option>
+                                    <option value="number">Число</option>
+                                    <option value="date">Дата</option>
+                                    <option value="file">Файл</option>
+                                </select>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const newFields = customFields.filter((_, i) => i !== index);
+                                        setCustomFields(newFields);
+                                    }}
+                                    className="px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+                                >
+                                    Удалить
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="flex gap-2">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setCustomFields([...customFields, {
+                                    name: '',
+                                    type: 'text',
+                                    value: ''
+                                }]);
+                            }}
+                            className="px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                        >
+                            Добавить поле
+                        </button>
+                    </div>
+                </div>
                 
                 <div className="flex items-center gap-2">
                     <input
