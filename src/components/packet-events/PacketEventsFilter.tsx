@@ -98,7 +98,7 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
                 <CustomButton
                     variant="submit"
                     onClick={handleSearch}
-                    className="h-[37px] px-6 mt-auto"
+                    className="h-[37px] px-6 mt-auto bg-[#6B9AB0] hover:bg-[#5a8296] text-white transition-colors border-none"
                 >
                     Поиск
                 </CustomButton>
