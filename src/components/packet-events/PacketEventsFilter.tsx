@@ -13,6 +13,8 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
     const [name, setName] = useState("");
     const [departments, setDepartments] = useState<{ label: string; value: string }[]>([]);
     const [selectedDepartment, setSelectedDepartment] = useState("");
+    const [periodFrom, setPeriodFrom] = useState("");
+    const [periodTo, setPeriodTo] = useState("");
 
     useEffect(() => {
         const fetchDepartments = async () => {
@@ -41,6 +43,14 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
             filters.department_id = selectedDepartment.trim();
         }
         
+        if (periodFrom && periodFrom.trim()) {
+            filters.period_from = periodFrom.trim();
+        }
+        
+        if (periodTo && periodTo.trim()) {
+            filters.period_to = periodTo.trim();
+        }
+        
         console.log("🔍 Prepared filters:", filters);
         onSearch(filters);
     };
@@ -65,6 +75,24 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
                         value={selectedDepartment}
                         onChange={setSelectedDepartment}
                         triggerClassName="bg-white w-full sm:min-w-[200px] h-[37px] text-black text-sm border-[#6B9AB0]"
+                    />
+                </div>
+                <div className="flex flex-col gap-[10px] flex-1 sm:flex-none">
+                    <label className="text-sm font-medium">Период с</label>
+                    <input
+                        type="date"
+                        value={periodFrom}
+                        onChange={(e) => setPeriodFrom(e.target.value)}
+                        className="bg-white h-[37px] p-2 border border-[#6B9AB0] rounded-[4px] text-sm"
+                    />
+                </div>
+                <div className="flex flex-col gap-[10px] flex-1 sm:flex-none">
+                    <label className="text-sm font-medium">Период по</label>
+                    <input
+                        type="date"
+                        value={periodTo}
+                        onChange={(e) => setPeriodTo(e.target.value)}
+                        className="bg-white h-[37px] p-2 border border-[#6B9AB0] rounded-[4px] text-sm"
                     />
                 </div>
                 <CustomButton
