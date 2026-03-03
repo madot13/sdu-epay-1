@@ -21,7 +21,6 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
     const [selectedEvent, setSelectedEvent] = useState("");
     const [price, setPrice] = useState(0);
     const [priceUsd, setPriceUsd] = useState(0);
-    const [showInUsd, setShowInUsd] = useState(false);
     const [active] = useState(true);
 
     // Дополнительные поля на каждом уровне
@@ -125,7 +124,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                 email: email,
                 category: category || undefined,
                 price: price,
-                price_usd: showInUsd ? priceUsd : undefined,
+                price_usd: priceUsd > 0 ? priceUsd : undefined,
                 active: active,
                 additional_fields: Object.keys(allAdditionalFields).length > 0 ? allAdditionalFields : undefined
             });
@@ -140,7 +139,6 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
             setPrice(0); 
             setPriceUsd(0); 
             setCategory(""); 
-            setShowInUsd(false);
             setPaymentTypeCustomFields([]);
         } catch (error) {
             toast.error("Ошибка при создании");
@@ -213,7 +211,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                         </>
                     )}
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-4">
                         <CustomInput 
                             type="number" 
                             placeholder="Сумма KZT" 
@@ -221,21 +219,6 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                             onChange={(e) => setPrice(Number(e.target.value))}
                             icon={<span className="text-[#6B9AB0]">₸</span>} 
                         />
-                        <div className="flex items-center gap-2">
-                            <input
-                                type="checkbox"
-                                id="showInUsd"
-                                checked={showInUsd}
-                                onChange={(e) => setShowInUsd(e.target.checked)}
-                                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                            />
-                            <label htmlFor="showInUsd" className="text-sm text-gray-700">
-                                Показать в USD
-                            </label>
-                        </div>
-                    </div>
-
-                    {showInUsd && (
                         <CustomInput 
                             type="number" 
                             placeholder="Сумма USD" 
@@ -243,7 +226,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                             onChange={(e) => setPriceUsd(Number(e.target.value))}
                             icon={<CurrencyDollarIcon className="text-[#6B9AB0]" />} 
                         />
-                    )}
+                    </div>
                     
                     <div className="sticky bottom-0 bg-white border-t border-gray-200 pt-4 mt-4">
                         <CustomButton onClick={handleSubmit} className="w-full">
