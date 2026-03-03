@@ -296,15 +296,13 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                     )}
 
                     {/* Дополнительные поля категории платежа */}
-                    {category && (
-                        <div className="flex flex-col gap-2">
-                            <label className="text-sm font-medium text-gray-700">Дополнительные поля типа оплаты</label>
-                            <AddAdditionalFields 
-                                value={paymentCustomFields} 
-                                onChange={setPaymentCustomFields} 
-                            />
-                        </div>
-                    )}
+                    <div className="flex flex-col gap-2">
+                        <label className="text-sm font-medium text-gray-700">Дополнительные поля типа оплаты</label>
+                        <AddAdditionalFields 
+                            value={paymentCustomFields} 
+                            onChange={setPaymentCustomFields} 
+                        />
+                    </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         <CustomInput 
