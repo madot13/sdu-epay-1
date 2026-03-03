@@ -585,11 +585,6 @@ export const PaymentForm: FC = () => {
                             {/* Дополнительные поля события */}
                             {eventAdditionalFields.length > 0 && (
                                 <div className="flex flex-col gap-2">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                                            {eventAdditionalFields.length} полей
-                                        </span>
-                                    </div>
                                     {eventAdditionalFields.map((field) => {
                                         const key = field.name;
                                         return (
