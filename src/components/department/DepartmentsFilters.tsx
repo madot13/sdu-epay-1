@@ -82,6 +82,7 @@ export const DepartmentsFilters:FC = () => {
                     )}
                 </div>
                 <CustomButton
+                    variant="submit"
                     onClick={handleSearch}
                     className="h-[37px] px-6 mt-auto"
                 >

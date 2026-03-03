@@ -96,7 +96,7 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
                     />
                 </div>
                 <CustomButton
-                    variant="default"
+                    variant="submit"
                     onClick={handleSearch}
                     className="h-[37px] px-6 mt-auto"
                 >
