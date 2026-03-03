@@ -15,6 +15,7 @@ export interface IEventRecord {
     period_from?: string;
     period_till?: string; // API может возвращать period_till
     without_period?: boolean;
+    additional_fields?: Record<string, any>; // ← Добавляем дополнительные поля
 }
 
 export type CreateEventPayload = Omit<IEventRecord, 'id'>;

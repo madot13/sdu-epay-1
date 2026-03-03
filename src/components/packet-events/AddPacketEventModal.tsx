@@ -10,6 +10,7 @@ import { getPublicEventsById } from "@/api/endpoints/events.ts";
 import { Department } from "@/types/departments.ts";
 import { IEvent } from "@/types/events.ts";
 import { packetEventsApi } from "@/api/endpoints/packet-events";
+import { PaymentFormAdditionalFields } from "./PaymentFormAdditionalFields.tsx";
 
 export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -22,6 +23,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
     const [priceUsd, setPriceUsd] = useState(0); // ← По умолчанию 0
     const [category, setCategory] = useState("");
     const [active] = useState(true); // ← Убрали setActive, оставили по умолчанию true
+    const [additionalFieldsValues, setAdditionalFieldsValues] = useState<Record<string, any>>({});
 
     const [departments, setDepartments] = useState<{ label: string; value: string }[]>([]);
     const [events, setEvents] = useState<{ label: string; value: string }[]>([]);
@@ -82,14 +84,15 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                 category: category,
                 price: price,
                 price_usd: priceUsd,
-                active: active
+                active: active,
+                additional_fields: additionalFieldsValues // ← Добавляем дополнительные поля
             });
 
             toast.success("Запись успешно добавлена");
             setIsOpen(false);
             onRefresh(); // Обновляем таблицу
             // Очистка полей
-            setEmail(""); setDepartment(""); setSelectedEvent(""); setPrice(0); setPriceUsd(0); setCategory("");
+            setEmail(""); setDepartment(""); setSelectedEvent(""); setPrice(0); setPriceUsd(0); setCategory(""); setAdditionalFieldsValues({});
         } catch (error) {
             toast.error("Ошибка при создании");
         }
@@ -141,6 +144,13 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                         value={category} 
                         onChange={(e) => setCategory(e.target.value)}
                         icon={<UserCircleIcon className="text-[#6B9AB0]" />} 
+                    />
+
+                    {/* Дополнительные поля департамента */}
+                    <PaymentFormAdditionalFields
+                        departmentId={department}
+                        values={additionalFieldsValues}
+                        onChange={setAdditionalFieldsValues}
                     />
 
                     <div className="grid grid-cols-2 gap-4">
