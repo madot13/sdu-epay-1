@@ -12,6 +12,7 @@ import * as yup from "yup";
 import { PulseLoader } from "react-spinners";
 import {getPublicDepartments} from "@/api/endpoints/departments.ts";
 import {getPublicEventsById} from "@/api/endpoints/events.ts";
+import {packetEventsApi} from "@/api/endpoints/packet-events";
 import {IEvent} from "@/types/events.ts";
 import {usePaymentStore} from "@/store/usePaymentStore.ts";
 import {orderHalyk, orderKaspi, orderSelfHalyk, orderSelfKaspi, orderKaspiCustomPrice, orderHalykCustomPrice} from "@/api/endpoints/order.ts";
@@ -29,6 +30,7 @@ interface FormValues {
     promo_code: string | null;
     department_id: string;
     event_id: string | null;
+    payment_category_id: string | null;
     additional: string;
     paymentMethod: string;
     amount: number | null;
@@ -52,6 +54,7 @@ export const usePaymentSchema = (departmentType: DepartmentType | null, eventPri
         event_id: departmentType === "EVENT_BASED"
             ? yup.string().required(t("paymentPage.errors.event_id"))
             : yup.string().optional(),
+        payment_category_id: yup.string().optional(),
         additional: yup.string().optional(),
         paymentMethod: yup.string().required(t("paymentPage.errors.paymentMethod")),
         amount: departmentType === "SELF_PAY" || (departmentType === "EVENT_BASED" && eventPriced === false)
@@ -73,6 +76,7 @@ export const PaymentForm: FC = () => {
     const [paymentData, setPaymentData] = useState<any>(null);
     const [departmentOptions, setDepartmentOptions] = useState<Option[]>([]);
     const [eventOptions, setEventOptions] = useState<Option[]>([]);
+    const [paymentCategoryOptions, setPaymentCategoryOptions] = useState<Option[]>([]);
     const [departments, setDepartments] = useState<any[]>([]); // store all data
     const [additionalFields, setAdditionalFields] = useState<any[]>([]);
     const [additionalFieldValues, setAdditionalFieldValues] = useState<Record<string, string | boolean>>({});
@@ -130,8 +134,6 @@ export const PaymentForm: FC = () => {
         fetchEvents();
     }, [selectedDepartmentId]);
 
-
-
     const schema = usePaymentSchema(selectedDepartmentType, selectedEventPriced);
     const {
         control,
@@ -147,6 +149,7 @@ export const PaymentForm: FC = () => {
             cellphone: '',
             department_id: '',
             event_id: '',
+            payment_category_id: '',
             additional: '',
             promo_code: null,
             paymentMethod: '',
@@ -154,6 +157,38 @@ export const PaymentForm: FC = () => {
             showInUsd: false,
         }
     });
+
+    useEffect(() => {
+        const fetchPaymentCategories = async () => {
+            const eventId = watch("event_id");
+            if (!eventId) {
+                setPaymentCategoryOptions([]);
+                return;
+            }
+
+            try {
+                console.log("Fetching payment categories for event:", eventId);
+                const paymentTypes = await packetEventsApi.getAll({ event_id: eventId });
+                console.log("Payment types for event:", paymentTypes);
+                
+                const categories = paymentTypes
+                    .filter(pt => pt.category && pt.active)
+                    .map(pt => ({
+                        label: pt.category || '',
+                        value: pt.id || ''
+                    }))
+                    .filter(cat => cat.label && cat.value);
+                
+                console.log("Mapped categories:", categories);
+                setPaymentCategoryOptions(categories);
+            } catch (error) {
+                console.error("Failed to fetch payment categories:", error);
+                setPaymentCategoryOptions([]);
+            }
+        };
+
+        fetchPaymentCategories();
+    }, [watch("event_id")]);
 
     const watchShowInUsd = watch("showInUsd");
     const watchPaymentMethod = watch("paymentMethod");
@@ -473,6 +508,33 @@ export const PaymentForm: FC = () => {
                                         </>
                                     )}
                                 />
+                                
+                                {/* Селект категорий платежей */}
+                                {watch("event_id") && paymentCategoryOptions.length > 0 && (
+                                    <Controller
+                                        name="payment_category_id"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <>
+                                                <CustomSelect
+                                                    {...field}
+                                                    options={paymentCategoryOptions}
+                                                    value={field.value || ''}
+                                                    onChange={(val) => {
+                                                        field.onChange(val);
+                                                        setOrderField("payment_category_id", val);
+                                                    }}
+                                                    triggerClassName={"text-white"}
+                                                    placeholder={t('paymentPage.inputs.selectCategoryPH')}
+                                                    error={errors.payment_category_id?.message}
+                                                />
+                                                {errors.payment_category_id && (
+                                                    <p className="text-red-500 text-sm -mt-2 ml-2">{errors.payment_category_id.message}</p>
+                                                )}
+                                            </>
+                                        )}
+                                    />
+                                )}
                                 {/* Чекбокс рендерится только если есть цена в USD */}
                         {selectedDepartmentType === "EVENT_BASED" && selectedEventPriceUsd && (
                             <Controller
