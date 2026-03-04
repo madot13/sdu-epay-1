@@ -28,8 +28,24 @@ export const PacketEventsPage: FC = () => {
         { header: "Департамент", accessor: "department", sortable: true },
         { header: "Email", accessor: "email", sortable: true },
         { header: "Категория", accessor: "category", sortable: true },
-        { header: "Период с", accessor: "period_from_display", sortable: true },
-        { header: "Период по", accessor: "period_till_display", sortable: true },
+        { 
+            header: "Цена KZT", 
+            accessor: (item: Record<string, any>) => {
+                const priced = item.priced;
+                const price = item.price;
+                return priced ? (price || 0) + " ₸" : "—";
+            }
+        },
+        { 
+            header: "Цена USD", 
+            accessor: (item: Record<string, any>) => {
+                const priced = item.priced;
+                const priceUsd = item.price_usd;
+                if (!priced) return "—";
+                if (priceUsd) return priceUsd + " $";
+                return "—";
+            }
+        },
     ];
 
     const loadData = useCallback(async (currentFilters: any = filters) => {
@@ -74,9 +90,7 @@ export const PacketEventsPage: FC = () => {
             ...item,
             event_name: item.title || item.event_name || '',
             category: item.category || "—",
-            department: item.department_name || item.department || '',
-            period_from_display: item.period_from ? new Date(item.period_from).toLocaleDateString('ru-RU') : "—",
-            period_till_display: item.period_till ? new Date(item.period_till).toLocaleDateString('ru-RU') : "—"
+            department: item.department_name || item.department || ''
         }));
 
         if (!sort) return mapped;
@@ -84,15 +98,6 @@ export const PacketEventsPage: FC = () => {
         return [...mapped].sort((a: any, b: any) => {
             let aValue = a[sort.column] ?? '';
             let bValue = b[sort.column] ?? '';
-
-            // Для дат используем оригинальные значения, а не отформатированные строки
-            if (sort.column === 'period_from_display') {
-                aValue = a.period_from ? new Date(a.period_from).getTime() : 0;
-                bValue = b.period_from ? new Date(b.period_from).getTime() : 0;
-            } else if (sort.column === 'period_till_display') {
-                aValue = a.period_till ? new Date(a.period_till).getTime() : 0;
-                bValue = b.period_till ? new Date(b.period_till).getTime() : 0;
-            }
 
             if (typeof aValue === 'string' && typeof bValue === 'string') {
                 const cmp = aValue.localeCompare(bValue, 'ru');
