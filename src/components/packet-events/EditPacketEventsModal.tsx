@@ -78,7 +78,6 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
                 ...form,
                 price: withoutFixedPrice ? 0 : (form.price || 0),
                 price_usd: withoutFixedPrice ? 0 : (form.price_usd || 0),
-                active: form.active !== false,
                 additional_fields: Object.keys(allAdditionalFields).length > 0 ? allAdditionalFields : undefined
             });
             toast.success("Данные успешно обновлены");
@@ -132,19 +131,6 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
                     />
                     <label htmlFor="without-fixed-price-edit" className="text-sm text-gray-700">
                         Без фиксированной цены
-                    </label>
-                </div>
-
-                <div className="flex items-center gap-2">
-                    <input
-                        type="checkbox"
-                        id="active-status"
-                        checked={form.active !== false}
-                        onChange={(e) => setForm({...form, active: e.target.checked})}
-                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                    <label htmlFor="active-status" className="text-sm text-gray-700">
-                        Активная запись
                     </label>
                 </div>
 

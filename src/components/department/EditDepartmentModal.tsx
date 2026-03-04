@@ -14,6 +14,7 @@ interface EditDepartmentModalProps {
     departmentData: {
         id:string;
         name: string;
+        active?: boolean;
         additional_fields?: Record<string, { type: string }>;
     },
 }
@@ -22,12 +23,14 @@ interface EditDepartmentModalProps {
 export const EditDepartmentModal: FC<EditDepartmentModalProps> = ({isOpen, onClose, departmentData}) => {
     const [additionalFields, setAdditionalFields] = useState<{ name: string; type: string }[]>([]);
     const [name, setName] = useState(departmentData.name);
+    const [active, setActive] = useState(departmentData.active !== false);
 
     const {updateDepartment} = useDepartmentsStore();
 
     useEffect(() => {
         if (isOpen) {
             setName(departmentData.name);
+            setActive(departmentData.active !== false);
             const fields = departmentData.additional_fields
                 ? Object.entries(departmentData.additional_fields).map(([key, value]) => ({
                     name: key,
@@ -47,6 +50,7 @@ export const EditDepartmentModal: FC<EditDepartmentModalProps> = ({isOpen, onClo
         try {
             await updateDepartment(departmentData.id, {
                 name,
+                active,
                 additional_fields,
             });
             onClose();
@@ -71,6 +75,19 @@ export const EditDepartmentModal: FC<EditDepartmentModalProps> = ({isOpen, onClo
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                 />
+
+                <div className="flex items-center gap-2">
+                    <input
+                        type="checkbox"
+                        id="active-status"
+                        checked={active}
+                        onChange={(e) => setActive(e.target.checked)}
+                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <label htmlFor="active-status" className="text-sm text-gray-700">
+                        Активный
+                    </label>
+                </div>
 
                 <AddAdditionalFields value={additionalFields} onChange={setAdditionalFields} />
 

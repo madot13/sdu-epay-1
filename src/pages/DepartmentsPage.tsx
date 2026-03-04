@@ -20,7 +20,13 @@ export const DepartmentsPage:FC = () => {
     const [sortedDepartments, setSortedDepartments] = useState<any[]>([]);
 
     const columns = [
-        {header: "Департамент", accessor: "name", sortable: true}
+        {header: "Департамент", accessor: "name", sortable: true},
+        { 
+            header: "Статус", 
+            accessor: (item: Record<string, any>) => {
+                return item.active !== false ? "Активный" : "Неактивный";
+            }
+        }
     ]
 
     useEffect(() => {

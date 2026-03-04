@@ -22,7 +22,6 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
     const [price, setPrice] = useState(0);
     const [priceUsd, setPriceUsd] = useState(0);
     const [withoutFixedPrice, setWithoutFixedPrice] = useState(false);
-    const [active] = useState(true);
 
     // Дополнительные поля на каждом уровне
     const [paymentTypeCustomFields, setPaymentTypeCustomFields] = useState<{name:string; type:string; value?: any}[]>([]);
@@ -106,7 +105,6 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                 priced: !withoutFixedPrice,
                 price: withoutFixedPrice ? 0 : price,
                 price_usd: withoutFixedPrice ? 0 : (priceUsd > 0 ? priceUsd : undefined),
-                active: active,
                 additional_fields: Object.keys(allAdditionalFields).length > 0 ? allAdditionalFields : undefined
             });
 
