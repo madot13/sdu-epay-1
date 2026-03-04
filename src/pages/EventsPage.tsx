@@ -25,8 +25,6 @@ export const EventsPage:FC = () => {
         { header: "Email", accessor: "manager_email", sortable: true },
         { header: "Период с", accessor: "period_from", sortable: true },
         { header: "Период по", accessor: "period_till", sortable: true },
-        { header: "Цена KZT", accessor: "price_kzt_display", sortable: true },
-        { header: "Цена USD", accessor: "price_usd_display", sortable: true },
     ];
 
     useEffect(() => {
