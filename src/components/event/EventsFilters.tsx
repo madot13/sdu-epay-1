@@ -12,6 +12,8 @@ export const EventFilters:FC = () => {
     const [name, setName] = useState("");
     const [departments, setDepartments] = useState<{ label: string; value: string }[]>([]);
     const [selectedDepartment, setSelectedDepartment] = useState("");
+    const [periodFrom, setPeriodFrom] = useState("");
+    const [periodTo, setPeriodTo] = useState("");
     const [eventSuggestions, setEventSuggestions] = useState<{title: string, id: string}[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
 
@@ -21,6 +23,8 @@ export const EventFilters:FC = () => {
         await fetchEvents({
             title: name || undefined,
             department_id: selectedDepartment !== "" ? selectedDepartment : undefined,
+            period_from: periodFrom || undefined,
+            period_to: periodTo || undefined,
             page: 0,
         })
     }
@@ -114,6 +118,24 @@ export const EventFilters:FC = () => {
                         dropdownClassName="bg-gray-100"
                         optionClassName="text-sm"
                         activeOptionClassName="bg-blue-200"
+                    />
+                </div>
+                <div className="flex flex-col gap-[10px] flex-1 sm:flex-none">
+                    <label className="text-sm">Период с</label>
+                    <input
+                        type="date"
+                        value={periodFrom}
+                        onChange={(e) => setPeriodFrom(e.target.value)}
+                        className="bg-white h-[37px] p-2 border border-[#6B9AB0] rounded-[4px] text-sm"
+                    />
+                </div>
+                <div className="flex flex-col gap-[10px] flex-1 sm:flex-none">
+                    <label className="text-sm">Период по</label>
+                    <input
+                        type="date"
+                        value={periodTo}
+                        onChange={(e) => setPeriodTo(e.target.value)}
+                        className="bg-white h-[37px] p-2 border border-[#6B9AB0] rounded-[4px] text-sm"
                     />
                 </div>
                 <CustomButton

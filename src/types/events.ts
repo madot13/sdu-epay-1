@@ -17,6 +17,8 @@ export type EventQuery = {
     page?: number;
     size?: number;
     department_id?: string | null;
+    period_from?: string | null;
+    period_to?: string | null;
 };
 
 

@@ -14,8 +14,6 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
     const [name, setName] = useState("");
     const [departments, setDepartments] = useState<{ label: string; value: string }[]>([]);
     const [selectedDepartment, setSelectedDepartment] = useState("");
-    const [periodFrom, setPeriodFrom] = useState("");
-    const [periodTo, setPeriodTo] = useState("");
 
     useEffect(() => {
         const fetchDepartments = async () => {
@@ -53,14 +51,10 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
         overrides: {
             name?: string;
             department?: string;
-            from?: string;
-            to?: string;
         } = {}
     ) => {
         const currentName = overrides.name !== undefined ? overrides.name : name;
         const currentDepartment = overrides.department !== undefined ? overrides.department : selectedDepartment;
-        const currentFrom = overrides.from !== undefined ? overrides.from : periodFrom;
-        const currentTo = overrides.to !== undefined ? overrides.to : periodTo;
 
         const filters: any = {};
 
@@ -70,14 +64,6 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
 
         if (currentDepartment && currentDepartment.trim()) {
             filters.department_id = currentDepartment.trim();
-        }
-
-        if (currentFrom && currentFrom.trim()) {
-            filters.period_from = currentFrom.trim();
-        }
-
-        if (currentTo && currentTo.trim()) {
-            filters.period_to = currentTo.trim();
         }
 
         console.log("🔍 Prepared filters:", filters);
@@ -108,27 +94,9 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
                         triggerClassName="bg-white w-full sm:min-w-[200px] h-[37px] text-black text-sm border-[#6B9AB0]"
                     />
                 </div>
-                <div className="flex flex-col gap-[10px] flex-1 sm:flex-none">
-                    <label className="text-sm font-medium">Период с</label>
-                    <input
-                        type="date"
-                        value={periodFrom}
-                        onChange={(e) => setPeriodFrom(e.target.value)}
-                        className="bg-white h-[37px] p-2 border border-[#6B9AB0] rounded-[4px] text-sm"
-                    />
-                </div>
-                <div className="flex flex-col gap-[10px] flex-1 sm:flex-none">
-                    <label className="text-sm font-medium">Период по</label>
-                    <input
-                        type="date"
-                        value={periodTo}
-                        onChange={(e) => setPeriodTo(e.target.value)}
-                        className="bg-white h-[37px] p-2 border border-[#6B9AB0] rounded-[4px] text-sm"
-                    />
-                </div>
                 <CustomButton
                     variant="submit"
-                    onClick={() => handleSearch({ name, department: selectedDepartment, from: periodFrom, to: periodTo })}
+                    onClick={() => handleSearch({ name, department: selectedDepartment })}
                     className="h-[37px] px-6 mt-auto"
                 >
                     Поиск
