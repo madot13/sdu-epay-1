@@ -16,13 +16,6 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
     const [selectedDepartment, setSelectedDepartment] = useState("");
     const [periodFrom, setPeriodFrom] = useState("");
     const [periodTo, setPeriodTo] = useState("");
-    const [activeStatus, setActiveStatus] = useState("");
-
-    const activeOptions = [
-        { label: "Все", value: "" },
-        { label: "Активные", value: "true" },
-        { label: "Неактивные", value: "false" }
-    ];
 
     useEffect(() => {
         const fetchDepartments = async () => {
@@ -62,14 +55,12 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
             department?: string;
             from?: string;
             to?: string;
-            active?: string;
         } = {}
     ) => {
         const currentName = overrides.name !== undefined ? overrides.name : name;
         const currentDepartment = overrides.department !== undefined ? overrides.department : selectedDepartment;
         const currentFrom = overrides.from !== undefined ? overrides.from : periodFrom;
         const currentTo = overrides.to !== undefined ? overrides.to : periodTo;
-        const currentActive = overrides.active !== undefined ? overrides.active : activeStatus;
 
         const filters: any = {};
 
@@ -87,10 +78,6 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
 
         if (currentTo && currentTo.trim()) {
             filters.period_to = currentTo.trim();
-        }
-
-        if (currentActive && currentActive.trim()) {
-            filters.active = currentActive.trim() === "true";
         }
 
         console.log("🔍 Prepared filters:", filters);
@@ -111,20 +98,10 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
                     />
                 </div>
                 <div className="flex flex-col gap-[10px] flex-1 sm:flex-none">
-                    <label className="text-sm font-medium">Статус</label>
-                    <CustomSelect
-                        options={activeOptions}
-                        value={activeStatus}
-                        onChange={(val) => setActiveStatus(val)}
-                        triggerClassName="bg-white w-full sm:min-w-[150px] h-[37px] text-black text-sm border-[#6B9AB0]"
-                    />
-                </div>
-                <div className="flex flex-col gap-[10px] flex-1 sm:flex-none">
                     <label className="text-sm font-medium">Департамент</label>
                     <CustomSelect
                         options={departments}
                         value={selectedDepartment}
-                        // ✅ ИСПРАВЛЕНИЕ: при смене департамента сразу передаём новое значение в поиск
                         onChange={(val) => {
                             setSelectedDepartment(val);
                         }}
@@ -151,8 +128,7 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
                 </div>
                 <CustomButton
                     variant="submit"
-                    // ✅ ИСПРАВЛЕНИЕ: передаём актуальные значения напрямую, минуя стейт
-                    onClick={() => handleSearch({ name, department: selectedDepartment, from: periodFrom, to: periodTo, active: activeStatus })}
+                    onClick={() => handleSearch({ name, department: selectedDepartment, from: periodFrom, to: periodTo })}
                     className="h-[37px] px-6 mt-auto"
                 >
                     Поиск

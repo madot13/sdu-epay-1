@@ -7,6 +7,7 @@ export interface Department {
 
 export interface DepartmentQuery {
     name?: string;
+    active?: boolean;
     page?: number;
     size?: number;
 }

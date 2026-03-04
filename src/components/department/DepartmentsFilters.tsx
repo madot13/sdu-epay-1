@@ -1,20 +1,29 @@
 import {FC, useEffect, useState} from "react";
 import {useDepartmentsStore} from "@/store/useDepartmentsStore.ts";
 import {CustomButton} from "@/ui/CustomButton.tsx";
+import {CustomSelect} from "@/ui/CustomSelect.tsx";
 import {AddDepartmentModal} from "@/components/department/AddDepartmentModal.tsx";
 import {getDepartments} from "@/api/endpoints/departments.ts";
 import {AnimatePresence, motion} from "framer-motion";
 
 export const DepartmentsFilters:FC = () => {
     const [name, setName] = useState("");
+    const [activeStatus, setActiveStatus] = useState("");
     const [depSuggestions, setDepSuggestions] = useState<{name: string, id: string}[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
+
+    const activeOptions = [
+        { label: "Все", value: "" },
+        { label: "Активные", value: "true" },
+        { label: "Неактивные", value: "false" }
+    ];
 
 
     const {fetchDepartments } = useDepartmentsStore();
     const handleSearch = async () => {
         await fetchDepartments({
             name: name || undefined,
+            active: activeStatus ? activeStatus === "true" : undefined,
             page: 0,
         });
     }
@@ -80,6 +89,15 @@ export const DepartmentsFilters:FC = () => {
                             </motion.ul>
                         </AnimatePresence>
                     )}
+                </div>
+                <div className="flex flex-col gap-[10px] flex-1 sm:flex-none">
+                    <label className="text-sm">Статус</label>
+                    <CustomSelect
+                        options={activeOptions}
+                        value={activeStatus}
+                        onChange={(val) => setActiveStatus(val)}
+                        triggerClassName="bg-white w-full sm:min-w-[150px] h-[37px] text-black text-sm border-[#6B9AB0]"
+                    />
                 </div>
                 <CustomButton
                     variant="submit"
