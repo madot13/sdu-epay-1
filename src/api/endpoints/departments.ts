@@ -13,6 +13,7 @@ export const getDepartments = async (query?: DepartmentQuery) => {
     ).toString()
         : '';
 
+    console.log('🔍 Departments API query:', query, 'queryString:', queryString);
     const {data} = await api.get(`/departments${queryString}`);
     return data;
 }

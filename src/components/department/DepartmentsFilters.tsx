@@ -21,11 +21,13 @@ export const DepartmentsFilters:FC = () => {
 
     const {fetchDepartments } = useDepartmentsStore();
     const handleSearch = async () => {
-        await fetchDepartments({
+        const params = {
             name: name || undefined,
             active: activeStatus ? activeStatus === "true" : undefined,
             page: 0,
-        });
+        };
+        console.log('🔍 Departments filters:', params);
+        await fetchDepartments(params);
     }
 
 
