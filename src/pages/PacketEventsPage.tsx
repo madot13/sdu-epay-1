@@ -30,24 +30,6 @@ export const PacketEventsPage: FC = () => {
         { header: "Категория", accessor: "category", sortable: true },
         { header: "Период с", accessor: "period_from_display", sortable: true },
         { header: "Период по", accessor: "period_till_display", sortable: true },
-        { 
-            header: "Цена (KZT)", 
-            accessor: (item: Record<string, any>) => {
-                const priced = item.priced;
-                const price = item.price;
-                return priced ? (price || 0) + " ₸" : "—";
-            }
-        },
-        { 
-            header: "Цена (USD)", 
-            accessor: (item: Record<string, any>) => {
-                const priced = item.priced;
-                const priceUsd = item.price_usd;
-                if (!priced) return "—";
-                if (priceUsd) return priceUsd + " $";
-                return "—";
-            }
-        },
     ];
 
     const loadData = useCallback(async (currentFilters: any = filters) => {
@@ -91,8 +73,6 @@ export const PacketEventsPage: FC = () => {
         const mapped = data.map((item) => ({
             ...item,
             event_name: item.title || item.event_name || '',
-            price_display: `${item.price?.toLocaleString() || 0} ₸`,
-            price_usd_display: item.price_usd ? `$${item.price_usd}` : "—",
             category: item.category || "—",
             department: item.department_name || item.department || '',
             period_from_display: item.period_from ? new Date(item.period_from).toLocaleDateString('ru-RU') : "—",
