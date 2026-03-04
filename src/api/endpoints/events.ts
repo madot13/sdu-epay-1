@@ -26,7 +26,7 @@ export const addEvent = async (event: IEvent): Promise<IEvent> => {
 
 
 export const getEventById = async (id: string) => {
-    const { data } = await api.get(`/events/${id}`);
+    const { data } = await publicApi.get(`/events/${id}`);
     return data;
 }
 

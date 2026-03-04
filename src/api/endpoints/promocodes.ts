@@ -3,7 +3,7 @@ import {
     PromocodeQuery, UpdatePromocodePayload, VerifyPromocodePayload,
     VerifyPromocodeResponse
 } from "@/types/promocodes.ts";
-import {api} from "@/api/api.ts";
+import {api, publicApi} from "@/api/api.ts";
 
 export const getPromocodes = async (query?:PromocodeQuery) => {
     const queryString = query
@@ -27,7 +27,7 @@ export const addPromocode = async (promocode: CreatePromocodePayload) => {
 }
 
 export const verifyPromocode = async (payload: VerifyPromocodePayload): Promise<VerifyPromocodeResponse> => {
-    const {data} = await api.post('/promo-codes/public/verify', payload);
+    const {data} = await publicApi.post('/promo-codes/public/verify', payload);
 
     return data;
 }
