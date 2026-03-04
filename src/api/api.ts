@@ -26,6 +26,11 @@ export const api = axios.create({
     baseURL: API_URL,
 });
 
+// Public API instance without authentication for payment endpoints
+export const publicApi = axios.create({
+    baseURL: API_URL,
+});
+
 api.interceptors.request.use(
     (config) => {
         const token = getAccessToken();
