@@ -1,4 +1,4 @@
-import {api} from "@/api/api";
+import {api, publicApi} from "@/api/api";
 import {Department, DepartmentQuery} from "@/types/departments.ts";
 
 export const getDepartments = async (query?: DepartmentQuery) => {
@@ -24,7 +24,7 @@ export const getDepartmentById = async (id:string) => {
 }
 
 export const getPublicDepartments = async () => {
-    const {data} = await api.get('/departments/public');
+    const {data} = await publicApi.get('/departments/public');
 
     return data;
 }

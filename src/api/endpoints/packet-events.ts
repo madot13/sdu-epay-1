@@ -1,9 +1,9 @@
-import { api } from "@/api/api";
+import { api, publicApi } from "@/api/api";
 import { IEventRecord, CreateEventPayload } from "@/types/packetevents";
 
 export const packetEventsApi = {
     getAll: async (params?: any) => {
-    const response = await api.get<IEventRecord[]>('event-payment-types', { params });
+    const response = await publicApi.get<IEventRecord[]>('event-payment-types', { params });
     return response.data;},
     create: (data: CreateEventPayload) => api.post('event-payment-types', data),
     delete: (id: string) => api.delete(`event-payment-types/${id}`),

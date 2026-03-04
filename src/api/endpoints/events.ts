@@ -1,4 +1,4 @@
-import {api} from "@/api/api.ts";
+import {api, publicApi} from "@/api/api.ts";
 import {EventQuery, IEvent, UpdateEventPayload} from "@/types/events.ts";
 
 export const getEvents = async (query?: EventQuery) => {
@@ -31,7 +31,7 @@ export const getEventById = async (id: string) => {
 }
 
 export const getPublicEventsById = async (id: string): Promise<IEvent[]> => {
-    const { data } = await api.get(`/events/public?department_id=${id}`);
+    const { data } = await publicApi.get(`/events/public?department_id=${id}`);
 
     return data;
 }
