@@ -225,6 +225,7 @@ export const PaymentForm: FC = () => {
     const [isKaspiDisabled, setIsKaspiDisabled] = useState(false);
     const [isUsdForced, setIsUsdForced] = useState(false);
     const [isKztForced, setIsKztForced] = useState(false);
+    const [isCustomPrice, setIsCustomPrice] = useState(false); // Добавляем состояние для произвольной цены
     const [paymentMethodMessage, setPaymentMethodMessage] = useState("");
 
     // Умная логика валют и цен
@@ -288,6 +289,11 @@ export const PaymentForm: FC = () => {
                     }
                 } else if (hasCustomPrice) {
                     // Произвольная цена - позволяем выбор валюты и ввод суммы
+                    setIsUsdForced(false);
+                    setIsKztForced(false);
+                    setIsKaspiDisabled(false);
+                    setPaymentMethodMessage("");
+                    setIsCustomPrice(true); // Устанавливаем состояние произвольной цены
                     setValue("amount", null);
                     setPrice(0);
                     console.log("🔍 Set custom price: null");
@@ -299,6 +305,7 @@ export const PaymentForm: FC = () => {
             setIsKztForced(false);
             setIsKaspiDisabled(false);
             setPaymentMethodMessage("");
+            setIsCustomPrice(false); // Сбрасываем состояние произвольной цены
             setValue("amount", null);
             setPrice(0);
         }
@@ -366,12 +373,6 @@ export const PaymentForm: FC = () => {
                 return converted;
             };
 
-            const payload = {
-                ...data,
-                additional_fields: convertAdditionalFields(additionalFieldValues),
-                currency
-            };
-
             console.log("🔍 Payment payload:", {
                 amount: data.amount,
                 amountType: typeof data.amount,
@@ -396,6 +397,21 @@ export const PaymentForm: FC = () => {
                 toast.error("Сумма платежа должна быть положительным числом.");
                 return;
             }
+
+            // Дополнительная валидация для произвольной цены
+            if (isCustomPrice && (!data.amount || data.amount <= 0)) {
+                console.error("❌ Custom price requires amount:", data.amount);
+                toast.error("При произвольной цене введите сумму больше 0.");
+                return;
+            }
+
+            const payload = {
+                ...data,
+                additional_fields: convertAdditionalFields(additionalFieldValues),
+                currency
+            };
+
+            console.log("🚀 Starting payment processing with payload:", payload);
 
 
             if(selectedDepartmentType==="EVENT_BASED"){
@@ -423,27 +439,43 @@ export const PaymentForm: FC = () => {
                         console.log("kaspiData", kaspiData);
                         setPaymentData(kaspiData);
                     }
-                }else if (data.paymentMethod === "HalykBank") {
+                } else if (data.paymentMethod === "HalykBank") {
                     if (selectedEventPriced === false) {
                         // Если событие без фиксированной цены, используем эндпоинт event-custom-price
                         // eslint-disable-next-line @typescript-eslint/no-unused-vars
                         const { paymentMethod, department_id, promo_code, showInUsd, ...customPriceData } = payload;
-                        setPaymentData(await orderHalykCustomPrice({
-                            ...customPriceData,
-                            event_id: customPriceData.event_id!,
-                            amount: customPriceData.amount!,
-                            currency
-                        }));
-                        setShowWidget(true);
+                        console.log("🔍 Calling orderHalykCustomPrice with:", customPriceData);
+                        try {
+                            const halykData = await orderHalykCustomPrice({
+                                ...customPriceData,
+                                event_id: customPriceData.event_id!,
+                                amount: customPriceData.amount!,
+                                currency
+                            });
+                            console.log("✅ orderHalykCustomPrice success:", halykData);
+                            setPaymentData(halykData);
+                            setShowWidget(true);
+                        } catch (error) {
+                            console.error("❌ orderHalykCustomPrice error:", error);
+                            toast.error("Ошибка при создании платежа. Пожалуйста, попробуйте еще раз.");
+                        }
                     } else {
                         // Если событие с фиксированной ценой, используем обычный эндпоинт
                         // eslint-disable-next-line @typescript-eslint/no-unused-vars
                         const { paymentMethod, department_id, amount, showInUsd, ...dataWithoutPaymentMethodAndDepartment } = payload;
-                        setPaymentData(await orderHalyk({
-                            ...dataWithoutPaymentMethodAndDepartment,
-                            currency
-                        }));
-                        setShowWidget(true);
+                        console.log("🔍 Calling orderHalyk with:", dataWithoutPaymentMethodAndDepartment);
+                        try {
+                            const halykData = await orderHalyk({
+                                ...dataWithoutPaymentMethodAndDepartment,
+                                currency
+                            });
+                            console.log("✅ orderHalyk success:", halykData);
+                            setPaymentData(halykData);
+                            setShowWidget(true);
+                        } catch (error) {
+                            console.error("❌ orderHalyk error:", error);
+                            toast.error("Ошибка при создании платежа. Пожалуйста, попробуйте еще раз.");
+                        }
                     }
                 }
                 else {
@@ -1041,6 +1073,7 @@ export const PaymentForm: FC = () => {
                                                     <>
                                                         <CustomInput
                                                             {...field}
+                                                            disabled={false} // Всегда активно для произвольной цены
                                                             icon={watchShowInUsd 
                                                                 ? <CurrencyDollarIcon className={errors.amount ? "text-red-500" : "text-[#6B9AB0]"} />
                                                                 : <TengeIcon color={errors.amount ? "#fb2c36" : "#6B9AB0"} />
@@ -1050,7 +1083,7 @@ export const PaymentForm: FC = () => {
                                                                 field.onChange(e);
                                                                 setOrderField("amount", Number(e.target.value));
                                                             }}
-                                                            placeholder={t('paymentPage.inputs.amountPH')}
+                                                            placeholder={isCustomPrice ? "Введите сумму" : t('paymentPage.inputs.amountPH')}
                                                             error={errors.amount?.message}
                                                         />
                                                         {errors.amount && (
@@ -1060,8 +1093,8 @@ export const PaymentForm: FC = () => {
                                                 )}
                                             />
                                         )}
-
-                                        {selectedEventPriced !== false && <CheckOut />}
+                                        
+                                        {selectedEventPriced !== false && !isCustomPrice && <CheckOut />}
                                     </>
                             ) : (
                                 <Controller
@@ -1071,14 +1104,15 @@ export const PaymentForm: FC = () => {
                                         <>
                                             <CustomInput
                                                 {...field}
+                                                disabled={!isCustomPrice} // Блокируем если не произвольная цена
                                                 icon={<TengeIcon  color={errors.amount ? "#fb2c36" : "#6B9AB0"} />}
                                                 type="number"
                                                 onChange={(e) => {
                                                     field.onChange(e);
                                                     setOrderField("amount", Number(e.target.value));
                                                 }}
-                                                placeholder={t('paymentPage.inputs.amountPH')}
-                                                error={errors.cellphone?.message}
+                                                placeholder={isCustomPrice ? "Введите сумму" : t('paymentPage.inputs.amountPH')}
+                                                error={errors.amount?.message}
                                             />
                                             {errors.amount && (
                                                 <p className="text-red-500 text-sm -mt-4 ml-2">{errors.amount.message}</p>
@@ -1092,6 +1126,7 @@ export const PaymentForm: FC = () => {
                             <CustomButton 
                                 type="submit" 
                                 variant="submit"
+                                disabled={isCustomPrice && (!watch("amount") || Number(watch("amount")) <= 0)} // Блокируем при произвольной цене без суммы
                                 className="bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-[#1E40AF] px-4 py-2 text-white font-medium rounded-md transition duration-200 ease-in-out shadow-md hover:shadow-lg"
                             >
                                 {t('paymentPage.payBtn')}
