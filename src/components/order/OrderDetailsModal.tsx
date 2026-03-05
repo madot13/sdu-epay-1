@@ -227,20 +227,58 @@ export const OrderDetailsModal: FC<OrderDetailsModalProps> = ({ isOpen, onClose,
 
                 {orderDetails.additional_fields && Object.keys(orderDetails.additional_fields).length > 0 && (
                     <div>
-                        <p className="text-sm text-gray-500 mb-2">Дополнительные поля</p>
-                        <div className="bg-gray-50 p-3 rounded-md">
-                            {Object.entries(orderDetails.additional_fields).map(([key, value]) => (
-                                <div key={key} className="flex justify-between py-1">
-                                    <span className="text-gray-600">{key}:</span>
-                                    <span className="font-semibold">
-                                        {typeof value === "boolean"
-                                            ? value
-                                                ? "Да"
-                                                : "Нет"
-                                            : String(value)}
-                                    </span>
-                                </div>
-                            ))}
+                        <p className="text-sm text-gray-500 mb-3">Дополнительные поля</p>
+                        <div className="bg-gray-50 p-4 rounded-md">
+                            <div className="flex flex-col gap-3">
+                                {Object.entries(orderDetails.additional_fields).map(([key, value]) => {
+                                    const isFile = typeof value === "string" && (
+                                        value.includes("http") || 
+                                        value.includes("www") || 
+                                        value.includes("C:\\fakepath") ||
+                                        value.includes("fakepath") ||
+                                        value.includes("blob:")
+                                    );
+                                    
+                                    return (
+                                        <div key={key} className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 pb-3 border-b border-gray-200 last:border-0">
+                                            <span className="text-gray-600 font-medium min-w-[120px]">{key}:</span>
+                                            
+                                            {isFile ? (
+                                                <button
+                                                    onClick={() => {
+                                                        const url = value.includes("http") ? value : '#';
+                                                        if (url !== '#') {
+                                                            window.open(url, '_blank');
+                                                        } else {
+                                                            // Для локальных файлов или blob URL
+                                                            const link = document.createElement('a');
+                                                            link.href = value;
+                                                            link.download = value.split('/').pop() || 'file';
+                                                            document.body.appendChild(link);
+                                                            link.click();
+                                                            document.body.removeChild(link);
+                                                        }
+                                                    }}
+                                                    className="flex items-center gap-2 px-3 py-2 bg-white border border-blue-500 text-blue-600 rounded-md hover:bg-blue-50 transition-colors text-sm font-medium"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                    </svg>
+                                                    Скачать файл
+                                                </button>
+                                            ) : (
+                                                <span className="font-semibold text-gray-800 break-all">
+                                                    {typeof value === "boolean"
+                                                        ? value
+                                                            ? "Да"
+                                                            : "Нет"
+                                                        : String(value)}
+                                                </span>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </div>
                     </div>
                 )}
