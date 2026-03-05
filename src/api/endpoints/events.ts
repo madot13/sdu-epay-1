@@ -30,6 +30,11 @@ export const getEventById = async (id: string) => {
     return data;
 }
 
+export const getEventByIdAuth = async (id: string) => {
+    const { data } = await api.get(`/events/${id}`);
+    return data;
+}
+
 export const getPublicEventsById = async (id: string): Promise<IEvent[]> => {
     const { data } = await publicApi.get(`/events/public?department_id=${id}`);
 

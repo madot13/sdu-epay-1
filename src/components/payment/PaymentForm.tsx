@@ -11,8 +11,8 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { PulseLoader } from "react-spinners";
 import {getPublicDepartments} from "@/api/endpoints/departments.ts";
-import {getPublicEventsById, getEventById} from "@/api/endpoints/events.ts";
-import {packetEventsApi} from "@/api/endpoints/packet-events";
+import {getPublicEventsById, getEventByIdAuth} from "@/api/endpoints/events.ts";
+import {packetEventsApi} from "@/api/endpoints/packet-events.ts";
 import {IEvent} from "@/types/events.ts";
 import {usePaymentStore} from "@/store/usePaymentStore.ts";
 import {orderHalyk, orderKaspi, orderSelfHalyk, orderSelfKaspi, orderKaspiCustomPrice, orderHalykCustomPrice} from "@/api/endpoints/order.ts";
@@ -170,7 +170,7 @@ export const PaymentForm: FC = () => {
                 if (selectedEvent) {
                     console.log("🔍 Found selected event:", selectedEvent);
                     try {
-                        const eventData = await getEventById(currentEventId);
+                        const eventData = await getEventByIdAuth(currentEventId);
                         console.log("🔍 Event data from API:", eventData);
                         if (eventData.additional_fields) {
                             const eventFields = Object.entries(eventData.additional_fields).map(([name, config]: [string, any]) => ({
