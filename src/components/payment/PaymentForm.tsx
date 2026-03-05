@@ -744,20 +744,39 @@ export const PaymentForm: FC = () => {
                                                 <div className="flex flex-col gap-2 mt-4">
                                                     {paymentCategoryAdditionalFields.map((field) => {
                                                         const key = field.name;
-                                                        return (
-                                                            <CustomInput
-                                                                key={key}
-                                                                icon={<UserIcon className="text-[#6B9AB0]" />}
-                                                                type={field.type}
-                                                                value={paymentCategoryAdditionalFieldValues[key] || ""}
-                                                                onChange={(e) => {
-                                                                    const newValues = {...paymentCategoryAdditionalFieldValues};
-                                                                    newValues[key] = e.target.value;
-                                                                    setPaymentCategoryAdditionalFieldValues(newValues);
-                                                                }}
-                                                                placeholder={field.label}
-                                                            />
-                                                        );
+                                                        
+                                                        if (field.type === "checkbox") {
+                                                            return (
+                                                                <label key={key} className="flex items-center gap-2 ml-2 cursor-pointer">
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={Boolean(paymentCategoryAdditionalFieldValues[key])}
+                                                                        onChange={(e) => {
+                                                                            const newValues = {...paymentCategoryAdditionalFieldValues};
+                                                                            newValues[key] = e.target.checked;
+                                                                            setPaymentCategoryAdditionalFieldValues(newValues);
+                                                                        }}
+                                                                        className="w-4 h-4 rounded accent-[#6B9AB0]"
+                                                                    />
+                                                                    <span className="text-black text-sm">{field.label}</span>
+                                                                </label>
+                                                            );
+                                                        } else {
+                                                            return (
+                                                                <CustomInput
+                                                                    key={key}
+                                                                    icon={<UserIcon className="text-[#6B9AB0]" />}
+                                                                    type={field.type}
+                                                                    value={paymentCategoryAdditionalFieldValues[key] || ""}
+                                                                    onChange={(e) => {
+                                                                        const newValues = {...paymentCategoryAdditionalFieldValues};
+                                                                        newValues[key] = e.target.value;
+                                                                        setPaymentCategoryAdditionalFieldValues(newValues);
+                                                                    }}
+                                                                    placeholder={field.label}
+                                                                />
+                                                            );
+                                                        }
                                                     })}
                                                 </div>
                                             )}
