@@ -75,20 +75,32 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
             return;
         }
 
+        // Валидация цен: хотя бы одно поле должно быть >= 0
+        if (!withoutFixedPrice && (form.price || 0) < 0 && (form.price_usd || 0) < 0) {
+            toast.error("Хотя бы одна цена должна быть больше или равна 0");
+            return;
+        }
+
         // Валидация цен только если не выбран "без фиксированной цены"
         if (!withoutFixedPrice) {
-            if ((form.price || 0) <= 0) {
+            if ((form.price || 0) < 0) {
                 toast.error("Цена в KZT должна быть больше 0");
                 return;
             }
 
-            if ((form.price_usd || 0) <= 0) {
+            if ((form.price_usd || 0) < 0) {
                 toast.error("Цена в USD должна быть больше 0");
                 return;
             }
         }
 
         try {
+            // Если этот тип оплаты отмечен как Main, снимаем флаг с других типов
+            if (isMain) {
+                await packetEventsApi.clearMainFlag(eventData.event_id!, eventData.id!);
+                console.log("🔍 Cleared main flag from other payment types for event:", eventData.event_id);
+            }
+
             // Объединяем все дополнительные поля
             const allAdditionalFields: Record<string, any> = {};
             

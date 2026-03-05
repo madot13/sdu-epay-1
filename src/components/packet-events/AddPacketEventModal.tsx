@@ -99,6 +99,12 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
             return;
         }
 
+        // Валидация цен: хотя бы одно поле должно быть >= 0
+        if (price < 0 && priceUsd < 0) {
+            toast.error("Хотя бы одна цена должна быть больше или равна 0");
+            return;
+        }
+
         if (price < 0) {
             toast.error("Цена в KZT не может быть отрицательной");
             return;
@@ -110,6 +116,12 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
         }
 
         try {
+            // Если этот тип оплаты отмечен как Main, снимаем флаг с других типов
+            if (isMain) {
+                await packetEventsApi.clearMainFlag(selectedEvent, '');
+                console.log("🔍 Cleared main flag from other payment types for event:", selectedEvent);
+            }
+
             // Объединяем все дополнительные поля
             const allAdditionalFields: Record<string, any> = {};
             

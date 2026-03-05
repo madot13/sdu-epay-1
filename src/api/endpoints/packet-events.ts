@@ -3,12 +3,32 @@ import { IEventRecord, CreateEventPayload } from "@/types/packetevents";
 
 export const packetEventsApi = {
     getAll: async (params?: any) => {
-    const response = await publicApi.get<IEventRecord[]>('event-payment-types', { params });
-    return response.data;},
+        const response = await publicApi.get<IEventRecord[]>('event-payment-types', { params });
+        return response.data;
+    },
     create: (data: CreateEventPayload) => api.post('event-payment-types', data),
     delete: (id: string) => api.delete(`event-payment-types/${id}`),
     update: async (id: string, data: Partial<IEventRecord>) => {
         const response = await api.patch(`event-payment-types/${id}`, data);
         return response.data;
+    },
+    // Функция для снятия флага main с других типов оплаты события
+    clearMainFlag: async (eventId: string, excludeId: string) => {
+        try {
+            // Получаем все типы оплаты для события
+            const allTypes = await publicApi.get<IEventRecord[]>(`event-payment-types?event_id=${eventId}`);
+            const types = allTypes.data || [];
+            
+            // Снимаем флаг main со всех типов, кроме исключаемого
+            const updatePromises = types
+                .filter(type => type.id !== excludeId && type.main === true)
+                .map(type => api.patch(`event-payment-types/${type.id}`, { main: false }));
+            
+            await Promise.all(updatePromises);
+            console.log(`Cleared main flag from ${updatePromises.length} payment types for event ${eventId}`);
+        } catch (error) {
+            console.error('Error clearing main flag:', error);
+            throw error;
+        }
     },
 };
