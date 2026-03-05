@@ -3,12 +3,14 @@ import { CustomModal } from "@/ui/CustomModal.tsx";
 import { CustomInput } from "@/ui/CustomInput.tsx";
 import { CustomSelect } from "@/ui/CustomSelect.tsx";
 import { CustomButton } from "@/ui/CustomButton.tsx";
-import { PlusIcon, EnvelopeIcon, UserCircleIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline";
+import { PlusIcon, UserCircleIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
 import { getDepartments } from "@/api/endpoints/departments.ts";
 import { getPublicEventsById } from "@/api/endpoints/events.ts";
+import { getUsers } from "@/api/endpoints/users.ts";
 import { Department } from "@/types/departments.ts";
 import { IEvent } from "@/types/events.ts";
+import { IUser } from "@/types/users.ts";
 import { packetEventsApi } from "@/api/endpoints/packet-events";
 import { AddAdditionalFields } from "@/components/department/AddAdditionalFields.tsx";
 
@@ -16,7 +18,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
     const [isOpen, setIsOpen] = useState(false);
     
     // Обязательные поля
-    const [email, setEmail] = useState("");
+    const [selectedManager, setSelectedManager] = useState("");
     const [department, setDepartment] = useState("");
     const [selectedEvent, setSelectedEvent] = useState("");
     const [price, setPrice] = useState(0);
@@ -31,6 +33,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
     // Данные для селектов
     const [departments, setDepartments] = useState<{ label: string; value: string }[]>([]);
     const [events, setEvents] = useState<{ label: string; value: string }[]>([]);
+    const [managers, setManagers] = useState<{ label: string; value: string }[]>([]);
 
     useEffect(() => {
         const fetchDepts = async () => {
@@ -41,6 +44,30 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
         };
         if (isOpen) fetchDepts();
     }, [isOpen]);
+
+    useEffect(() => {
+        const fetchManagers = async () => {
+            try {
+                const allUsersResponse = await getUsers();
+                console.log("All users response:", allUsersResponse);
+                
+                const managers = allUsersResponse.data.filter((user: IUser) => 
+                    user.role === "MANAGER" || user.role === "ADMIN" || user.role === "SUPER_ADMIN"
+                );
+                console.log("Filtered managers:", managers);
+                
+                const formatted = managers.map((user: IUser) => ({
+                    label: `${user.name} (${user.username})`,
+                    value: user.username,
+                }));
+                setManagers(formatted);
+            } catch (error) {
+                console.error("Failed to fetch managers:", error);
+            }
+        };
+
+        fetchManagers();
+    }, []);
 
     useEffect(() => {
         const fetchEvents = async () => {
@@ -65,7 +92,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
     }, [department]);
 
     const handleSubmit = async () => {
-        if (!email || !department || !selectedEvent) {
+        if (!selectedManager || !department || !selectedEvent) {
             toast.error("Пожалуйста, заполните все обязательные поля");
             return;
         }
@@ -100,7 +127,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
 
             await packetEventsApi.create({
                 event_id: selectedEvent,
-                email: email,
+                email: selectedManager,
                 category: category || undefined,
                 priced: !withoutFixedPrice,
                 price: withoutFixedPrice ? 0 : price,
@@ -112,7 +139,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
             setIsOpen(false);
             onRefresh(); // Обновляем таблицу
             // Очистка полей
-            setEmail(""); 
+            setSelectedManager(""); 
             setDepartment(""); 
             setSelectedEvent(""); 
             setPrice(0); 
@@ -138,11 +165,18 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
 
             <CustomModal title="Добавить тип оплаты" isOpen={isOpen} onClose={() => setIsOpen(false)} className="max-w-2xl w-full max-h-[90vh] overflow-hidden">
                 <div className="flex flex-col gap-5 max-h-[calc(90vh-120px)] overflow-y-auto pr-2">
-                    <CustomInput 
-                        placeholder="Email ответственного" 
-                        value={email} 
-                        onChange={(e) => setEmail(e.target.value)}
-                        icon={<EnvelopeIcon className="text-[#6B9AB0]" />} 
+                    <CustomSelect
+                        placeholder="Выберите менеджера"
+                        options={managers}
+                        value={selectedManager}
+                        onChange={(value) => {
+                            console.log("Selected manager:", value);
+                            setSelectedManager(value);
+                        }}
+                        triggerClassName="bg-white h-[50px] text-black"
+                        dropdownClassName="bg-gray-100"
+                        optionClassName="text-sm"
+                        activeOptionClassName="bg-blue-200"
                     />
 
                     <CustomSelect

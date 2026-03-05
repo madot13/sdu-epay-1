@@ -2,11 +2,14 @@ import { FC, useEffect, useState } from "react";
 import { CustomModal } from "@/ui/CustomModal.tsx";
 import { CustomInput } from "@/ui/CustomInput.tsx";
 import { CustomButton } from "@/ui/CustomButton.tsx";
-import { EnvelopeIcon, UserCircleIcon, CurrencyDollarIcon, TagIcon } from "@heroicons/react/24/outline";
+import { CustomSelect } from "@/ui/CustomSelect.tsx";
+import { UserCircleIcon, CurrencyDollarIcon, TagIcon } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
 import { packetEventsApi } from "@/api/endpoints/packet-events";
 import { IEventRecord } from "@/types/packetevents";
 import { AddAdditionalFields } from "@/components/department/AddAdditionalFields.tsx";
+import { getUsers } from "@/api/endpoints/users.ts";
+import { IUser } from "@/types/users.ts";
 
 interface Props {
     isOpen: boolean;
@@ -19,6 +22,7 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
     const [form, setForm] = useState<IEventRecord>({} as IEventRecord);
     const [withoutFixedPrice, setWithoutFixedPrice] = useState(false);
     const [customFields, setCustomFields] = useState<{name:string; type:string; value?: any}[]>([]);
+    const [managers, setManagers] = useState<{ label: string; value: string }[]>([]);
 
     useEffect(() => {
         setForm({ ...eventData });
@@ -35,6 +39,30 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
             setCustomFields(fields);
         }
     }, [eventData, isOpen]);
+
+    useEffect(() => {
+        const fetchManagers = async () => {
+            try {
+                const allUsersResponse = await getUsers();
+                console.log("All users response:", allUsersResponse);
+                
+                const managers = allUsersResponse.data.filter((user: IUser) => 
+                    user.role === "MANAGER" || user.role === "ADMIN" || user.role === "SUPER_ADMIN"
+                );
+                console.log("Filtered managers:", managers);
+                
+                const formatted = managers.map((user: IUser) => ({
+                    label: `${user.name} (${user.username})`,
+                    value: user.username,
+                }));
+                setManagers(formatted);
+            } catch (error) {
+                console.error("Failed to fetch managers:", error);
+            }
+        };
+
+        fetchManagers();
+    }, []);
 
     const handleSave = async () => {
         // Проверка на наличие ID (решает ошибку 2345)
@@ -92,11 +120,15 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
     return (
         <CustomModal title="Редактировать тип платежа" isOpen={isOpen} className={"max-w-md w-full"} onClose={onClose}>
             <div className="flex flex-col gap-[21px]">
-                <CustomInput
-                    icon={<EnvelopeIcon className="text-[#6B9AB0]" />}
-                    placeholder="Email ответственного"
+                <CustomSelect
+                    placeholder="Выберите менеджера"
+                    options={managers}
                     value={form.email}
-                    onChange={(e) => setForm({...form, email: e.target.value})}
+                    onChange={(value) => setForm({...form, email: value})}
+                    triggerClassName="bg-white h-[50px] text-black"
+                    dropdownClassName="bg-gray-100"
+                    optionClassName="text-sm"
+                    activeOptionClassName="bg-blue-200"
                 />
                 
                 <CustomInput
