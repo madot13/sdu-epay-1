@@ -224,6 +224,7 @@ export const PaymentForm: FC = () => {
             
             if (mainCategory) {
                 setValue("payment_category_id", mainCategory.value);
+                setSelectedPaymentCategory(mainCategory as any); // Устанавливаем выбранную категорию
                 
                 const price = (mainCategory as any).price || 0;
                 const priceUsd = (mainCategory as any).price_usd || 0;
