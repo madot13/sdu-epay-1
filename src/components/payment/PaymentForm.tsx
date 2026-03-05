@@ -26,6 +26,12 @@ const formatDate = (date: Date): string => {
     return date.toISOString().split('T')[0];
 };
 
+// #region agent log
+const debugLog = (location: string, message: string, data: Record<string, unknown>) => {
+    fetch("http://127.0.0.1:7399/ingest/d8c64204-f012-4f5e-aee1-a9fe62c69ed8", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "84f5a0" }, body: JSON.stringify({ sessionId: "84f5a0", location, message, data, timestamp: Date.now() }) }).catch(() => {});
+};
+// #endregion
+
 import {TengeIcon} from "@/assets/TengeIcon.tsx";
 
 interface FormValues {
@@ -503,7 +509,6 @@ export const PaymentForm: FC = () => {
                         }
                     } else {
                         // Для фиксированных цен (с категориями или без)
-                        console.log("🔍 Using orderHalyk endpoint");
                         // eslint-disable-next-line @typescript-eslint/no-unused-vars
                         const { paymentMethod, department_id, showInUsd, amount, ...dataWithoutPaymentMethodAndDepartment } = payload;
 
@@ -518,6 +523,48 @@ export const PaymentForm: FC = () => {
                             }
                         }
 
+                        // Событие с ценой только в категории (у события price=0, price_usd=null) — бэкенд /epay отклонит.
+                        // Сразу используем event-custom-price с суммой из категории.
+                        const currentEvent = eventOptions.find((e: Option) => e.value === currentEventId) as any;
+                        const eventHasNoDirectPrice = currentEvent && Number(currentEvent?.price || 0) === 0 && (currentEvent?.price_usd == null || Number(currentEvent?.price_usd) === 0);
+                        const useCustomPriceDirectly = eventHasNoDirectPrice && data.payment_category_id && selectedPaymentCategory && (finalAmount ?? 0) > 0;
+
+                        // #region agent log
+                        debugLog("PaymentForm.tsx:halyk-branch", "halyk priced branch", { hypothesisId: "H1", currentEventId, eventOptionsLen: eventOptions.length, currentEventFound: !!currentEvent, currentEventPrice: currentEvent?.price, currentEventPriceUsd: currentEvent?.price_usd, eventHasNoDirectPrice, useCustomPriceDirectly, finalAmount, hasPaymentCategoryId: !!data.payment_category_id });
+                        // #endregion
+
+                        if (useCustomPriceDirectly) {
+                            // #region agent log
+                            debugLog("PaymentForm.tsx:custom-price-direct", "taking direct custom price path", { hypothesisId: "H2" });
+                            // #endregion
+                            console.log("🔍 Using orderHalykCustomPrice (event has no direct price, category amount)");
+                            try {
+                                const halykData = await orderHalykCustomPrice({
+                                    ...dataWithoutPaymentMethodAndDepartment,
+                                    event_id: data.event_id!,
+                                    amount: finalAmount!,
+                                    currency
+                                });
+                                // #region agent log
+                                debugLog("PaymentForm.tsx:custom-price-ok", "orderHalykCustomPrice success", { hypothesisId: "H2", hasOrder: !!halykData?.order });
+                                // #endregion
+                                setPaymentData(halykData);
+                                setShowWidget(true);
+                            } catch (err: any) {
+                                // #region agent log
+                                debugLog("PaymentForm.tsx:custom-price-err", "orderHalykCustomPrice error", { hypothesisId: "H2", status: err?.response?.status, detail: err?.response?.data?.detail });
+                                // #endregion
+                                console.error("🔍 Halyk CustomPrice error:", err);
+                                if (err?.response?.data) console.error("🔍 Error response data:", err.response.data);
+                                toast.error("Ошибка при создании платежа. Пожалуйста, попробуйте еще раз.");
+                            }
+                            return;
+                        }
+
+                        console.log("🔍 Using orderHalyk endpoint");
+                        // #region agent log
+                        debugLog("PaymentForm.tsx:orderHalyk-call", "calling orderHalyk", { hypothesisId: "H3", finalAmount, currency });
+                        // #endregion
                         try {
                             const halykData = await orderHalyk({
                                 ...dataWithoutPaymentMethodAndDepartment,
@@ -532,31 +579,43 @@ export const PaymentForm: FC = () => {
                                 console.error("🔍 Error response data:", error.response.data);
                             }
 
-                            // Если бэкенд отвечает, что этот роут только для priced-событий,
-                            // пробуем выполнить оплату через endpoint произвольной цены
-                            const detail = error?.response?.data?.detail;
-                            if (typeof detail === "string" && detail.includes("This route only for priced events")) {
+                            // Бэкенд может вернуть detail строкой или массивом
+                            const rawDetail = error?.response?.data?.detail;
+                            const detailStr = typeof rawDetail === "string"
+                                ? rawDetail
+                                : Array.isArray(rawDetail) && rawDetail.length > 0
+                                    ? (typeof rawDetail[0] === "object" && rawDetail[0]?.msg) ? String(rawDetail[0].msg) : String(rawDetail[0])
+                                    : "";
+                            const isPricedRouteError = /priced events|only for priced/i.test(detailStr);
+
+                            // #region agent log
+                            debugLog("PaymentForm.tsx:orderHalyk-err", "orderHalyk error", { hypothesisId: "H3", rawDetail, detailStr, isPricedRouteError });
+                            // #endregion
+
+                            if (isPricedRouteError) {
+                                // #region agent log
+                                debugLog("PaymentForm.tsx:fallback-call", "fallback to orderHalykCustomPrice", { hypothesisId: "H4", amount: finalAmount ?? 0 });
+                                // #endregion
                                 console.log("🔍 Fallback to orderHalykCustomPrice due to priced route rejection");
                                 try {
-                                    const customPriceData = {
+                                    const halykData = await orderHalykCustomPrice({
                                         ...dataWithoutPaymentMethodAndDepartment,
+                                        event_id: data.event_id!,
                                         amount: finalAmount ?? 0,
                                         currency
-                                    };
-                                    const halykData = await orderHalykCustomPrice({
-                                        ...customPriceData,
-                                        event_id: customPriceData.event_id!,
-                                        amount: customPriceData.amount!,
-                                        currency: customPriceData.currency
                                     });
+                                    // #region agent log
+                                    debugLog("PaymentForm.tsx:fallback-ok", "fallback orderHalykCustomPrice success", { hypothesisId: "H4" });
+                                    // #endregion
                                     setPaymentData(halykData);
                                     setShowWidget(true);
                                     return;
                                 } catch (fallbackError: any) {
+                                    // #region agent log
+                                    debugLog("PaymentForm.tsx:fallback-err", "fallback orderHalykCustomPrice error", { hypothesisId: "H4", status: fallbackError?.response?.status, detail: fallbackError?.response?.data?.detail });
+                                    // #endregion
                                     console.error("🔍 Halyk CustomPrice fallback error:", fallbackError);
-                                    if (fallbackError.response) {
-                                        console.error("🔍 Fallback error response data:", fallbackError.response.data);
-                                    }
+                                    if (fallbackError?.response?.data) console.error("🔍 Fallback error response data:", fallbackError.response.data);
                                     toast.error("Ошибка при создании платежа. Пожалуйста, попробуйте еще раз.");
                                     return;
                                 }
