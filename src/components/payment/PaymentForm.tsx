@@ -534,6 +534,13 @@ export const PaymentForm: FC = () => {
                                     setSelectedEventPriced(null);
                                     setPrice(0);
 
+                                    // Reset payment category when department changes
+                                    setValue("payment_category_id", null);
+                                    setOrderField("payment_category_id", ""); // Reset in store too
+                                    setPaymentCategoryOptions([]); // Clear payment category options
+                                    setPaymentCategoryAdditionalFields([]);
+                                    setPaymentCategoryAdditionalFieldValues({});
+
                                     // Reset residency status
                                     setValue("showInUsd", false);
                                     setCurrency("KZT");
@@ -573,13 +580,14 @@ export const PaymentForm: FC = () => {
 
                             if (field.type === "checkbox") {
                                 return (
-                                    <label key={key} className="flex items-center gap-2 ml-2">
+                                    <label key={key} className="flex items-center gap-2 ml-2 cursor-pointer">
                                         <input
                                             type="checkbox"
                                             checked={Boolean(additionalFieldValues[key])}
                                             onChange={(e) => handleAdditionalChange(key, e.target.checked)}
+                                            className="w-4 h-4 rounded accent-[#6B9AB0]"
                                         />
-                                        <span>{field.label}</span>
+                                        <span className="text-black text-sm">{field.label}</span>
                                     </label>
                                 );
                             }else if (field.type === "date") {
