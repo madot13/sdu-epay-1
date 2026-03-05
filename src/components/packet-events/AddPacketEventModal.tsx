@@ -146,7 +146,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                 priced: !withoutFixedPrice,
                 price: withoutFixedPrice ? 0 : price,
                 price_usd: withoutFixedPrice ? 0 : (priceUsd > 0 ? priceUsd : undefined),
-                main: isMain, // Добавляем главный тип оплаты
+                is_main: isMain, // Используем is_main для соответствия бэкенду
                 additional_fields: Object.keys(allAdditionalFields).length > 0 ? allAdditionalFields : undefined
             });
 

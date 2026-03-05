@@ -30,7 +30,7 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
         // Устанавливаем чекбокс если цены 0 или не заданы
         setWithoutFixedPrice((eventData.price || 0) === 0 && (eventData.price_usd || 0) === 0);
         // Устанавливаем главный тип оплаты
-        setIsMain(eventData.main || false);
+        setIsMain(eventData.is_main || false); // Используем is_main из бэкенда
         
         // Загружаем дополнительные поля если они есть
         if (eventData.additional_fields) {
@@ -117,7 +117,7 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
                 ...form,
                 price: withoutFixedPrice ? 0 : (form.price || 0),
                 price_usd: withoutFixedPrice ? 0 : (form.price_usd || 0),
-                main: isMain, // Добавляем главный тип оплаты
+                is_main: isMain, // Используем is_main для соответствия бэкенду
                 additional_fields: Object.keys(allAdditionalFields).length > 0 ? allAdditionalFields : undefined
             });
 

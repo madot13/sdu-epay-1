@@ -203,7 +203,7 @@ export const PaymentForm: FC = () => {
                     value: pt.id,
                     price: pt.price,
                     price_usd: pt.price_usd,
-                    main: pt.main, // Добавляем поле main
+                    is_main: pt.is_main, // Используем is_main для соответствия бэкенду
                     additional_fields: pt.additional_fields
                 }));
                 
@@ -234,7 +234,7 @@ export const PaymentForm: FC = () => {
         if (paymentCategoryOptions.length > 0) {
             const mainCategory = paymentCategoryOptions.find(cat => {
                 const categoryData = cat as any;
-                return categoryData.main === true || categoryData.is_main === true;
+                return categoryData.is_main === true;
             });
             
             if (mainCategory) {

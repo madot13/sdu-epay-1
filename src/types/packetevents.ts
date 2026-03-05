@@ -13,7 +13,7 @@ export interface IEventRecord {
     priced?: boolean;
     active?: boolean;
     event_active?: boolean; // API может возвращать event_active
-    main?: boolean; // Главный тип оплаты для события
+    is_main?: boolean; // Главный тип оплаты для события (соответствует бэкенду)
     period_from?: string;
     period_till?: string; // API может возвращать period_till
     without_period?: boolean;

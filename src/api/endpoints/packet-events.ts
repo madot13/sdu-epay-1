@@ -33,8 +33,8 @@ export const packetEventsApi = {
             
             // Снимаем флаг main со всех типов, кроме исключаемого
             const updatePromises = types
-                .filter(type => type.id !== excludeId && type.main === true)
-                .map(type => api.patch(`event-payment-types/${type.id}`, { main: false }));
+                .filter(type => type.id !== excludeId && type.is_main === true)
+                .map(type => api.patch(`event-payment-types/${type.id}`, { is_main: false }));
             
             await Promise.all(updatePromises);
             console.log(`Cleared main flag from ${updatePromises.length} payment types for event ${eventId}`);
