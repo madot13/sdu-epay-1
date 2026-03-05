@@ -30,6 +30,22 @@ export const PacketEventsPage: FC = () => {
         { header: "Email", accessor: "email", sortable: true },
         { header: "Категория", accessor: "category", sortable: true },
         { 
+            header: "Активный", 
+            accessor: (item: Record<string, any>): ReactNode => {
+                const isActive = item.active === true || item.event_active === true;
+                return (
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        isActive 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                    }`}>
+                        {isActive ? 'Да' : 'Нет'}
+                    </span>
+                );
+            },
+            sortable: true
+        },
+        { 
             header: "Цена KZT", 
             accessor: (item: Record<string, any>): ReactNode => {
                 const price = item.price;

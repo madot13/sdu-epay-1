@@ -75,8 +75,13 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
             filters.department_id = currentDepartment.trim();
         }
 
-        if (currentActive && currentActive.trim()) {
-            filters.active = currentActive.trim();
+        // Явно добавляем active фильтр, даже если это "Все"
+        if (currentActive === "") {
+            // Для "Все" не добавляем фильтр, чтобы получить все записи
+        } else if (currentActive === "true") {
+            filters.active = true;
+        } else if (currentActive === "false") {
+            filters.active = false;
         }
 
         console.log("🔍 Prepared filters:", filters);
@@ -121,7 +126,7 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
                 <CustomButton
                     variant="submit"
                     onClick={() => handleSearch({ name, department: selectedDepartment, active })}
-                    className="w-full sm:w-auto h-[37px] px-4"
+                    className="w-full sm:w-auto h-[37px] px-4 py-2"
                 >
                     Поиск
                 </CustomButton>
