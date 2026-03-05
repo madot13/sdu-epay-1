@@ -8,6 +8,7 @@ import {EditEventsModal} from "@/components/event/EditEventsModal.tsx";
 import {DeleteModal} from "@/ui/DeleteModal.tsx";
 import {toast} from "react-hot-toast";
 import {Paginator} from "primereact/paginator";
+import {ReactNode} from "react";
 
 export const EventsPage:FC = () => {
     const {events, fetchEvents, deleteEvent, total} = useEventsStore();
@@ -25,11 +26,45 @@ export const EventsPage:FC = () => {
         { header: "Email", accessor: "manager_email", sortable: true },
         { header: "Период с", accessor: "period_from", sortable: true },
         { header: "Период по", accessor: "period_till", sortable: true },
+        { 
+            header: "Активный", 
+            accessor: (item: Record<string, any>): ReactNode => {
+                // Проверяем, есть ли поле active в данных
+                if ('active' in item) {
+                    const isActive = item.active !== false;
+                    return (
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            isActive 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-red-100 text-red-800'
+                        }`}>
+                            {isActive ? 'Да' : 'Нет'}
+                        </span>
+                    );
+                } else {
+                    // Если поля active нет, показываем серый бейдж "Нет данных"
+                    return (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                            Нет данных
+                        </span>
+                    );
+                }
+            },
+            sortable: true
+        },
     ];
 
     useEffect(() => {
         fetchEvents();
     }, []);
+
+    // Временное логирование для проверки структуры событий
+    useEffect(() => {
+        if (events.length > 0) {
+            console.log("Events structure:", events[0]);
+            console.log("Event fields:", Object.keys(events[0]));
+        }
+    }, [events]);
 
     useEffect(() => {
         const eventsWithDisplay = events.map((event: any) => ({
