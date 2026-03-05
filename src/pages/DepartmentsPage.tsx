@@ -8,6 +8,7 @@ import {EditDepartmentModal} from "@/components/department/EditDepartmentModal.t
 import {DeleteModal} from "@/ui/DeleteModal.tsx";
 import {Paginator} from "primereact/paginator";
 import {toast} from "react-hot-toast";
+import {ReactNode} from "react";
 
 export const DepartmentsPage:FC = () => {
     const {departments, fetchDepartments, deleteDepartment, total} = useDepartmentsStore();
@@ -23,9 +24,19 @@ export const DepartmentsPage:FC = () => {
         {header: "Департамент", accessor: "name", sortable: true},
         { 
             header: "Статус", 
-            accessor: (item: Record<string, any>) => {
-                return item.active !== false ? "Активный" : "Неактивный";
-            }
+            accessor: (item: Record<string, any>): ReactNode => {
+                const isActive = item.active !== false;
+                return (
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        isActive 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                    }`}>
+                        {isActive ? 'Да' : 'Нет'}
+                    </span>
+                );
+            },
+            sortable: true
         }
     ]
 
