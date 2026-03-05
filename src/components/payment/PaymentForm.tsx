@@ -433,8 +433,8 @@ export const PaymentForm: FC = () => {
 
             if (selectedDepartmentType === "EVENT_BASED") {
                 if (data.paymentMethod === "KaspiBank") {
-                    if (selectedEventPriced === false || isCustomPrice || data.payment_category_id) {
-                        // Для произвольных цен ИЛИ для любых категорий платежа
+                    if (selectedEventPriced === false || isCustomPrice) {
+                        // Только для произвольных цен (бесплатные события или категории с произвольной ценой)
                         console.log("🔍 Using orderKaspiCustomPrice endpoint");
                         // eslint-disable-next-line @typescript-eslint/no-unused-vars
                         const { paymentMethod, department_id, promo_code, showInUsd, ...customPriceData } = payload;
@@ -457,8 +457,8 @@ export const PaymentForm: FC = () => {
                         setPaymentData(kaspiData);
                     }
                 } else if (data.paymentMethod === "HalykBank") {
-                    if (selectedEventPriced === false || isCustomPrice || data.payment_category_id) {
-                        // Для произвольных цен ИЛИ для любых категорий платежа
+                    if (selectedEventPriced === false || isCustomPrice) {
+                        // Только для произвольных цен (бесплатные события или категории с произвольной ценой)
                         console.log("🔍 Using orderHalykCustomPrice endpoint");
                         // eslint-disable-next-line @typescript-eslint/no-unused-vars
                         const { paymentMethod, department_id, promo_code, showInUsd, ...customPriceData } = payload;
@@ -488,8 +488,6 @@ export const PaymentForm: FC = () => {
                                 ...dataWithoutPaymentMethodAndDepartment,
                                 currency
                             });
-                            console.log("🔍 Halyk response:", halykData);
-                            console.log("🔍 Price in response:", halykData.order.amount);
                             setPaymentData(halykData);
                             setShowWidget(true);
                         } catch (error: any) {
