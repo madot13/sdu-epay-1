@@ -460,13 +460,14 @@ export const PaymentForm: FC = () => {
                     if (selectedEventPriced === false || isCustomPrice) {
                         // Только для произвольных цен БЕЗ категорий платежа
                         if (data.payment_category_id) {
-                            // Если есть категория - используем обычный эндпоинт
-                            console.log("🔍 Using orderHalyk endpoint (with category)");
+                            // Если есть категория - используем обычный эндпоинт с event_id: null
+                            console.log("🔍 Using orderHalyk endpoint (with category, event_id: null)");
                             // eslint-disable-next-line @typescript-eslint/no-unused-vars
                             const { paymentMethod, department_id, showInUsd, ...dataWithoutPaymentMethodAndDepartment } = payload;
                             try {
                                 const halykData = await orderHalyk({
                                     ...dataWithoutPaymentMethodAndDepartment,
+                                    event_id: null,  // Явно устанавливаем null для категорий
                                     currency
                                 });
                                 setPaymentData(halykData);
@@ -802,12 +803,20 @@ export const PaymentForm: FC = () => {
                                             setCurrency("KZT");
 
                                             const selectedEvent = eventOptions.find(e => e.value === val);
-                                            if (selectedEvent && "price" in selectedEvent) {
-                                                const eventData = selectedEvent as IEvent;
-                                                setPrice(Number(eventData.price));
-                                                // Событие считается priced только если у него есть цена > 0
-                                                const hasValidPrice = Number(eventData.price) > 0 || Number(eventData.price_usd) > 0;
-                                                setSelectedEventPriced(hasValidPrice);
+                                            if (selectedEvent) {
+                                                const eventData = selectedEvent as any;
+                                                const eventPrice = Number(eventData.price || 0);
+                                                const eventPriceUsd = Number(eventData.price_usd || 0);
+                                                setPrice(eventPrice);
+
+                                                // Используем флаг priced от бэкенда, если он есть.
+                                                // Если его нет, считаем событие платным, если есть цена в любой валюте.
+                                                const isPricedFlag =
+                                                    typeof eventData.priced === "boolean"
+                                                        ? eventData.priced
+                                                        : eventPrice > 0 || eventPriceUsd > 0;
+
+                                                setSelectedEventPriced(isPricedFlag);
                                             }
                                         }}
                                         triggerClassName={"text-white"}
