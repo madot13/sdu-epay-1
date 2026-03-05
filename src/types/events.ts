@@ -16,6 +16,15 @@ export type CreateEventPayload = IEvent & {
     priced: boolean; // Обязательно указываем priced при создании
 };
 
+export type EventQuery = {
+    title?: string | null;
+    page?: number;
+    size?: number;
+    department_id?: string | null;
+    period_from?: string | null;
+    period_to?: string | null;
+};
+
 export interface UpdateEventPayload {
     title: string;
     manager_email: string;
