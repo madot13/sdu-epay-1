@@ -531,6 +531,37 @@ export const PaymentForm: FC = () => {
                             if (error.response) {
                                 console.error("🔍 Error response data:", error.response.data);
                             }
+
+                            // Если бэкенд отвечает, что этот роут только для priced-событий,
+                            // пробуем выполнить оплату через endpoint произвольной цены
+                            const detail = error?.response?.data?.detail;
+                            if (typeof detail === "string" && detail.includes("This route only for priced events")) {
+                                console.log("🔍 Fallback to orderHalykCustomPrice due to priced route rejection");
+                                try {
+                                    const customPriceData = {
+                                        ...dataWithoutPaymentMethodAndDepartment,
+                                        amount: finalAmount ?? 0,
+                                        currency
+                                    };
+                                    const halykData = await orderHalykCustomPrice({
+                                        ...customPriceData,
+                                        event_id: customPriceData.event_id!,
+                                        amount: customPriceData.amount!,
+                                        currency: customPriceData.currency
+                                    });
+                                    setPaymentData(halykData);
+                                    setShowWidget(true);
+                                    return;
+                                } catch (fallbackError: any) {
+                                    console.error("🔍 Halyk CustomPrice fallback error:", fallbackError);
+                                    if (fallbackError.response) {
+                                        console.error("🔍 Fallback error response data:", fallbackError.response.data);
+                                    }
+                                    toast.error("Ошибка при создании платежа. Пожалуйста, попробуйте еще раз.");
+                                    return;
+                                }
+                            }
+
                             toast.error("Ошибка при создании платежа. Пожалуйста, попробуйте еще раз.");
                         }
                     }
