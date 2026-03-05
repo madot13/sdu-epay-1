@@ -90,18 +90,18 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
 
     return (
         <div className="flex flex-col lg:flex-row lg:justify-between lg:items-end gap-4 mb-6 lg:mb-[31px]">
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-[22px] w-full lg:w-auto">
-                <div className="flex flex-col gap-[10px] flex-1 sm:flex-none">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-[22px] w-full lg:w-auto flex-wrap">
+                <div className="flex flex-col gap-[10px] flex-1 sm:flex-none min-w-[200px]">
                     <label className="text-sm font-medium">Название</label>
                     <input
                         type="text"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className="bg-white h-[37px] p-2 border border-[#6B9AB0] rounded-[4px] text-sm"
+                        className="bg-white h-[37px] p-2 border border-[#6B9AB0] rounded-[4px] text-sm w-full"
                         placeholder="Название оплаты"
                     />
                 </div>
-                <div className="flex flex-col gap-[10px] flex-1 sm:flex-none">
+                <div className="flex flex-col gap-[10px] flex-1 sm:flex-none min-w-[200px]">
                     <label className="text-sm font-medium">Департамент</label>
                     <CustomSelect
                         options={departments}
@@ -112,7 +112,7 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
                         triggerClassName="bg-white w-full sm:min-w-[200px] h-[37px] text-black text-sm border-[#6B9AB0]"
                     />
                 </div>
-                <div className="flex flex-col gap-[10px] flex-1 sm:flex-none">
+                <div className="flex flex-col gap-[10px] flex-1 sm:flex-none min-w-[150px]">
                     <label className="text-sm font-medium">Статус</label>
                     <CustomSelect
                         options={activeOptions}
@@ -123,16 +123,18 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
                         triggerClassName="bg-white w-full sm:min-w-[150px] h-[37px] text-black text-sm border-[#6B9AB0]"
                     />
                 </div>
-                <CustomButton
-                    variant="submit"
-                    onClick={() => handleSearch({ name, department: selectedDepartment, active })}
-                    className="w-full sm:w-auto h-[37px] px-4 py-2"
-                >
-                    Поиск
-                </CustomButton>
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-[22px] w-full lg:w-auto lg:flex-shrink-0 items-end">
+                    <CustomButton
+                        variant="submit"
+                        onClick={() => handleSearch({ name, department: selectedDepartment, active })}
+                        className="w-full sm:w-auto h-[37px] px-4 py-2 lg:flex-shrink-0"
+                    >
+                        Поиск
+                    </CustomButton>
+                </div>
             </div>
 
-            <div className="flex items-center gap-5 justify-end lg:justify-start">
+            <div className="flex items-center gap-5 justify-end lg:justify-start mt-4 lg:mt-0">
                 <AddPacketEventModal onRefresh={() => handleSearch()} />
             </div>
         </div>
