@@ -53,11 +53,10 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                 const allUsersResponse = await getUsers();
                 console.log("All users response:", allUsersResponse);
                 
+                // Фильтруем только активных менеджеров
                 const managers = allUsersResponse.data.filter((user: IUser) => 
-                    user.role === "MANAGER" || user.role === "ADMIN" || user.role === "SUPER_ADMIN"
+                    (user.role === "MANAGER" || user.role === "ADMIN" || user.role === "SUPER_ADMIN") && user.active === true
                 );
-                console.log("Filtered managers:", managers);
-                
                 const formatted = managers.map((user: IUser) => ({
                     label: `${user.name} (${user.username})`,
                     value: user.username,

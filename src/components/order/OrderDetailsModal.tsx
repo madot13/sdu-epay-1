@@ -106,10 +106,10 @@ export const OrderDetailsModal: FC<OrderDetailsModalProps> = ({ isOpen, onClose,
         <CustomModal
             title={`Детали заказа #${order.id}`}
             isOpen={isOpen}
-            className="max-w-2xl w-full"
+            className="max-w-2xl w-full max-h-[90vh]"
             onClose={onClose}
         >
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
                 <div className="grid grid-cols-2 gap-4">
                     <div>
                         <p className="text-sm text-gray-500">Имя клиента</p>
@@ -233,6 +233,7 @@ export const OrderDetailsModal: FC<OrderDetailsModalProps> = ({ isOpen, onClose,
                                 {Object.entries(orderDetails.additional_fields).map(([key, value]) => {
                                     const isFile = typeof value === "string" && (
                                         value.includes("http") || 
+                                        value.includes("https") || 
                                         value.includes("www") || 
                                         value.includes("C:\\fakepath") ||
                                         value.includes("fakepath") ||
@@ -246,17 +247,24 @@ export const OrderDetailsModal: FC<OrderDetailsModalProps> = ({ isOpen, onClose,
                                             {isFile ? (
                                                 <button
                                                     onClick={() => {
-                                                        const url = value.includes("http") ? value : '#';
-                                                        if (url !== '#') {
+                                                        const url = value;
+                                                        console.log("Attempting to download file from:", url);
+                                                        
+                                                        if (url.includes("http") || url.includes("https")) {
+                                                            // Для веб-URL открываем в новой вкладке
                                                             window.open(url, '_blank');
-                                                        } else {
-                                                            // Для локальных файлов или blob URL
+                                                        } else if (url.includes("blob:")) {
+                                                            // Для blob URL создаем временную ссылку
                                                             const link = document.createElement('a');
-                                                            link.href = value;
-                                                            link.download = value.split('/').pop() || 'file';
+                                                            link.href = url;
+                                                            link.download = `file_${Date.now()}`;
                                                             document.body.appendChild(link);
                                                             link.click();
                                                             document.body.removeChild(link);
+                                                        } else {
+                                                            // Для локальных файлов или других случаев
+                                                            console.log("Cannot download file from this URL:", url);
+                                                            alert("Не удалось скачать файл. Свяжитесь с администратором.");
                                                         }
                                                     }}
                                                     className="flex items-center gap-2 px-3 py-2 bg-white border border-blue-500 text-blue-600 rounded-md hover:bg-blue-50 transition-colors text-sm font-medium"

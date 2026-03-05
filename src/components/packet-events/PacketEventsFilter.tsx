@@ -14,6 +14,13 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
     const [name, setName] = useState("");
     const [departments, setDepartments] = useState<{ label: string; value: string }[]>([]);
     const [selectedDepartment, setSelectedDepartment] = useState("");
+    const [active, setActive] = useState("");
+
+    const activeOptions = [
+        { label: "Все", value: "" },
+        { label: "Активные", value: "true" },
+        { label: "Неактивные", value: "false" }
+    ];
 
     useEffect(() => {
         const fetchDepartments = async () => {
@@ -51,10 +58,12 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
         overrides: {
             name?: string;
             department?: string;
+            active?: string;
         } = {}
     ) => {
         const currentName = overrides.name !== undefined ? overrides.name : name;
         const currentDepartment = overrides.department !== undefined ? overrides.department : selectedDepartment;
+        const currentActive = overrides.active !== undefined ? overrides.active : active;
 
         const filters: any = {};
 
@@ -64,6 +73,10 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
 
         if (currentDepartment && currentDepartment.trim()) {
             filters.department_id = currentDepartment.trim();
+        }
+
+        if (currentActive && currentActive.trim()) {
+            filters.active = currentActive.trim();
         }
 
         console.log("🔍 Prepared filters:", filters);
@@ -94,10 +107,21 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
                         triggerClassName="bg-white w-full sm:min-w-[200px] h-[37px] text-black text-sm border-[#6B9AB0]"
                     />
                 </div>
+                <div className="flex flex-col gap-[10px] flex-1 sm:flex-none">
+                    <label className="text-sm font-medium">Статус</label>
+                    <CustomSelect
+                        options={activeOptions}
+                        value={active}
+                        onChange={(val) => {
+                            setActive(val);
+                        }}
+                        triggerClassName="bg-white w-full sm:min-w-[150px] h-[37px] text-black text-sm border-[#6B9AB0]"
+                    />
+                </div>
                 <CustomButton
                     variant="submit"
-                    onClick={() => handleSearch({ name, department: selectedDepartment })}
-                    className="h-[37px] px-6 mt-auto"
+                    onClick={() => handleSearch({ name, department: selectedDepartment, active })}
+                    className="w-full sm:w-auto h-[37px] px-4"
                 >
                     Поиск
                 </CustomButton>
