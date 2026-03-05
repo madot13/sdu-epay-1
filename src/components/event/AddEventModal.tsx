@@ -73,10 +73,12 @@ export const AddEventModal: FC = () => {
         const fetchManagers = async () => {
             try {
                 const response = await getUsers({ role: "MANAGER" });
+                console.log("API response users:", response.data);
                 const formatted = response.data.map((user: IUser) => ({
                     label: `${user.name} (${user.username})`,
-                    value: user.username,
+                    value: user.username, // Используем username как email
                 }));
+                console.log("Formatted managers:", formatted);
                 setManagers(formatted);
             } catch (error) {
                 console.error("Failed to fetch managers:", error);
@@ -185,7 +187,10 @@ export const AddEventModal: FC = () => {
                         placeholder="Выберите менеджера"
                         options={managers}
                         value={selectedManager}
-                        onChange={setSelectedManager}
+                        onChange={(value) => {
+                            console.log("Selected manager:", value);
+                            setSelectedManager(value);
+                        }}
                         triggerClassName={`bg-white h-[50px] text-black ${errors.manager ? "border border-red-500" : ""}`}
                         dropdownClassName="bg-gray-100"
                         optionClassName="text-sm"
@@ -232,15 +237,14 @@ export const AddEventModal: FC = () => {
 
                     {/* Дополнительные поля */}
                     <div className="flex flex-col gap-2">
-                        <div className="flex items-center justify-between">
-                            <label className="text-sm font-medium text-gray-700">Дополнительные поля</label>
+                        <div className="flex justify-start">
                             <CustomButton
                                 variant="default"
-                                className="h-[32px] px-3 py-1 text-xs"
+                                className="h-[38px] font-bold gap-[5px] px-[20px] flex rounded-[4px]"
                                 onClick={addCustomField}
                             >
-                                <PlusIcon className="w-4 h-4" />
-                                Дополнительные поля
+                                <PlusIcon />
+                                Добавить
                             </CustomButton>
                         </div>
                         
