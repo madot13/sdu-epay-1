@@ -2,8 +2,7 @@ import { FC, useEffect, useState } from "react";
 import { CustomButton } from "@/ui/CustomButton.tsx";
 import {
     PlusIcon,
-    UserCircleIcon,
-    TrashIcon
+    UserCircleIcon
 } from "@heroicons/react/24/outline";
 import { CustomModal } from "@/ui/CustomModal.tsx";
 import { CustomInput } from "@/ui/CustomInput.tsx";
@@ -16,10 +15,7 @@ import { toast } from "react-hot-toast";
 import { formatLocalDate } from "@/utils/formatLocalDate.ts";
 import { getUsers } from "@/api/endpoints/users.ts";
 import { IUser } from "@/types/users.ts";
-
-interface CustomField {
-    value: string;
-}
+import { AddAdditionalFields } from "@/components/department/AddAdditionalFields.tsx";
 
 export const AddEventModal: FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -30,7 +26,7 @@ export const AddEventModal: FC = () => {
     const [selectedDepartment, setSelectedDepartment] = useState("");
     const [departments, setDepartments] = useState<{ label: string; value: string }[]>([]);
     const [managers, setManagers] = useState<{ label: string; value: string }[]>([]);
-    const [customFields, setCustomFields] = useState<CustomField[]>([]);
+    const [additionalFields, setAdditionalFields] = useState<{ name: string; type: string; value?: any }[]>([]);
     const [errors, setErrors] = useState({
         name: false,
         manager: false,
@@ -39,21 +35,6 @@ export const AddEventModal: FC = () => {
     });
 
     const { addEvent, fetchEvents } = useEventsStore();
-
-    // Функции для управления дополнительными полями
-    const addCustomField = () => {
-        setCustomFields([...customFields, { value: "" }]);
-    };
-
-    const removeCustomField = (index: number) => {
-        setCustomFields(customFields.filter((_, i) => i !== index));
-    };
-
-    const updateCustomField = (index: number, field: 'value', value: string) => {
-        const updatedFields = [...customFields];
-        updatedFields[index][field] = value;
-        setCustomFields(updatedFields);
-    };
 
     useEffect(() => {
         const fetchDepartments = async () => {
@@ -123,13 +104,13 @@ export const AddEventModal: FC = () => {
         }
 
         try {
-            // Подготавливаем additional_fields из customFields
+            // Подготавливаем additional_fields
             const additional_fields: Record<string, any> = {};
-            customFields.forEach((field, index) => {
-                if (field.value.trim()) {
-                    additional_fields[`field_${index}`] = {
-                        type: "text",
-                        value: field.value
+            additionalFields.forEach((field) => {
+                if (field.name.trim() && field.type) {
+                    additional_fields[field.name] = {
+                        type: field.type,
+                        ...(field.value && { value: field.value })
                     };
                 }
             });
@@ -156,7 +137,7 @@ export const AddEventModal: FC = () => {
             setWithoutPeriod(false);
             setSelectedDepartment("");
             setDates(null);
-            setCustomFields([]);
+            setAdditionalFields([]);
             setErrors({
                 name: false,
                 manager: false,
@@ -242,37 +223,7 @@ export const AddEventModal: FC = () => {
                         </div>
                     )}
 
-                    {/* Дополнительные поля */}
-                    <div className="flex flex-col gap-2">
-                        <div className="flex justify-start">
-                            <CustomButton
-                                variant="default"
-                                className="h-[38px] font-bold gap-[5px] px-[20px] flex rounded-[4px]"
-                                onClick={addCustomField}
-                            >
-                                <PlusIcon />
-                                Добавить
-                            </CustomButton>
-                        </div>
-                        
-                        {customFields.map((field, index) => (
-                            <div key={index} className="flex gap-2 items-center">
-                                <CustomInput
-                                    placeholder="Значение"
-                                    value={field.value}
-                                    onChange={(e) => updateCustomField(index, 'value', e.target.value)}
-                                    className="flex-1"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => removeCustomField(index)}
-                                    className="p-2 text-red-500 hover:text-red-700 transition-colors"
-                                >
-                                    <TrashIcon className="w-4 h-4" />
-                                </button>
-                            </div>
-                        ))}
-                    </div>
+                    <AddAdditionalFields value={additionalFields} onChange={setAdditionalFields} />
 
                     <CustomButton onClick={handleSubmit} className="w-full">
                         Добавить
