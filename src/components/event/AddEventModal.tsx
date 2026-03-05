@@ -3,8 +3,7 @@ import { CustomButton } from "@/ui/CustomButton.tsx";
 import {
     EnvelopeIcon,
     PlusIcon,
-    UserCircleIcon,
-    CurrencyDollarIcon
+    UserCircleIcon
 } from "@heroicons/react/24/outline";
 import { CustomModal } from "@/ui/CustomModal.tsx";
 import { CustomInput } from "@/ui/CustomInput.tsx";
@@ -15,7 +14,6 @@ import { Department } from "@/types/departments.ts";
 import { useEventsStore } from "@/store/useEventsStore.ts";
 import { toast } from "react-hot-toast";
 import {formatLocalDate} from "@/utils/formatLocalDate.ts";
-import {TengeIcon} from "@/assets/TengeIcon.tsx";
 import { AddAdditionalFields } from "@/components/department/AddAdditionalFields.tsx";
 
 export const AddEventModal: FC = () => {
@@ -23,9 +21,6 @@ export const AddEventModal: FC = () => {
     const [dates, setDates] = useState<Date[] | null>(null);
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
-    const [price, setPrice] = useState(0);
-    const [priceUsd, setPriceUsd] = useState(0);
-    const [priced, setPriced] = useState(true);
     const [withoutPeriod, setWithoutPeriod] = useState(false);
     const [selectedDepartment, setSelectedDepartment] = useState("");
     const [departments, setDepartments] = useState<{ label: string; value: string }[]>([]);
@@ -34,8 +29,6 @@ export const AddEventModal: FC = () => {
         name: false,
         email: false,
         department: false,
-        price: false,
-        priceUsd: false,
         dates: false,
     });
 
@@ -69,8 +62,6 @@ export const AddEventModal: FC = () => {
             name: !name,
             email: !email || !emailRegex.test(email),
             department: !selectedDepartment,
-            price: priced && (!price || price <= 0),
-            priceUsd: priced && priceUsd < 0,
             dates: !withoutPeriod && (!periodFrom || !periodTo),
         };
 
@@ -85,8 +76,6 @@ export const AddEventModal: FC = () => {
             messages.push("Неверный формат email");
         }
         if (newErrors.department) messages.push("Необходимо выбрать департамент");
-        if (newErrors.price) messages.push("Укажите корректную цену в KZT");
-        if (newErrors.priceUsd) messages.push("Цена в USD не может быть отрицательной");
         if (newErrors.dates) messages.push("Необходимо указать период проведения");
 
         if (messages.length > 0) {
@@ -115,9 +104,6 @@ export const AddEventModal: FC = () => {
                 title: name,
                 manager_email: email,
                 department_id: selectedDepartment,
-                priced: priced,
-                price: priced ? price : 0,
-                price_usd: priced && priceUsd > 0 ? priceUsd : undefined,
                 without_period: withoutPeriod,
                 additional_fields: Object.keys(additional_fields).length > 0 ? additional_fields : undefined,
                 ...(withoutPeriod
@@ -132,9 +118,6 @@ export const AddEventModal: FC = () => {
             setIsModalOpen(false);
             setName("");
             setEmail("");
-            setPrice(0);
-            setPriceUsd(0);
-            setPriced(true);
             setWithoutPeriod(false);
             setSelectedDepartment("");
             setDates(null);
@@ -143,8 +126,6 @@ export const AddEventModal: FC = () => {
                 name: false,
                 email: false,
                 department: false,
-                price: false,
-                priceUsd: false,
                 dates: false,
             });
         } catch (err:any) {
@@ -193,39 +174,7 @@ export const AddEventModal: FC = () => {
                         activeOptionClassName="bg-blue-200"
                     />
 
-                    <div className="flex items-center gap-2">
-                        <input
-                            type="checkbox"
-                            id="priced"
-                            checked={priced}
-                            onChange={(e) => setPriced(e.target.checked)}
-                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                        />
-                        <label htmlFor="priced" className="text-sm text-gray-700">
-                            Фиксированная цена
-                        </label>
-                    </div>
-
-                    {priced && (
-                        <>
-                            <CustomInput
-                                value={String(price)}
-                                onChange={(e) => setPrice(Number(e.target.value))}
-                                icon={<TengeIcon  color={errors.price ? "#fb2c36" : "#6B9AB0"} />}
-                                placeholder="Введите цену в KZT (обязательно)"
-                                type="number"
-                                className={errors.price ? "border border-red-500" : ""}
-                            />
-                            <CustomInput
-                                value={String(priceUsd)}
-                                onChange={(e) => setPriceUsd(Number(e.target.value))}
-                                icon={<CurrencyDollarIcon className={errors.priceUsd ? "text-red-500" : "text-[#6B9AB0]"} />}
-                                placeholder="Введите цену в USD (опционально)"
-                                type="number"
-                                className={errors.priceUsd ? "border border-red-500" : ""}
-                            />
-                        </>
-                    )}
+                    <AddAdditionalFields value={additionalFields} onChange={setAdditionalFields} />
 
                     <div className="flex items-center gap-2">
                         <input

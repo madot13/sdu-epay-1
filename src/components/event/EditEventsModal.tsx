@@ -1,20 +1,21 @@
 import {FC, useEffect, useState} from "react";
 import {getDepartments} from "@/api/endpoints/departments.ts";
 import {Department} from "@/types/departments.ts";
+import {CustomModal} from "@/ui/CustomModal.tsx";
+import {CustomSelect} from "@/ui/CustomSelect.tsx";
 import {useEventsStore} from "@/store/useEventsStore.ts";
+import {toast} from "react-hot-toast";
+import {formatLocalDate} from "@/utils/formatLocalDate.ts";
+import { AddAdditionalFields } from "@/components/department/AddAdditionalFields.tsx";
 import {CustomInput} from "@/ui/CustomInput.tsx";
 import {
     EnvelopeIcon,
     InformationCircleIcon,
 } from "@heroicons/react/24/outline";
 import {CustomButton} from "@/ui/CustomButton.tsx";
-import {CustomModal} from "@/ui/CustomModal.tsx";
 import {Calendar} from "primereact/calendar";
-import {CustomSelect} from "@/ui/CustomSelect.tsx";
-import { toast } from "react-hot-toast";
-import {TengeIcon} from "@/assets/TengeIcon.tsx";
 import {CurrencyDollarIcon} from "@heroicons/react/24/outline";
-import { AddAdditionalFields } from "@/components/department/AddAdditionalFields.tsx";
+import { TengeIcon } from "@/assets/TengeIcon.tsx";
 
 interface EditEventsModalProps {
     isOpen: boolean;
@@ -23,9 +24,6 @@ interface EditEventsModalProps {
         id: string;
         title: string;
         manager_email: string;
-        priced: boolean;
-        price: number;
-        price_usd?: number;
         without_period: boolean;
         period_from: string;
         period_till: string;
@@ -33,30 +31,25 @@ interface EditEventsModalProps {
             id: string;
             name: string;
         };
-        additional_fields?: Record<string, any>;
+        additional_fields?: Record<string, { type: string }>;
     };
 }
 
 export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, eventData}) => {
     const [title, setTitle] = useState(eventData.title);
     const [email, setEmail] = useState(eventData.manager_email);
-    const [price, setPrice] = useState(eventData.price);
-    const [priceUsd, setPriceUsd] = useState(eventData.price_usd || 0);
-    const [priced, setPriced] = useState(eventData.priced);
     const [withoutPeriod, setWithoutPeriod] = useState(eventData.without_period);
     const [selectedDepartment, setSelectedDepartment] = useState(eventData.department.id);
     const [dates, setDates] = useState<Date[] | null>(
-        eventData.without_period
-            ? null
-            : [new Date(eventData.period_from), new Date(eventData.period_till)]
+        eventData.period_from && eventData.period_till
+            ? [new Date(eventData.period_from), new Date(eventData.period_till)]
+            : null
     );
     const [additionalFields, setAdditionalFields] = useState<{name:string; type:string; value?: any}[]>([]);
     const [errors, setErrors] = useState({
         title: false,
         email: false,
         department: false,
-        price: false,
-        priceUsd: false,
         dates: false,
     });
     const [departments, setDepartments] = useState<{ label: string; value: string }[]>([]);
@@ -67,26 +60,20 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
         if (isOpen) {
             setTitle(eventData.title);
             setEmail(eventData.manager_email);
-            setPrice(eventData.price);
-            setPriceUsd(eventData.price_usd || 0);
-            setPriced(eventData.priced);
             setWithoutPeriod(eventData.without_period);
             setSelectedDepartment(eventData.department.id);
             setDates(
-                eventData.without_period
-                    ? null
-                    : [new Date(eventData.period_from), new Date(eventData.period_till)]
+                eventData.period_from && eventData.period_till
+                    ? [new Date(eventData.period_from), new Date(eventData.period_till)]
+                    : null
             );
-            
-            // Загружаем дополнительные поля из eventData
-            if (eventData.additional_fields) {
-                console.log("Loading additional fields from eventData:", eventData.additional_fields);
-                const fields = Object.entries(eventData.additional_fields).map(([key, config]) => ({
+            const fields = eventData.additional_fields
+                ? Object.entries(eventData.additional_fields).map(([key, value]) => ({
                     name: key,
-                    type: config.type || 'text',
-                    value: config.value
-                }));
-                console.log("Parsed fields for AddAdditionalFields:", fields);
+                    type: value.type,
+                }))
+                : [];
+            setAdditionalFields(fields);
                 setAdditionalFields(fields);
             } else {
                 console.log("No additional_fields in eventData");
@@ -128,8 +115,6 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
             title: !title.trim(),
             email: !email.trim() || !emailRegex.test(email),
             department: !selectedDepartment,
-            price: priced && (!price || price <= 0),
-            priceUsd: priced && priceUsd < 0,
             dates: !withoutPeriod && (!from || !till),
         };
 
@@ -144,8 +129,6 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
             messages.push("Неверный формат email.");
         }
         if (newErrors.department) messages.push("Необходимо выбрать департамент.");
-        if (newErrors.price) messages.push("Укажите корректную цену в KZT.");
-        if (newErrors.priceUsd) messages.push("Цена в USD не может быть отрицательной.");
         if (newErrors.dates) messages.push("Укажите период проведения мероприятия.");
 
 
@@ -181,9 +164,6 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
                 title,
                 manager_email: email,
                 department_id: selectedDepartment,
-                priced: priced,
-                price: priced ? price : 0,
-                price_usd: priced && priceUsd > 0 ? priceUsd : undefined,
                 without_period: withoutPeriod,
                 additional_fields: Object.keys(additional_fields).length > 0 ? additional_fields : undefined,
                 ...(withoutPeriod
@@ -232,7 +212,7 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
                     optionClassName="text-sm"
                     activeOptionClassName="bg-blue-200"
                 />
-                
+
                 <div className="flex items-center gap-2">
                     <input
                         type="checkbox"
@@ -286,7 +266,6 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
                         onChange={(e) => setDates(e.value as Date[])}
                         selectionMode="range"
                         readOnlyInput
-                        hideOnRangeSelection
                     />
                 )}
 
