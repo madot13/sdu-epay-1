@@ -781,8 +781,11 @@ export const PaymentForm: FC = () => {
 
                                             const selectedEvent = eventOptions.find(e => e.value === val);
                                             if (selectedEvent && "price" in selectedEvent) {
-                                                setPrice(Number((selectedEvent as IEvent).price));
-                                                setSelectedEventPriced((selectedEvent as any).priced ?? true);
+                                                const eventData = selectedEvent as IEvent;
+                                                setPrice(Number(eventData.price));
+                                                // Событие считается priced только если у него есть цена > 0
+                                                const hasValidPrice = Number(eventData.price) > 0 || Number(eventData.price_usd) > 0;
+                                                setSelectedEventPriced(hasValidPrice);
                                             }
                                         }}
                                         triggerClassName={"text-white"}
