@@ -31,18 +31,26 @@ export const PacketEventsPage: FC = () => {
         { 
             header: "Цена KZT", 
             accessor: (item: Record<string, any>) => {
-                const priced = item.priced;
                 const price = item.price;
-                return priced ? (price || 0) + " ₸" : "—";
+                const priced = item.priced !== false; // По умолчанию priced=true
+                
+                if (!priced) return "—";
+                if (price !== null && price !== undefined) {
+                    return Number(price) + " ₸";
+                }
+                return "—";
             }
         },
         { 
             header: "Цена USD", 
             accessor: (item: Record<string, any>) => {
-                const priced = item.priced;
                 const priceUsd = item.price_usd;
+                const priced = item.priced !== false; // По умолчанию priced=true
+                
                 if (!priced) return "—";
-                if (priceUsd) return priceUsd + " $";
+                if (priceUsd !== null && priceUsd !== undefined) {
+                    return Number(priceUsd) + " $";
+                }
                 return "—";
             }
         },
@@ -56,6 +64,18 @@ export const PacketEventsPage: FC = () => {
             let items: any[] = [];
             if (result && typeof result === 'object') {
                 items = Array.isArray(result) ? result : (result as any).data || [];
+            }
+
+            // Логирование для отладки структуры данных
+            console.log("API Response:", result);
+            console.log("Items:", items);
+            if (items.length > 0) {
+                console.log("First item structure:", items[0]);
+                console.log("Price fields:", {
+                    price: items[0].price,
+                    price_usd: items[0].price_usd,
+                    priced: items[0].priced
+                });
             }
 
             if (result && typeof result === 'object' && 'detail' in result) {
