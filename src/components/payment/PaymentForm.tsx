@@ -200,6 +200,8 @@ export const PaymentForm: FC = () => {
                 const paymentCategories = paymentTypes.map((pt: any) => ({
                     label: pt.category || `Тип платежа ${pt.id}`,
                     value: pt.id,
+                    price: pt.price,
+                    price_usd: pt.price_usd,
                     additional_fields: pt.additional_fields
                 }));
                 
@@ -216,6 +218,35 @@ export const PaymentForm: FC = () => {
 
     const watchShowInUsd = watch("showInUsd");
     const watchPaymentMethod = watch("paymentMethod");
+    const watchPaymentCategoryId = watch("payment_category_id");
+
+    // Автоматическое заполнение цены при выборе категории
+    useEffect(() => {
+        if (watchPaymentCategoryId) {
+            const selectedCategory = paymentCategoryOptions.find(opt => opt.value === watchPaymentCategoryId);
+            if (selectedCategory) {
+                const categoryData = selectedCategory as any;
+                console.log("Selected payment category:", categoryData);
+                
+                // Устанавливаем цену в зависимости от валюты
+                if (watchShowInUsd && categoryData.price_usd) {
+                    setValue("amount", categoryData.price_usd);
+                    setPrice(categoryData.price_usd);
+                } else if (categoryData.price) {
+                    setValue("amount", categoryData.price);
+                    setPrice(categoryData.price);
+                }
+            }
+        }
+    }, [watchPaymentCategoryId, watchShowInUsd, paymentCategoryOptions, setValue, setPrice]);
+
+    // Очистка цены при сбросе категории
+    useEffect(() => {
+        if (!watchPaymentCategoryId) {
+            setValue("amount", null);
+            setPrice(0);
+        }
+    }, [watchPaymentCategoryId, setValue, setPrice]);
 
     const handleAdditionalChange = (key: string, value: any) => {
         const formattedValue =
@@ -622,14 +653,33 @@ export const PaymentForm: FC = () => {
 
                                                     // Загружаем дополнительные поля категории платежа
                                                     const selectedCategory = paymentCategoryOptions.find(opt => opt.value === val);
-                                                    if (selectedCategory && (selectedCategory as any).additional_fields) {
-                                                        const categoryFields = Object.entries((selectedCategory as any).additional_fields).map(([name, config]: [string, any]) => ({
-                                                            name,
-                                                            type: config.type,
-                                                            label: name
-                                                        }));
-                                                        setPaymentCategoryAdditionalFields(categoryFields);
+                                                    if (selectedCategory) {
+                                                        const categoryData = selectedCategory as any;
+                                                        
+                                                        // Устанавливаем цену в зависимости от валюты
+                                                        if (watchShowInUsd && categoryData.price_usd) {
+                                                            setValue("amount", categoryData.price_usd);
+                                                            setPrice(categoryData.price_usd);
+                                                        } else if (categoryData.price) {
+                                                            setValue("amount", categoryData.price);
+                                                            setPrice(categoryData.price);
+                                                        }
+                                                        
+                                                        // Загружаем дополнительные поля
+                                                        if (categoryData.additional_fields) {
+                                                            const categoryFields = Object.entries(categoryData.additional_fields).map(([name, config]: [string, any]) => ({
+                                                                name,
+                                                                type: config.type,
+                                                                label: name
+                                                            }));
+                                                            setPaymentCategoryAdditionalFields(categoryFields);
+                                                        } else {
+                                                            setPaymentCategoryAdditionalFields([]);
+                                                        }
                                                     } else {
+                                                        // Очищаем цену если категория не найдена
+                                                        setValue("amount", null);
+                                                        setPrice(0);
                                                         setPaymentCategoryAdditionalFields([]);
                                                     }
                                                 }}
