@@ -10,9 +10,9 @@ import {useForm, Controller, SubmitHandler} from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { PulseLoader } from "react-spinners";
-import {getPublicDepartments} from "@/api/endpoints/departments.ts";
-import {getPublicEventsById, getEventByIdAuth} from "@/api/endpoints/events.ts";
-import {packetEventsApi} from "@/api/endpoints/packet-events.ts";
+import { getPublicDepartments } from "@/api/endpoints/departments.ts";
+import { getPublicEventsById } from "@/api/endpoints/events.ts";
+import { packetEventsApi } from "@/api/endpoints/packet-events.ts";
 import {IEvent} from "@/types/events.ts";
 import {usePaymentStore} from "@/store/usePaymentStore.ts";
 import {orderHalyk, orderKaspi, orderSelfHalyk, orderSelfKaspi, orderKaspiCustomPrice, orderHalykCustomPrice} from "@/api/endpoints/order.ts";
@@ -119,6 +119,7 @@ export const PaymentForm: FC = () => {
                     price: Number(event.price || 0),
                     price_usd: event.price_usd ? Number(event.price_usd) : null,
                     priced: event.priced ?? true,
+                    additional_fields: event.additional_fields
                 })).filter((event: any) => event.label && event.value);
                 
                 setEventOptions(mapped);
@@ -168,28 +169,19 @@ export const PaymentForm: FC = () => {
                 
                 const selectedEvent = eventOptions.find(opt => opt.value === currentEventId);
                 if (selectedEvent) {
-                    console.log("🔍 Found selected event:", selectedEvent);
-                    try {
-                        const eventData = await getEventByIdAuth(currentEventId);
-                        console.log("🔍 Event data from API:", eventData);
-                        if (eventData.additional_fields) {
-                            const eventFields = Object.entries(eventData.additional_fields).map(([name, config]: [string, any]) => ({
-                                name,
-                                type: config.type,
-                                label: name
-                            }));
-                            console.log("🔍 Mapped event fields:", eventFields);
-                            setEventAdditionalFields(eventFields);
-                        } else {
-                            console.log("🔍 No additional fields in event data");
-                            setEventAdditionalFields([]);
-                        }
-                    } catch (error) {
-                        console.error("Error fetching event additional fields:", error);
+                    // Используем данные из eventOptions, которые уже содержат additional_fields
+                    if ((selectedEvent as any).additional_fields) {
+                        const eventFields = Object.entries((selectedEvent as any).additional_fields).map(([name, config]: [string, any]) => ({
+                            name,
+                            type: config.type,
+                            label: name,
+                            required: config.required ?? false
+                        }));
+                        setEventAdditionalFields(eventFields);
+                    } else {
                         setEventAdditionalFields([]);
                     }
                 } else {
-                    console.log("🔍 No selected event found for currentEventId:", currentEventId);
                     setEventAdditionalFields([]);
                 }
                 
@@ -826,7 +818,6 @@ export const PaymentForm: FC = () => {
                         )}
 
                         {/* Event additional fields */}
-                        {console.log("🔍 Rendering event additional fields:", eventAdditionalFields.length, eventAdditionalFields)}
                         {eventAdditionalFields.length > 0 && (
                             <div className="flex flex-col gap-2">
                                 {eventAdditionalFields.map((field) => {
