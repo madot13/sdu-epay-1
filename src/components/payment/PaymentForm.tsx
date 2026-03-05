@@ -502,13 +502,26 @@ export const PaymentForm: FC = () => {
                         }
                         }
                     } else {
-                        // Для фиксированных цен без категорий
+                        // Для фиксированных цен (с категориями или без)
                         console.log("🔍 Using orderHalyk endpoint");
                         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                        const { paymentMethod, department_id, showInUsd, ...dataWithoutPaymentMethodAndDepartment } = payload;
+                        const { paymentMethod, department_id, showInUsd, amount, ...dataWithoutPaymentMethodAndDepartment } = payload;
+
+                        // Гарантируем, что в запрос уходит сумма именно из выбранной категории
+                        let finalAmount = amount ?? null;
+                        if (selectedPaymentCategory && data.payment_category_id === selectedPaymentCategory.value) {
+                            const categoryData = selectedPaymentCategory as any;
+                            if (currency === "USD" && categoryData.price_usd) {
+                                finalAmount = Number(categoryData.price_usd);
+                            } else if (categoryData.price) {
+                                finalAmount = Number(categoryData.price);
+                            }
+                        }
+
                         try {
                             const halykData = await orderHalyk({
                                 ...dataWithoutPaymentMethodAndDepartment,
+                                amount: finalAmount,
                                 currency
                             });
                             setPaymentData(halykData);
