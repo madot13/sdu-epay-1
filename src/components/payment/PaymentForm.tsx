@@ -345,8 +345,10 @@ export const PaymentForm: FC = () => {
                 const converted: Record<string, string | boolean> = {};
                 Object.entries(fields).forEach(([key, value]) => {
                     if (typeof value === 'object' && value !== null && 'name' in value) {
-                        // Для файлов преобразуем в JSON строку или специальный формат
-                        converted[key] = JSON.stringify(value);
+                        // Для файлов НЕ преобразуем в JSON строку, а извлекаем только имя файла
+                        // Это предотвращает ошибки парсинга в платежном шлюзе
+                        converted[key] = (value as any).name || 'file';
+                        console.log(`🔍 Converting file field ${key}:`, value, '→', converted[key]);
                     } else {
                         converted[key] = value;
                     }
@@ -367,7 +369,9 @@ export const PaymentForm: FC = () => {
                 showInUsd: data.showInUsd,
                 paymentMethod: data.paymentMethod,
                 paymentCategoryId: data.payment_category_id,
-                eventId: data.event_id
+                eventId: data.event_id,
+                additionalFieldsRaw: additionalFieldValues,
+                additionalFieldsConverted: convertAdditionalFields(additionalFieldValues)
             });
 
             // Валидация amount
