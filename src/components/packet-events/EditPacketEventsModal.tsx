@@ -95,12 +95,6 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
         }
 
         try {
-            // Если этот тип оплаты отмечен как Main, снимаем флаг с других типов
-            if (isMain) {
-                await packetEventsApi.clearMainFlag(eventData.event_id!, eventData.id!);
-                console.log("🔍 Cleared main flag from other payment types for event:", eventData.event_id);
-            }
-
             // Объединяем все дополнительные поля
             const allAdditionalFields: Record<string, any> = {};
             
@@ -118,6 +112,7 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
                 }
             });
 
+            // Сначала обновляем текущий тип оплаты
             await packetEventsApi.update(eventData.id, {
                 ...form,
                 price: withoutFixedPrice ? 0 : (form.price || 0),
@@ -125,6 +120,13 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
                 main: isMain, // Добавляем главный тип оплаты
                 additional_fields: Object.keys(allAdditionalFields).length > 0 ? allAdditionalFields : undefined
             });
+
+            // Затем, если этот тип оплаты отмечен как Main, снимаем флаг с других типов
+            if (isMain) {
+                await packetEventsApi.clearMainFlag(eventData.event_id!, eventData.id!);
+                console.log("🔍 Cleared main flag from other payment types for event:", eventData.event_id);
+            }
+
             toast.success("Данные успешно обновлены");
             onSuccess();
             onClose();
