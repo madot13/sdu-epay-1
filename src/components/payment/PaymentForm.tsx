@@ -458,8 +458,29 @@ export const PaymentForm: FC = () => {
                     }
                 } else if (data.paymentMethod === "HalykBank") {
                     if (selectedEventPriced === false || isCustomPrice) {
-                        // Только для произвольных цен (бесплатные события или категории с произвольной ценой)
-                        console.log("🔍 Using orderHalykCustomPrice endpoint");
+                        // Только для произвольных цен БЕЗ категорий платежа
+                        if (data.payment_category_id) {
+                            // Если есть категория - используем обычный эндпоинт
+                            console.log("🔍 Using orderHalyk endpoint (with category)");
+                            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                            const { paymentMethod, department_id, showInUsd, ...dataWithoutPaymentMethodAndDepartment } = payload;
+                            try {
+                                const halykData = await orderHalyk({
+                                    ...dataWithoutPaymentMethodAndDepartment,
+                                    currency
+                                });
+                                setPaymentData(halykData);
+                                setShowWidget(true);
+                            } catch (error: any) {
+                                console.error("🔍 Halyk order error:", error);
+                                if (error.response) {
+                                    console.error("🔍 Error response data:", error.response.data);
+                                }
+                                toast.error("Ошибка при создании платежа. Пожалуйста, попробуйте еще раз.");
+                            }
+                        } else {
+                            // Бесплатное событие без категории - используем CustomPrice
+                            console.log("🔍 Using orderHalykCustomPrice endpoint");
                         // eslint-disable-next-line @typescript-eslint/no-unused-vars
                         const { paymentMethod, department_id, promo_code, showInUsd, ...customPriceData } = payload;
                         try {
@@ -477,6 +498,7 @@ export const PaymentForm: FC = () => {
                                 console.error("🔍 Error response data:", error.response.data);
                             }
                             toast.error("Ошибка при создании платежа. Пожалуйста, попробуйте еще раз.");
+                        }
                         }
                     } else {
                         // Для фиксированных цен без категорий
