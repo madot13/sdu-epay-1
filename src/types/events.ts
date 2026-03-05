@@ -12,21 +12,14 @@ export interface IEvent {
     additional_fields?: Record<string, any>;
 }
 
-export type EventQuery = {
-    title?: string | null;
-    page?: number;
-    size?: number;
-    department_id?: string | null;
-    period_from?: string | null;
-    period_to?: string | null;
+export type CreateEventPayload = IEvent & {
+    priced: boolean; // Обязательно указываем priced при создании
 };
-
-
-export type CreateEventPayload = IEvent
 
 export interface UpdateEventPayload {
     title: string;
     manager_email: string;
+    priced: boolean;
     without_period: boolean;
     period_from?: string | null;
     period_till?: string | null;

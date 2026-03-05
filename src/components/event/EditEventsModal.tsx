@@ -2,17 +2,18 @@ import {FC, useEffect, useState} from "react";
 import {getDepartments} from "@/api/endpoints/departments.ts";
 import {Department} from "@/types/departments.ts";
 import {CustomModal} from "@/ui/CustomModal.tsx";
-import {CustomInput} from "@/ui/CustomInput.tsx";
 import {CustomSelect} from "@/ui/CustomSelect.tsx";
+import {CustomInput} from "@/ui/CustomInput.tsx";
 import {useEventsStore} from "@/store/useEventsStore.ts";
 import {toast} from "react-hot-toast";
 import { AddAdditionalFields } from "@/components/department/AddAdditionalFields.tsx";
 import {
-    EnvelopeIcon,
     InformationCircleIcon,
 } from "@heroicons/react/24/outline";
 import {CustomButton} from "@/ui/CustomButton.tsx";
 import {Calendar} from "primereact/calendar";
+import { getUsers } from "@/api/endpoints/users.ts";
+import { IUser } from "@/types/users.ts";
 
 interface EditEventsModalProps {
     isOpen: boolean;
@@ -34,7 +35,7 @@ interface EditEventsModalProps {
 
 export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, eventData}) => {
     const [title, setTitle] = useState(eventData.title);
-    const [email, setEmail] = useState(eventData.manager_email);
+    const [selectedManager, setSelectedManager] = useState(eventData.manager_email);
     const [withoutPeriod, setWithoutPeriod] = useState(eventData.without_period);
     const [selectedDepartment, setSelectedDepartment] = useState(eventData.department.id);
     const [dates, setDates] = useState<Date[] | null>(
@@ -45,18 +46,19 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
     const [additionalFields, setAdditionalFields] = useState<{name:string; type:string; value?: any}[]>([]);
     const [errors, setErrors] = useState({
         title: false,
-        email: false,
+        manager: false,
         department: false,
         dates: false,
     });
     const [departments, setDepartments] = useState<{ label: string; value: string }[]>([]);
+    const [managers, setManagers] = useState<{ label: string; value: string }[]>([]);
 
     const {updateEvent, fetchEvents} = useEventsStore();
 
     useEffect(() => {
         if (isOpen) {
             setTitle(eventData.title);
-            setEmail(eventData.manager_email);
+            setSelectedManager(eventData.manager_email);
             setWithoutPeriod(eventData.without_period);
             setSelectedDepartment(eventData.department.id);
             setDates(
@@ -88,7 +90,28 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
             }
         };
 
+        const fetchManagers = async () => {
+            try {
+                const allUsersResponse = await getUsers();
+                console.log("All users response:", allUsersResponse);
+                
+                const managers = allUsersResponse.data.filter((user: IUser) => 
+                    user.role === "MANAGER" || user.role === "ADMIN" || user.role === "SUPER_ADMIN"
+                );
+                console.log("Filtered managers:", managers);
+                
+                const formatted = managers.map((user: IUser) => ({
+                    label: `${user.name} (${user.username})`,
+                    value: user.username,
+                }));
+                setManagers(formatted);
+            } catch (error) {
+                console.error("Failed to fetch managers:", error);
+            }
+        };
+
         fetchDepartments();
+        fetchManagers();
     }, []);
 
     const handleSubmit = async () => {
@@ -104,7 +127,7 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
 
         const newErrors = {
             title: !title.trim(),
-            email: !email.trim() || !emailRegex.test(email),
+            manager: !selectedManager || !emailRegex.test(selectedManager),
             department: !selectedDepartment,
             dates: !withoutPeriod && (!from || !till),
         };
@@ -114,12 +137,8 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
         const messages: string[] = [];
 
         if (newErrors.title) messages.push("Название мероприятия обязательно.");
-        if (!email.trim()) {
-            messages.push("Email менеджера обязателен.");
-        } else if (!emailRegex.test(email)) {
-            messages.push("Неверный формат email.");
-        }
-        if (newErrors.department) messages.push("Необходимо выбрать департамент.");
+        if (newErrors.manager) messages.push("Email менеджера обязателен");
+        if (newErrors.department) messages.push("Необходимо выбрать департамент");
         if (newErrors.dates) messages.push("Укажите период проведения мероприятия.");
 
         if (messages.length > 0) {
@@ -130,8 +149,6 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
         try {
             // Подготавливаем additional_fields
             const additional_fields: Record<string, any> = {};
-            console.log("Current additionalFields state:", additionalFields);
-            
             additionalFields.forEach((field) => {
                 if (field.type === 'file' && field.value) {
                     // Для файлов копируем весь объект с value
@@ -140,28 +157,24 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
                         value: field.value
                     };
                 } else {
-                    // Для других типов отправляем type и value (пустое для новых полей)
-                    additional_fields[field.name] = { 
-                        type: field.type,
-                        value: field.value || ''
-                    };
+                    // Для других типов только type
+                    additional_fields[field.name] = { type: field.type };
                 }
             });
-            
-            console.log("Prepared additional_fields for API:", additional_fields);
 
             const updatePayload = {
                 title,
-                manager_email: email,
+                manager_email: selectedManager,
                 department_id: selectedDepartment,
                 without_period: withoutPeriod,
+                priced: false, // Добавляем чтобы бэкенд не требовал цену
                 additional_fields: Object.keys(additional_fields).length > 0 ? additional_fields : undefined,
                 ...(withoutPeriod
                     ? {}
                     : { period_from: from!, period_till: till! }
                 ),
             };
-            
+
             console.log("Full update payload:", updatePayload);
 
             await updateEvent(eventData.id, updatePayload);
@@ -187,14 +200,19 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
                     className={errors.title ? "border border-red-500" : ""}
                 />
                 
-                <CustomInput
-                    icon={<EnvelopeIcon className={errors.email ? " text-red-500" : "text-[#6B9AB0]"} />}
-                    placeholder="Введите email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className={errors.email ? "border border-red-500" : ""}
-                />
+                <CustomSelect
+                        placeholder="Выберите менеджера"
+                        options={managers}
+                        value={selectedManager}
+                        onChange={(value) => {
+                            console.log("Selected manager:", value);
+                            setSelectedManager(value);
+                        }}
+                        triggerClassName={`bg-white h-[50px] text-black ${errors.manager ? "border border-red-500" : ""}`}
+                        dropdownClassName="bg-gray-100"
+                        optionClassName="text-sm"
+                        activeOptionClassName="bg-blue-200"
+                    />
 
                 <CustomSelect
                     placeholder="Выберите департамент"

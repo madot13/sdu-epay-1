@@ -140,6 +140,7 @@ export const AddEventModal: FC = () => {
                 manager_email: selectedManager,
                 department_id: selectedDepartment,
                 without_period: withoutPeriod,
+                priced: false, // Добавляем чтобы бэкенд не требовал цену
                 additional_fields: Object.keys(additional_fields).length > 0 ? additional_fields : undefined,
                 ...(withoutPeriod
                     ? {}
