@@ -258,30 +258,39 @@ export const PaymentForm: FC = () => {
                     setValue("showInUsd", true);
                     
                     // Устанавливаем цену USD
-                    setValue("amount", priceUsd);
-                    setPrice(priceUsd);
+                    const usdAmount = priceUsd || 0;
+                    setValue("amount", usdAmount);
+                    setPrice(usdAmount);
+                    console.log("🔍 Set USD amount:", usdAmount, "from priceUsd:", priceUsd);
                 } else if (hasOnlyKzt) {
                     // Только KZT - принудительно выключаем USD
                     setIsKztForced(true);
                     setValue("showInUsd", false);
                     
                     // Устанавливаем цену KZT
-                    setValue("amount", price);
-                    setPrice(price);
+                    const kztAmount = price || 0;
+                    setValue("amount", kztAmount);
+                    setPrice(kztAmount);
+                    console.log("🔍 Set KZT amount:", kztAmount, "from price:", price);
                 } else if (hasBothPrices) {
                     // Обе цены - позволяем выбор валюты
                     // Устанавливаем цену в зависимости от текущего выбора
                     if (watchShowInUsd) {
-                        setValue("amount", priceUsd);
-                        setPrice(priceUsd);
+                        const usdAmount = priceUsd || 0;
+                        setValue("amount", usdAmount);
+                        setPrice(usdAmount);
+                        console.log("🔍 Set USD amount (both prices):", usdAmount, "from priceUsd:", priceUsd);
                     } else {
-                        setValue("amount", price);
-                        setPrice(price);
+                        const kztAmount = price || 0;
+                        setValue("amount", kztAmount);
+                        setPrice(kztAmount);
+                        console.log("🔍 Set KZT amount (both prices):", kztAmount, "from price:", price);
                     }
                 } else if (hasCustomPrice) {
                     // Произвольная цена - позволяем выбор валюты и ввод суммы
                     setValue("amount", null);
                     setPrice(0);
+                    console.log("🔍 Set custom price: null");
                 }
             }
         } else {
@@ -350,6 +359,29 @@ export const PaymentForm: FC = () => {
                 additional_fields: convertAdditionalFields(additionalFieldValues),
                 currency
             };
+
+            console.log("🔍 Payment payload:", {
+                amount: data.amount,
+                amountType: typeof data.amount,
+                currency: currency,
+                showInUsd: data.showInUsd,
+                paymentMethod: data.paymentMethod,
+                paymentCategoryId: data.payment_category_id,
+                eventId: data.event_id
+            });
+
+            // Валидация amount
+            if (data.amount && typeof data.amount !== 'number') {
+                console.error("❌ Invalid amount type:", typeof data.amount, data.amount);
+                toast.error("Ошибка в сумме платежа. Пожалуйста, выберите категорию заново.");
+                return;
+            }
+
+            if (data.amount && (data.amount <= 0 || data.amount > 999999)) {
+                console.error("❌ Invalid amount value:", data.amount);
+                toast.error("Сумма платежа должна быть положительным числом.");
+                return;
+            }
 
 
             if(selectedDepartmentType==="EVENT_BASED"){
