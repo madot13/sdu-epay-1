@@ -27,9 +27,6 @@ export type CreateEventPayload = IEvent
 export interface UpdateEventPayload {
     title: string;
     manager_email: string;
-    priced: boolean;
-    price: number;
-    price_usd?: number;
     without_period: boolean;
     period_from?: string | null;
     period_till?: string | null;

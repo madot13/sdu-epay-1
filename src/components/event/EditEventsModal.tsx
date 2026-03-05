@@ -2,20 +2,17 @@ import {FC, useEffect, useState} from "react";
 import {getDepartments} from "@/api/endpoints/departments.ts";
 import {Department} from "@/types/departments.ts";
 import {CustomModal} from "@/ui/CustomModal.tsx";
+import {CustomInput} from "@/ui/CustomInput.tsx";
 import {CustomSelect} from "@/ui/CustomSelect.tsx";
 import {useEventsStore} from "@/store/useEventsStore.ts";
 import {toast} from "react-hot-toast";
-import {formatLocalDate} from "@/utils/formatLocalDate.ts";
 import { AddAdditionalFields } from "@/components/department/AddAdditionalFields.tsx";
-import {CustomInput} from "@/ui/CustomInput.tsx";
 import {
     EnvelopeIcon,
     InformationCircleIcon,
 } from "@heroicons/react/24/outline";
 import {CustomButton} from "@/ui/CustomButton.tsx";
 import {Calendar} from "primereact/calendar";
-import {CurrencyDollarIcon} from "@heroicons/react/24/outline";
-import { TengeIcon } from "@/assets/TengeIcon.tsx";
 
 interface EditEventsModalProps {
     isOpen: boolean;
@@ -74,11 +71,6 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
                 }))
                 : [];
             setAdditionalFields(fields);
-                setAdditionalFields(fields);
-            } else {
-                console.log("No additional_fields in eventData");
-                setAdditionalFields([]);
-            }
         }
     }, [isOpen, eventData]);
 
@@ -98,7 +90,6 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
 
         fetchDepartments();
     }, []);
-
 
     const handleSubmit = async () => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -130,7 +121,6 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
         }
         if (newErrors.department) messages.push("Необходимо выбрать департамент.");
         if (newErrors.dates) messages.push("Укажите период проведения мероприятия.");
-
 
         if (messages.length > 0) {
             messages.forEach((msg) => toast.error(msg));
@@ -182,7 +172,7 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
             onClose();
         } catch (err: any) {
             console.error("Failed to update event:", err);
-            toast.error(err.response.data.detail[0].msg)
+            toast.error(err.response.data.detail?.[0]?.msg || "Ошибка при обновлении события");
         }
     };
 
@@ -194,14 +184,18 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
                     placeholder="Введите название"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
+                    className={errors.title ? "border border-red-500" : ""}
                 />
+                
                 <CustomInput
                     icon={<EnvelopeIcon className={errors.email ? " text-red-500" : "text-[#6B9AB0]"} />}
                     placeholder="Введите email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    className={errors.email ? "border border-red-500" : ""}
                 />
+
                 <CustomSelect
                     placeholder="Выберите департамент"
                     options={departments}
@@ -212,38 +206,6 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
                     optionClassName="text-sm"
                     activeOptionClassName="bg-blue-200"
                 />
-
-                <div className="flex items-center gap-2">
-                    <input
-                        type="checkbox"
-                        id="priced-edit"
-                        checked={priced}
-                        onChange={(e) => setPriced(e.target.checked)}
-                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                    <label htmlFor="priced-edit" className="text-sm text-gray-700">
-                        Фиксированная цена
-                    </label>
-                </div>
-
-                {priced && (
-                    <>
-                        <CustomInput
-                            icon={<TengeIcon color={errors.price ? "#fb2c36" : "#6B9AB0"} />}
-                            placeholder="Введите цену в KZT (обязательно)"
-                            type="number"
-                            value={String(price)}
-                            onChange={(e) => setPrice(Number(e.target.value))}
-                        />
-                        <CustomInput
-                            icon={<CurrencyDollarIcon className={errors.priceUsd ? "text-red-500" : "text-[#6B9AB0]"} />}
-                            placeholder="Введите цену в USD (опционально)"
-                            type="number"
-                            value={String(priceUsd)}
-                            onChange={(e) => setPriceUsd(Number(e.target.value))}
-                        />
-                    </>
-                )}
 
                 <div className="flex items-center gap-2">
                     <input
