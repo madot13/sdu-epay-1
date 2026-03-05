@@ -58,14 +58,6 @@ export const EventsPage:FC = () => {
         fetchEvents();
     }, []);
 
-    // Временное логирование для проверки структуры событий
-    useEffect(() => {
-        if (events.length > 0) {
-            console.log("Events structure:", events[0]);
-            console.log("Event fields:", Object.keys(events[0]));
-        }
-    }, [events]);
-
     useEffect(() => {
         const eventsWithDisplay = events.map((event: any) => ({
             ...event,

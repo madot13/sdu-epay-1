@@ -23,6 +23,7 @@ export type EventQuery = {
     department_id?: string | null;
     period_from?: string | null;
     period_to?: string | null;
+    active?: boolean | null;
 };
 
 export interface UpdateEventPayload {
