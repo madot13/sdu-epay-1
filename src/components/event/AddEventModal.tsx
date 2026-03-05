@@ -1,9 +1,9 @@
 import { FC, useEffect, useState } from "react";
 import { CustomButton } from "@/ui/CustomButton.tsx";
 import {
-    EnvelopeIcon,
     PlusIcon,
-    UserCircleIcon
+    UserCircleIcon,
+    TrashIcon
 } from "@heroicons/react/24/outline";
 import { CustomModal } from "@/ui/CustomModal.tsx";
 import { CustomInput } from "@/ui/CustomInput.tsx";
@@ -13,26 +13,48 @@ import { getDepartments } from "@/api/endpoints/departments.ts";
 import { Department } from "@/types/departments.ts";
 import { useEventsStore } from "@/store/useEventsStore.ts";
 import { toast } from "react-hot-toast";
-import {formatLocalDate} from "@/utils/formatLocalDate.ts";
-import { AddAdditionalFields } from "@/components/department/AddAdditionalFields.tsx";
+import { formatLocalDate } from "@/utils/formatLocalDate.ts";
+import { getUsers } from "@/api/endpoints/users.ts";
+import { IUser } from "@/types/users.ts";
+
+interface CustomField {
+    key: string;
+    value: string;
+}
 
 export const AddEventModal: FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [dates, setDates] = useState<Date[] | null>(null);
     const [name, setName] = useState("");
-    const [email, setEmail] = useState("");
+    const [selectedManager, setSelectedManager] = useState("");
     const [withoutPeriod, setWithoutPeriod] = useState(false);
     const [selectedDepartment, setSelectedDepartment] = useState("");
     const [departments, setDepartments] = useState<{ label: string; value: string }[]>([]);
-    const [additionalFields, setAdditionalFields] = useState<{name:string; type:string; value?: any}[]>([]);
+    const [managers, setManagers] = useState<{ label: string; value: string }[]>([]);
+    const [customFields, setCustomFields] = useState<CustomField[]>([]);
     const [errors, setErrors] = useState({
         name: false,
-        email: false,
+        manager: false,
         department: false,
         dates: false,
     });
 
     const { addEvent, fetchEvents } = useEventsStore();
+
+    // Функции для управления дополнительными полями
+    const addCustomField = () => {
+        setCustomFields([...customFields, { key: "", value: "" }]);
+    };
+
+    const removeCustomField = (index: number) => {
+        setCustomFields(customFields.filter((_, i) => i !== index));
+    };
+
+    const updateCustomField = (index: number, field: 'key' | 'value', value: string) => {
+        const updatedFields = [...customFields];
+        updatedFields[index][field] = value;
+        setCustomFields(updatedFields);
+    };
 
     useEffect(() => {
         const fetchDepartments = async () => {
@@ -48,11 +70,24 @@ export const AddEventModal: FC = () => {
             }
         };
 
+        const fetchManagers = async () => {
+            try {
+                const response = await getUsers({ role: "MANAGER" });
+                const formatted = response.data.map((user: IUser) => ({
+                    label: `${user.name} (${user.username})`,
+                    value: user.username,
+                }));
+                setManagers(formatted);
+            } catch (error) {
+                console.error("Failed to fetch managers:", error);
+            }
+        };
+
         fetchDepartments();
+        fetchManagers();
     }, []);
 
     const handleSubmit = async () => {
-
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
         const periodFrom = Array.isArray(dates) && dates[0] ? formatLocalDate(dates[0]) : null;
@@ -60,7 +95,7 @@ export const AddEventModal: FC = () => {
 
         const newErrors = {
             name: !name,
-            email: !email || !emailRegex.test(email),
+            manager: !selectedManager || !emailRegex.test(selectedManager),
             department: !selectedDepartment,
             dates: !withoutPeriod && (!periodFrom || !periodTo),
         };
@@ -70,11 +105,7 @@ export const AddEventModal: FC = () => {
         const messages: string[] = [];
 
         if (newErrors.name) messages.push("Название мероприятия обязательно");
-        if (!email) {
-            messages.push("Email администратора обязателен");
-        } else if (!emailRegex.test(email)) {
-            messages.push("Неверный формат email");
-        }
+        if (newErrors.manager) messages.push("Email менеджера обязателен");
         if (newErrors.department) messages.push("Необходимо выбрать департамент");
         if (newErrors.dates) messages.push("Необходимо указать период проведения");
 
@@ -83,26 +114,21 @@ export const AddEventModal: FC = () => {
             return;
         }
 
-
         try {
-            // Подготавливаем additional_fields
+            // Подготавливаем additional_fields из customFields
             const additional_fields: Record<string, any> = {};
-            additionalFields.forEach((field) => {
-                if (field.type === 'file' && field.value) {
-                    // Для файлов копируем весь объект с value
-                    additional_fields[field.name] = {
-                        type: field.type,
+            customFields.forEach((field) => {
+                if (field.key.trim() && field.value.trim()) {
+                    additional_fields[field.key] = {
+                        type: "text",
                         value: field.value
                     };
-                } else {
-                    // Для других типов только type
-                    additional_fields[field.name] = { type: field.type };
                 }
             });
 
             await addEvent({
                 title: name,
-                manager_email: email,
+                manager_email: selectedManager,
                 department_id: selectedDepartment,
                 without_period: withoutPeriod,
                 additional_fields: Object.keys(additional_fields).length > 0 ? additional_fields : undefined,
@@ -112,23 +138,23 @@ export const AddEventModal: FC = () => {
                 ),
             });
 
-            await fetchEvents()
+            await fetchEvents();
 
             toast.success("Событие успешно создано!");
             setIsModalOpen(false);
             setName("");
-            setEmail("");
+            setSelectedManager("");
             setWithoutPeriod(false);
             setSelectedDepartment("");
             setDates(null);
-            setAdditionalFields([]);
+            setCustomFields([]);
             setErrors({
                 name: false,
-                email: false,
+                manager: false,
                 department: false,
                 dates: false,
             });
-        } catch (err:any) {
+        } catch (err: any) {
             console.error("Failed to add event:", err);
             toast.error("Что-то пошло не так при добавлении события.");
         }
@@ -155,12 +181,15 @@ export const AddEventModal: FC = () => {
                         className={errors.name ? "border border-red-500" : ""}
                     />
 
-                    <CustomInput
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        icon={<EnvelopeIcon className={errors.email ? "text-red-500" : "text-[#6B9AB0]"} />}
-                        placeholder="Email менеджера"
-                        className={errors.email ? "border border-red-500" : ""}
+                    <CustomSelect
+                        placeholder="Выберите менеджера"
+                        options={managers}
+                        value={selectedManager}
+                        onChange={setSelectedManager}
+                        triggerClassName={`bg-white h-[50px] text-black ${errors.manager ? "border border-red-500" : ""}`}
+                        dropdownClassName="bg-gray-100"
+                        optionClassName="text-sm"
+                        activeOptionClassName="bg-blue-200"
                     />
 
                     <CustomSelect
@@ -173,8 +202,6 @@ export const AddEventModal: FC = () => {
                         optionClassName="text-sm"
                         activeOptionClassName="bg-blue-200"
                     />
-
-                    <AddAdditionalFields value={additionalFields} onChange={setAdditionalFields} />
 
                     <div className="flex items-center gap-2">
                         <input
@@ -205,11 +232,41 @@ export const AddEventModal: FC = () => {
 
                     {/* Дополнительные поля */}
                     <div className="flex flex-col gap-2">
-                        <label className="text-sm font-medium text-gray-700">Дополнительные поля</label>
-                        <AddAdditionalFields 
-                            value={additionalFields} 
-                            onChange={setAdditionalFields} 
-                        />
+                        <div className="flex items-center justify-between">
+                            <label className="text-sm font-medium text-gray-700">Дополнительные поля</label>
+                            <CustomButton
+                                variant="default"
+                                className="h-[32px] px-3 py-1 text-xs"
+                                onClick={addCustomField}
+                            >
+                                <PlusIcon className="w-4 h-4" />
+                                Дополнительные поля
+                            </CustomButton>
+                        </div>
+                        
+                        {customFields.map((field, index) => (
+                            <div key={index} className="flex gap-2 items-center">
+                                <CustomInput
+                                    placeholder="Название поля"
+                                    value={field.key}
+                                    onChange={(e) => updateCustomField(index, 'key', e.target.value)}
+                                    className="flex-1"
+                                />
+                                <CustomInput
+                                    placeholder="Значение"
+                                    value={field.value}
+                                    onChange={(e) => updateCustomField(index, 'value', e.target.value)}
+                                    className="flex-1"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => removeCustomField(index)}
+                                    className="p-2 text-red-500 hover:text-red-700 transition-colors"
+                                >
+                                    <TrashIcon className="w-4 h-4" />
+                                </button>
+                            </div>
+                        ))}
                     </div>
 
                     <CustomButton onClick={handleSubmit} className="w-full">
