@@ -24,6 +24,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
     const [price, setPrice] = useState(0);
     const [priceUsd, setPriceUsd] = useState(0);
     const [withoutFixedPrice, setWithoutFixedPrice] = useState(false);
+    const [isMain, setIsMain] = useState(false); // Добавляем состояние для главного типа оплаты
 
     // Дополнительные поля на каждом уровне
     const [paymentTypeCustomFields, setPaymentTypeCustomFields] = useState<{name:string; type:string; value?: any}[]>([]);
@@ -133,6 +134,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                 priced: !withoutFixedPrice,
                 price: withoutFixedPrice ? 0 : price,
                 price_usd: withoutFixedPrice ? 0 : (priceUsd > 0 ? priceUsd : undefined),
+                main: isMain, // Добавляем главный тип оплаты
                 additional_fields: Object.keys(allAdditionalFields).length > 0 ? allAdditionalFields : undefined
             });
 
@@ -147,6 +149,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
             setPriceUsd(0); 
             setCategory(""); 
             setWithoutFixedPrice(false);
+            setIsMain(false); // Сбрасываем главный тип оплаты
             setPaymentTypeCustomFields([]);
         } catch (error) {
             toast.error("Ошибка при создании");
@@ -236,6 +239,19 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                         />
                         <label htmlFor="withoutFixedPrice" className="text-sm text-gray-700">
                             Без фиксированной цены
+                        </label>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            id="isMain"
+                            checked={isMain}
+                            onChange={(e) => setIsMain(e.target.checked)}
+                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                        />
+                        <label htmlFor="isMain" className="text-sm text-gray-700">
+                            Главный тип оплаты (Main)
                         </label>
                     </div>
 

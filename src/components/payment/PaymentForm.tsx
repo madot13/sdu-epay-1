@@ -228,6 +228,55 @@ export const PaymentForm: FC = () => {
     const [isCustomPrice, setIsCustomPrice] = useState(false); // Добавляем состояние для произвольной цены
     const [paymentMethodMessage, setPaymentMethodMessage] = useState("");
 
+    // Автозаполнение главного типа оплаты
+    useEffect(() => {
+        if (paymentCategoryOptions.length > 0) {
+            const mainCategory = paymentCategoryOptions.find(cat => {
+                const categoryData = cat as any;
+                return categoryData.main === true;
+            });
+            
+            if (mainCategory) {
+                console.log("🔍 Found main payment category:", mainCategory);
+                setValue("payment_category_id", mainCategory.value);
+                
+                // Устанавливаем цену и валюту на основе главного типа
+                const price = (mainCategory as any).price || 0;
+                const priceUsd = (mainCategory as any).price_usd || 0;
+                
+                if (price > 0 && priceUsd === 0) {
+                    // Только KZT
+                    setIsKztForced(true);
+                    setIsUsdForced(false);
+                    setValue("showInUsd", false);
+                    setValue("amount", price);
+                    setPrice(price);
+                } else if (price === 0 && priceUsd > 0) {
+                    // Только USD
+                    setIsUsdForced(true);
+                    setIsKztForced(false);
+                    setValue("showInUsd", true);
+                    setValue("amount", priceUsd);
+                    setPrice(priceUsd);
+                } else if (price > 0 && priceUsd > 0) {
+                    // Обе цены
+                    setIsUsdForced(false);
+                    setIsKztForced(false);
+                    setValue("showInUsd", false); // По умолчанию KZT
+                    setValue("amount", price);
+                    setPrice(price);
+                } else {
+                    // Произвольная цена
+                    setIsUsdForced(false);
+                    setIsKztForced(false);
+                    setIsCustomPrice(true);
+                    setValue("amount", null);
+                    setPrice(0);
+                }
+            }
+        }
+    }, [paymentCategoryOptions, setValue, setPrice, setIsKztForced, setIsUsdForced, setIsCustomPrice]);
+
     // Умная логика валют и цен
     useEffect(() => {
         if (watchPaymentCategoryId) {

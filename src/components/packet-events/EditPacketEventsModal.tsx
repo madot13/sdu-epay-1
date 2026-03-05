@@ -21,6 +21,7 @@ interface Props {
 export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, onSuccess }) => {
     const [form, setForm] = useState<IEventRecord>({} as IEventRecord);
     const [withoutFixedPrice, setWithoutFixedPrice] = useState(false);
+    const [isMain, setIsMain] = useState(false); // Добавляем состояние для главного типа оплаты
     const [customFields, setCustomFields] = useState<{name:string; type:string; value?: any}[]>([]);
     const [managers, setManagers] = useState<{ label: string; value: string }[]>([]);
 
@@ -28,6 +29,8 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
         setForm({ ...eventData });
         // Устанавливаем чекбокс если цены 0 или не заданы
         setWithoutFixedPrice((eventData.price || 0) === 0 && (eventData.price_usd || 0) === 0);
+        // Устанавливаем главный тип оплаты
+        setIsMain(eventData.main || false);
         
         // Загружаем дополнительные поля если они есть
         if (eventData.additional_fields) {
@@ -107,6 +110,7 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
                 ...form,
                 price: withoutFixedPrice ? 0 : (form.price || 0),
                 price_usd: withoutFixedPrice ? 0 : (form.price_usd || 0),
+                main: isMain, // Добавляем главный тип оплаты
                 additional_fields: Object.keys(allAdditionalFields).length > 0 ? allAdditionalFields : undefined
             });
             toast.success("Данные успешно обновлены");
@@ -164,6 +168,19 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
                     />
                     <label htmlFor="without-fixed-price-edit" className="text-sm text-gray-700">
                         Без фиксированной цены
+                    </label>
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <input
+                        type="checkbox"
+                        id="is-main-edit"
+                        checked={isMain}
+                        onChange={(e) => setIsMain(e.target.checked)}
+                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <label htmlFor="is-main-edit" className="text-sm text-gray-700">
+                        Главный тип оплаты (Main)
                     </label>
                 </div>
 
