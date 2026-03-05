@@ -649,9 +649,10 @@ export const PaymentForm: FC = () => {
                                                     }
                                                 }}
                                             />
-                                            <label
-                                                htmlFor={`file-${key}`}
-                                                className="flex items-center gap-2 px-4 py-2 bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-[#1E40AF] text-white rounded-md cursor-pointer transition duration-200 ease-in-out shadow-md hover:shadow-lg font-medium"
+                                            <button
+                                                type="button"
+                                                onClick={() => document.getElementById(`file-${key}`)?.click()}
+                                                className="bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-[#1E40AF] px-4 py-2 text-white font-medium rounded-md transition duration-200 ease-in-out shadow-md hover:shadow-lg cursor-pointer flex items-center gap-2"
                                             >
                                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -659,7 +660,7 @@ export const PaymentForm: FC = () => {
                                                 <span className="text-sm font-medium">
                                                     {(additionalFieldValues[key] as any)?.name || "Выберите файл"}
                                                 </span>
-                                            </label>
+                                            </button>
                                             {(additionalFieldValues[key] as any)?.name && (
                                                 <div className="mt-2 text-xs text-gray-600">
                                                     Файл: {(additionalFieldValues[key] as any).name} ({((additionalFieldValues[key] as any).size / 1024).toFixed(1)} KB)
@@ -842,9 +843,10 @@ export const PaymentForm: FC = () => {
                                                                                 }
                                                                             }}
                                                                         />
-                                                                        <label
-                                                                            htmlFor={`payment-file-${key}`}
-                                                                            className="flex items-center gap-2 px-4 py-2 bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-[#1E40AF] text-white rounded-md cursor-pointer transition duration-200 ease-in-out shadow-md hover:shadow-lg font-medium"
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => document.getElementById(`payment-file-${key}`)?.click()}
+                                                                            className="bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-[#1E40AF] px-4 py-2 text-white font-medium rounded-md transition duration-200 ease-in-out shadow-md hover:shadow-lg cursor-pointer flex items-center gap-2"
                                                                         >
                                                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -852,7 +854,7 @@ export const PaymentForm: FC = () => {
                                                                             <span className="text-sm font-medium">
                                                                                 {(paymentCategoryAdditionalFieldValues[key] as any)?.name || "Выберите файл"}
                                                                             </span>
-                                                                        </label>
+                                                                        </button>
                                                                         {(paymentCategoryAdditionalFieldValues[key] as any)?.name && (
                                                                             <div className="mt-2 text-xs text-gray-600">
                                                                                 Файл: {(paymentCategoryAdditionalFieldValues[key] as any).name} ({((paymentCategoryAdditionalFieldValues[key] as any).size / 1024).toFixed(1)} KB)
