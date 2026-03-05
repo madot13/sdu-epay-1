@@ -38,7 +38,7 @@ interface FormValues {
 
 
 
-export const usePaymentSchema = (departmentType: DepartmentType | null, eventPriced: boolean | null) => {
+export const usePaymentSchema = (departmentType: DepartmentType | null, eventPriced: boolean | null, isCustomPrice: boolean | null) => {
     const { t } = useTranslation();
 
     return yup.object().shape({
@@ -56,7 +56,7 @@ export const usePaymentSchema = (departmentType: DepartmentType | null, eventPri
         payment_category_id: yup.string().optional(),
         additional: yup.string().optional(),
         paymentMethod: yup.string().required(t("paymentPage.errors.paymentMethod")),
-        amount: departmentType === "SELF_PAY" || (departmentType === "EVENT_BASED" && eventPriced === false)
+        amount: departmentType === "SELF_PAY" || (departmentType === "EVENT_BASED" && (eventPriced === false || isCustomPrice === true))
             ? yup.number().typeError(t("paymentPage.errors.amount")).required(t("paymentPage.errors.amount"))
             : yup.number().nullable().optional(),
         showInUsd: yup.boolean().optional(),
@@ -67,6 +67,7 @@ export const usePaymentSchema = (departmentType: DepartmentType | null, eventPri
 
 export const PaymentForm: FC = () => {
     const {setPrice, setOrderField, setCurrency, discount, resetPromo} = usePaymentStore();
+    const [isCustomPrice, setIsCustomPrice] = useState(false);
     const { t } = useTranslation();
 
     const [selectedDepartmentId, setSelectedDepartmentId] = useState("");
@@ -132,7 +133,7 @@ export const PaymentForm: FC = () => {
         fetchEvents();
     }, [selectedDepartmentId]);
 
-    const schema = usePaymentSchema(selectedDepartmentType, selectedEventPriced);
+    const schema = usePaymentSchema(selectedDepartmentType, selectedEventPriced, isCustomPrice);
     const {
         control,
         handleSubmit,
@@ -212,7 +213,6 @@ export const PaymentForm: FC = () => {
     const [isKaspiDisabled, setIsKaspiDisabled] = useState(false);
     const [isUsdForced, setIsUsdForced] = useState(false);
     const [isKztForced, setIsKztForced] = useState(false);
-    const [isCustomPrice, setIsCustomPrice] = useState(false);
     const [paymentMethodMessage, setPaymentMethodMessage] = useState("");
 
     useEffect(() => {
@@ -338,6 +338,10 @@ export const PaymentForm: FC = () => {
 
 
     const onSubmit: SubmitHandler<FormValues> = async (data) => {
+        console.log("🔍 onSubmit called with data:", data);
+        console.log("🔍 selectedEventPriced:", selectedEventPriced);
+        console.log("🔍 isCustomPrice:", isCustomPrice);
+        console.log("🔍 selectedDepartmentType:", selectedDepartmentType);
         if (data.paymentMethod === "KaspiBank" && data.showInUsd === true) {
             toast.error("Kaspi Bank does not support USD payments. Please select HalykBank for non-resident payments or change to Resident.");
             return;
