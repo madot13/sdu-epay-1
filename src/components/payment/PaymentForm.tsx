@@ -81,9 +81,10 @@ export const PaymentForm: FC = () => {
     const [additionalFields, setAdditionalFields] = useState<any[]>([]);
     const [additionalFieldValues, setAdditionalFieldValues] = useState<Record<string, string | boolean | { name: string; size: number; type: string; lastModified: number }>>({});
     const [eventAdditionalFields, setEventAdditionalFields] = useState<any[]>([]);
-    const [eventAdditionalFieldValues, setEventAdditionalFieldValues] = useState<Record<string, string | boolean>>({});
+    const [eventAdditionalFieldValues, setEventAdditionalFieldValues] = useState<Record<string, any>>({});
     const [paymentCategoryAdditionalFields, setPaymentCategoryAdditionalFields] = useState<any[]>([]);
-    const [paymentCategoryAdditionalFieldValues, setPaymentCategoryAdditionalFieldValues] = useState<Record<string, string | boolean | { name: string; size: number; type: string; lastModified: number }>>({});
+    const [paymentCategoryAdditionalFieldValues, setPaymentCategoryAdditionalFieldValues] = useState<Record<string, any>>({});
+    const [selectedPaymentCategory, setSelectedPaymentCategory] = useState<any>(null);
     const [selectedDepartmentType, setSelectedDepartmentType] = useState<DepartmentType | null>(null);
     const [selectedEventPriced, setSelectedEventPriced] = useState<boolean | null>(null);
 
@@ -412,6 +413,9 @@ export const PaymentForm: FC = () => {
                 currency
             };
 
+            console.log("🔍 Payload for order:", payload);
+            console.log("🔍 Selected payment category:", selectedPaymentCategory);
+
             if (selectedDepartmentType === "EVENT_BASED") {
                 if (data.paymentMethod === "KaspiBank") {
                     if (selectedEventPriced === false) {
@@ -426,7 +430,7 @@ export const PaymentForm: FC = () => {
                         setPaymentData(kaspiData);
                     } else {
                         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                        const { paymentMethod, department_id, amount, showInUsd, ...dataWithoutPaymentMethodAndDepartment } = payload;
+                        const { paymentMethod, department_id, showInUsd, ...dataWithoutPaymentMethodAndDepartment } = payload;
                         const kaspiData = await orderKaspi({
                             ...dataWithoutPaymentMethodAndDepartment,
                             currency: "KZT"
@@ -451,7 +455,7 @@ export const PaymentForm: FC = () => {
                         }
                     } else {
                         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                        const { paymentMethod, department_id, amount, showInUsd, ...dataWithoutPaymentMethodAndDepartment } = payload;
+                        const { paymentMethod, department_id, showInUsd, ...dataWithoutPaymentMethodAndDepartment } = payload;
                         try {
                             const halykData = await orderHalyk({
                                 ...dataWithoutPaymentMethodAndDepartment,
@@ -813,6 +817,7 @@ export const PaymentForm: FC = () => {
                                                 const selectedCategory = paymentCategoryOptions.find(opt => opt.value === val);
                                                 if (selectedCategory) {
                                                     const categoryData = selectedCategory as any;
+                                                    setSelectedPaymentCategory(categoryData); // Сохраняем выбранную категорию
                                                     if (categoryData.additional_fields) {
                                                         const categoryFields = Object.entries(categoryData.additional_fields).map(([name, config]: [string, any]) => ({
                                                             name,
@@ -824,6 +829,7 @@ export const PaymentForm: FC = () => {
                                                         setPaymentCategoryAdditionalFields([]);
                                                     }
                                                 } else {
+                                                    setSelectedPaymentCategory(null);
                                                     setPaymentCategoryAdditionalFields([]);
                                                 }
                                             }}
