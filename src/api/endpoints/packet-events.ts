@@ -16,8 +16,20 @@ export const packetEventsApi = {
     clearMainFlag: async (eventId: string, excludeId: string) => {
         try {
             // Получаем все типы оплаты для события
-            const allTypes = await publicApi.get<IEventRecord[]>(`event-payment-types?event_id=${eventId}`);
-            const types = allTypes.data || [];
+            const allTypesResponse = await publicApi.get<IEventRecord[]>(`event-payment-types?event_id=${eventId}`);
+            console.log("🔍 All types response for clearMainFlag:", allTypesResponse);
+            
+            // Проверяем структуру ответа
+            let types: IEventRecord[] = [];
+            if (Array.isArray(allTypesResponse)) {
+                types = allTypesResponse;
+            } else if (allTypesResponse && Array.isArray((allTypesResponse as any).data)) {
+                types = (allTypesResponse as any).data;
+            } else if (allTypesResponse && (allTypesResponse as any).data && Array.isArray((allTypesResponse as any).data.data)) {
+                types = (allTypesResponse as any).data.data;
+            }
+            
+            console.log("🔍 Processed types for clearMainFlag:", types);
             
             // Снимаем флаг main со всех типов, кроме исключаемого
             const updatePromises = types
