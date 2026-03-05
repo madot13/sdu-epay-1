@@ -944,7 +944,7 @@ export const PaymentForm: FC = () => {
                             <CustomButton 
                                 type="submit" 
                                 variant="submit"
-                                className="bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-[#1E40AF] px-6 py-3 text-white font-medium rounded-lg transition duration-200 ease-in-out shadow-lg hover:shadow-xl"
+                                className="bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-[#1E40AF] px-4 py-2 text-white font-medium rounded-md transition duration-200 ease-in-out shadow-md hover:shadow-lg"
                             >
                                 {t('paymentPage.payBtn')}
                             </CustomButton>
@@ -953,7 +953,7 @@ export const PaymentForm: FC = () => {
                                 type="submit" 
                                 disabled={true} 
                                 variant="disabled"
-                                className="bg-[#2563EB] px-6 py-3 text-white font-medium rounded-lg opacity-75 shadow-lg"
+                                className="bg-[#2563EB] px-4 py-2 text-white font-medium rounded-md opacity-75 shadow-md"
                             >
                                 <PulseLoader size={6} color={"#ffff"} />
                             </CustomButton>
