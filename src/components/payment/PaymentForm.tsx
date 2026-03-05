@@ -773,6 +773,28 @@ export const PaymentForm: FC = () => {
                             )}
                         />
 
+                        {/* Event additional fields */}
+                        {eventAdditionalFields.length > 0 && (
+                            <div className="flex flex-col gap-2">
+                                {eventAdditionalFields.map((field) => {
+                                    const uniqueKey = `event_${field.name}`;
+                                    return (
+                                        <CustomInput
+                                            key={uniqueKey}
+                                            icon={<UserIcon className="text-[#6B9AB0]" />}
+                                            type={field.type}
+                                            value={(eventAdditionalFieldValues[field.name] as string) || ""}
+                                            onChange={(e) => {
+                                                setEventAdditionalFieldValues(prev => ({ ...prev, [field.name]: e.target.value }));
+                                            }}
+                                            placeholder={field.label}
+                                            required={field.required}
+                                        />
+                                    );
+                                })}
+                            </div>
+                        )}
+
                         {/* Payment category select */}
                         {currentEventId && paymentCategoryOptions.length > 0 && (
                             <Controller
@@ -815,28 +837,6 @@ export const PaymentForm: FC = () => {
                                     </>
                                 )}
                             />
-                        )}
-
-                        {/* Event additional fields */}
-                        {eventAdditionalFields.length > 0 && (
-                            <div className="flex flex-col gap-2">
-                                {eventAdditionalFields.map((field) => {
-                                    const uniqueKey = `event_${field.name}`;
-                                    return (
-                                        <CustomInput
-                                            key={uniqueKey}
-                                            icon={<UserIcon className="text-[#6B9AB0]" />}
-                                            type={field.type}
-                                            value={(eventAdditionalFieldValues[field.name] as string) || ""}
-                                            onChange={(e) => {
-                                                setEventAdditionalFieldValues(prev => ({ ...prev, [field.name]: e.target.value }));
-                                            }}
-                                            placeholder={field.label}
-                                            required={field.required}
-                                        />
-                                    );
-                                })}
-                            </div>
                         )}
 
                         {/* Payment category additional fields */}
