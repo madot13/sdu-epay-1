@@ -30,23 +30,6 @@ export const PacketEventsPage: FC = () => {
         { header: "Email", accessor: "email", sortable: true },
         { header: "Категория", accessor: "category", sortable: true },
         { 
-            header: "Main", 
-            accessor: (item: Record<string, any>): ReactNode => {
-                const isMain = item.main === true;
-                return (
-                    <div className="flex items-center gap-2">
-                        <span className="text-gray-700">{item.category || ''}</span>
-                        {isMain && (
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                ⭐ Main
-                            </span>
-                        )}
-                    </div>
-                );
-            },
-            sortable: true
-        },
-        { 
             header: "Активный", 
             accessor: (item: Record<string, any>): ReactNode => {
                 const isActive = item.active === true || item.event_active === true;
