@@ -467,9 +467,10 @@ export const PaymentForm: FC = () => {
                             toast.error("Ошибка при создании платежа. Пожалуйста, попробуйте еще раз.");
                         }
                     } else {
-                        // Для фиксированных цен
+                        // Для фиксированных цен - не отправляем amount, бэкенд возьмет цену из категории
+                        console.log("🔍 Using orderHalyk endpoint");
                         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                        const { paymentMethod, department_id, showInUsd, ...dataWithoutPaymentMethodAndDepartment } = payload;
+                        const { paymentMethod, department_id, amount, showInUsd, ...dataWithoutPaymentMethodAndDepartment } = payload;
                         try {
                             const halykData = await orderHalyk({
                                 ...dataWithoutPaymentMethodAndDepartment,
@@ -967,13 +968,14 @@ export const PaymentForm: FC = () => {
                             </div>
                         )}
 
-                        {/* showInUsd checkbox — only for custom price */}
+                        {/* showInUsd checkbox — only when both prices or custom price */}
                         {watchPaymentCategoryId && (() => {
                             const selectedCategory = paymentCategoryOptions.find(opt => opt.value === watchPaymentCategoryId);
                             if (!selectedCategory) return false;
                             const categoryData = selectedCategory as any;
+                            const hasBothPrices = categoryData.price > 0 && categoryData.price_usd > 0;
                             const hasCustomPrice = categoryData.price === 0 && categoryData.price_usd === 0;
-                            return hasCustomPrice;
+                            return hasBothPrices || hasCustomPrice;
                         })() && (
                             <Controller
                                 name="showInUsd"
