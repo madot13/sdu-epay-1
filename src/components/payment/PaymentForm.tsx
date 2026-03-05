@@ -15,7 +15,7 @@ import { getPublicEventsById } from "@/api/endpoints/events.ts";
 import { packetEventsApi } from "@/api/endpoints/packet-events.ts";
 import {IEvent} from "@/types/events.ts";
 import {usePaymentStore} from "@/store/usePaymentStore.ts";
-import {orderHalyk, orderKaspi, orderSelfHalyk, orderSelfKaspi, orderKaspiCustomPrice, orderHalykCustomPrice} from "@/api/endpoints/order.ts";
+import {orderHalyk, orderKaspi, orderSelfHalyk, orderKaspiCustomPrice, orderHalykCustomPrice} from "@/api/endpoints/order.ts";
 import {PaymentHalyk} from "@/components/payment/PaymentHalyk.tsx";
 import {toast} from "react-hot-toast";
 import {useTranslation} from "react-i18next";
