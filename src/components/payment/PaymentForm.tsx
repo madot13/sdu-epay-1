@@ -20,6 +20,12 @@ import {PaymentHalyk} from "@/components/payment/PaymentHalyk.tsx";
 import {toast} from "react-hot-toast";
 import {useTranslation} from "react-i18next";
 import {DepartmentType} from "@/types/payment.ts";
+
+// Функция форматирования даты
+const formatDate = (date: Date): string => {
+    return date.toISOString().split('T')[0];
+};
+
 import {TengeIcon} from "@/assets/TengeIcon.tsx";
 
 interface FormValues {
@@ -343,6 +349,7 @@ export const PaymentForm: FC = () => {
         console.log("🔍 selectedEventPriced:", selectedEventPriced);
         console.log("🔍 isCustomPrice:", isCustomPrice);
         console.log("🔍 selectedDepartmentType:", selectedDepartmentType);
+        console.log("🔍 Current event data:", eventOptions.find(e => e.value === currentEventId));
         if (data.paymentMethod === "KaspiBank" && data.showInUsd === true) {
             toast.error("Kaspi Bank does not support USD payments. Please select HalykBank for non-resident payments or change to Resident.");
             return;
@@ -426,8 +433,8 @@ export const PaymentForm: FC = () => {
 
             if (selectedDepartmentType === "EVENT_BASED") {
                 if (data.paymentMethod === "KaspiBank") {
-                    if (selectedEventPriced === false || isCustomPrice) {
-                        // Для произвольных цен (событий или категорий)
+                    if (selectedEventPriced === false || isCustomPrice || data.payment_category_id) {
+                        // Для произвольных цен ИЛИ для категорий платежа
                         console.log("🔍 Using orderKaspiCustomPrice endpoint");
                         // eslint-disable-next-line @typescript-eslint/no-unused-vars
                         const { paymentMethod, department_id, promo_code, showInUsd, ...customPriceData } = payload;
@@ -450,8 +457,9 @@ export const PaymentForm: FC = () => {
                         setPaymentData(kaspiData);
                     }
                 } else if (data.paymentMethod === "HalykBank") {
-                    if (selectedEventPriced === false || isCustomPrice) {
-                        // Для произвольных цен (событий или категорий)
+                    if (selectedEventPriced === false || isCustomPrice || data.payment_category_id) {
+                        // Для произвольных цен ИЛИ для категорий платежа
+                        console.log("🔍 Using orderHalykCustomPrice endpoint");
                         // eslint-disable-next-line @typescript-eslint/no-unused-vars
                         const { paymentMethod, department_id, promo_code, showInUsd, ...customPriceData } = payload;
                         try {
@@ -463,16 +471,18 @@ export const PaymentForm: FC = () => {
                             });
                             setPaymentData(halykData);
                             setShowWidget(true);
-                        } catch (error) {
+                        } catch (error: any) {
+                            console.error("🔍 Halyk CustomPrice error:", error);
+                            if (error.response) {
+                                console.error("🔍 Error response data:", error.response.data);
+                            }
                             toast.error("Ошибка при создании платежа. Пожалуйста, попробуйте еще раз.");
                         }
                     } else {
-                        // Для фиксированных цен - не отправляем amount, бэкенд возьмет цену из категории
+                        // Для фиксированных цен без категорий
                         console.log("🔍 Using orderHalyk endpoint");
                         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                        const { paymentMethod, department_id, amount, showInUsd, ...dataWithoutPaymentMethodAndDepartment } = payload;
-                        console.log("🔍 Sending to orderHalyk (without amount):", dataWithoutPaymentMethodAndDepartment);
-                        console.log("🔍 Additional fields:", dataWithoutPaymentMethodAndDepartment.additional_fields);
+                        const { paymentMethod, department_id, showInUsd, ...dataWithoutPaymentMethodAndDepartment } = payload;
                         try {
                             const halykData = await orderHalyk({
                                 ...dataWithoutPaymentMethodAndDepartment,
@@ -480,20 +490,14 @@ export const PaymentForm: FC = () => {
                             });
                             setPaymentData(halykData);
                             setShowWidget(true);
-                        } catch (error) {
+                        } catch (error: any) {
+                            console.error("🔍 Halyk order error:", error);
+                            if (error.response) {
+                                console.error("🔍 Error response data:", error.response.data);
+                            }
                             toast.error("Ошибка при создании платежа. Пожалуйста, попробуйте еще раз.");
                         }
                     }
-                }
-            } else if (selectedDepartmentType === "SELF_PAY") {
-                if (data.paymentMethod === "KaspiBank") {
-                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                    const { paymentMethod, event_id, promo_code, showInUsd, ...dataWithoutPaymentMethodAndDepartment } = payload;
-                    const kaspiData = await orderSelfKaspi({
-                        ...dataWithoutPaymentMethodAndDepartment,
-                        currency: "KZT"
-                    });
-                    setPaymentData(kaspiData);
                 } else if (data.paymentMethod === "HalykBank") {
                     // eslint-disable-next-line @typescript-eslint/no-unused-vars
                     const { paymentMethod, event_id, promo_code, showInUsd, ...dataWithoutPaymentMethodAndDepartment } = payload;
