@@ -439,28 +439,117 @@ export const PaymentForm: FC = () => {
 
             if (selectedDepartmentType === "EVENT_BASED") {
                 if (data.paymentMethod === "KaspiBank") {
-                    if (selectedEventPriced === false || isCustomPrice) {
-                        // Только для произвольных цен (бесплатные события или категории с произвольной ценой)
-                        console.log("🔍 Using orderKaspiCustomPrice endpoint");
-                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                        const { paymentMethod, department_id, promo_code, showInUsd, ...customPriceData } = payload;
-                        const kaspiData = await orderKaspiCustomPrice({
-                            ...customPriceData,
-                            event_id: customPriceData.event_id!,
-                            amount: customPriceData.amount!,
-                            currency: "KZT"
-                        });
-                        setPaymentData(kaspiData);
-                    } else {
-                        // Для фиксированных цен - отправляем amount, бэкенд решит использовать его или цену из категории
-                        console.log("🔍 Using orderKaspi endpoint");
-                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                        const { paymentMethod, department_id, showInUsd, ...dataWithoutPaymentMethodAndDepartment } = payload;
+                    // Для фиксированных цен (с категориями или без)
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                    const { paymentMethod, department_id, showInUsd, amount, ...dataWithoutPaymentMethodAndDepartment } = payload;
+
+                    // Гарантируем, что в запрос уходит сумма именно из выбранной категории
+                    let finalAmount = amount ?? null;
+                    if (selectedPaymentCategory && data.payment_category_id === selectedPaymentCategory.value) {
+                        const categoryData = selectedPaymentCategory as any;
+                        if (currency === "USD" && categoryData.price_usd) {
+                            finalAmount = Number(categoryData.price_usd);
+                        } else if (categoryData.price) {
+                            finalAmount = Number(categoryData.price);
+                        }
+                    }
+
+                    // Событие с ценой только в категории (у события price=0, price_usd=null) — бэкенд /kaspi отклонит.
+                    // Сразу используем kaspi-custom-price с суммой из категории.
+                    const currentEvent = eventOptions.find((e: Option) => e.value === currentEventId) as any;
+                    const eventHasNoDirectPrice = currentEvent && Number(currentEvent?.price || 0) === 0 && (currentEvent?.price_usd == null || Number(currentEvent?.price_usd) === 0);
+                    const useCustomPriceDirectly = eventHasNoDirectPrice && data.payment_category_id && selectedPaymentCategory && (finalAmount ?? 0) > 0;
+
+                    // #region agent log
+                    debugLog("PaymentForm.tsx:kaspi-branch", "kaspi priced branch", { hypothesisId: "K1", currentEventId, eventOptionsLen: eventOptions.length, currentEventFound: !!currentEvent, currentEventPrice: currentEvent?.price, currentEventPriceUsd: currentEvent?.price_usd, eventHasNoDirectPrice, useCustomPriceDirectly, finalAmount, hasPaymentCategoryId: !!data.payment_category_id });
+                    // #endregion
+
+                    if (useCustomPriceDirectly) {
+                        // #region agent log
+                        debugLog("PaymentForm.tsx:kaspi-custom-price-direct", "taking direct custom price path", { hypothesisId: "K2" });
+                        // #endregion
+                        console.log("🔍 Using orderKaspiCustomPrice (event has no direct price, category amount)");
+                        try {
+                            const kaspiData = await orderKaspiCustomPrice({
+                                ...dataWithoutPaymentMethodAndDepartment,
+                                event_id: data.event_id!,
+                                amount: finalAmount!,
+                                currency: "KZT"  // Kaspi только KZT
+                            });
+                            // #region agent log
+                            debugLog("PaymentForm.tsx:kaspi-custom-price-ok", "orderKaspiCustomPrice success", { hypothesisId: "K2", hasOrder: !!kaspiData?.order });
+                            // #endregion
+                            setPaymentData(kaspiData);
+                        } catch (err: any) {
+                            // #region agent log
+                            debugLog("PaymentForm.tsx:kaspi-custom-price-err", "orderKaspiCustomPrice error", { hypothesisId: "K2", status: err?.response?.status, detail: err?.response?.data?.detail });
+                            // #endregion
+                            console.error("🔍 Kaspi CustomPrice error:", err);
+                            if (err?.response?.data) console.error("🔍 Error response data:", err.response.data);
+                            toast.error("Ошибка при создании платежа. Пожалуйста, попробуйте еще раз.");
+                        }
+                        return;
+                    }
+
+                    console.log("🔍 Using orderKaspi endpoint");
+                    // #region agent log
+                    debugLog("PaymentForm.tsx:orderKaspi-call", "calling orderKaspi", { hypothesisId: "K3", finalAmount, currency: "KZT" });
+                    // #endregion
+                    try {
                         const kaspiData = await orderKaspi({
                             ...dataWithoutPaymentMethodAndDepartment,
-                            currency: "KZT"
+                            amount: finalAmount,
+                            currency: "KZT"  // Kaspi только KZT
                         });
                         setPaymentData(kaspiData);
+                    } catch (error: any) {
+                        console.error("🔍 Kaspi order error:", error);
+                        if (error.response) {
+                            console.error("🔍 Error response data:", error.response.data);
+                        }
+
+                        // Бэкенд может вернуть detail строкой или массивом
+                        const rawDetail = error?.response?.data?.detail;
+                        const detailStr = typeof rawDetail === "string"
+                            ? rawDetail
+                            : Array.isArray(rawDetail) && rawDetail.length > 0
+                                ? (typeof rawDetail[0] === "object" && rawDetail[0]?.msg) ? String(rawDetail[0].msg) : String(rawDetail[0])
+                                : "";
+                        const isPricedRouteError = /priced events|only for priced/i.test(detailStr);
+
+                        // #region agent log
+                        debugLog("PaymentForm.tsx:orderKaspi-err", "orderKaspi error", { hypothesisId: "K3", rawDetail, detailStr, isPricedRouteError });
+                        // #endregion
+
+                        if (isPricedRouteError) {
+                            // #region agent log
+                            debugLog("PaymentForm.tsx:kaspi-fallback-call", "fallback to orderKaspiCustomPrice", { hypothesisId: "K4", amount: finalAmount ?? 0 });
+                            // #endregion
+                            console.log("🔍 Fallback to orderKaspiCustomPrice due to priced route rejection");
+                            try {
+                                const kaspiData = await orderKaspiCustomPrice({
+                                    ...dataWithoutPaymentMethodAndDepartment,
+                                    event_id: data.event_id!,
+                                    amount: finalAmount ?? 0,
+                                    currency: "KZT"  // Kaspi только KZT
+                                });
+                                // #region agent log
+                                debugLog("PaymentForm.tsx:kaspi-fallback-ok", "fallback orderKaspiCustomPrice success", { hypothesisId: "K4" });
+                                // #endregion
+                                setPaymentData(kaspiData);
+                                return;
+                            } catch (fallbackError: any) {
+                                // #region agent log
+                                debugLog("PaymentForm.tsx:kaspi-fallback-err", "fallback orderKaspiCustomPrice error", { hypothesisId: "K4", status: fallbackError?.response?.status, detail: fallbackError?.response?.data?.detail });
+                                // #endregion
+                                console.error("🔍 Kaspi CustomPrice fallback error:", fallbackError);
+                                if (fallbackError?.response?.data) console.error("🔍 Fallback error response data:", fallbackError.response.data);
+                                toast.error("Ошибка при создании платежа. Пожалуйста, попробуйте еще раз.");
+                                return;
+                            }
+                        }
+
+                        toast.error("Ошибка при создании платежа. Пожалуйста, попробуйте еще раз.");
                     }
                 } else if (data.paymentMethod === "HalykBank") {
                     if (selectedEventPriced === false || isCustomPrice) {
