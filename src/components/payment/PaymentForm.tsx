@@ -79,11 +79,11 @@ export const PaymentForm: FC = () => {
     const [currentEventId, setCurrentEventId] = useState<string | null>(null);
     const [departments, setDepartments] = useState<any[]>([]); // store all data
     const [additionalFields, setAdditionalFields] = useState<any[]>([]);
-    const [additionalFieldValues, setAdditionalFieldValues] = useState<Record<string, string | boolean>>({});
+    const [additionalFieldValues, setAdditionalFieldValues] = useState<Record<string, string | boolean | { name: string; size: number; type: string; lastModified: number }>>({});
     const [eventAdditionalFields, setEventAdditionalFields] = useState<any[]>([]);
     const [eventAdditionalFieldValues, setEventAdditionalFieldValues] = useState<Record<string, string | boolean>>({});
     const [paymentCategoryAdditionalFields, setPaymentCategoryAdditionalFields] = useState<any[]>([]);
-    const [paymentCategoryAdditionalFieldValues, setPaymentCategoryAdditionalFieldValues] = useState<Record<string, string | boolean>>({});
+    const [paymentCategoryAdditionalFieldValues, setPaymentCategoryAdditionalFieldValues] = useState<Record<string, string | boolean | { name: string; size: number; type: string; lastModified: number }>>({});
     const [selectedDepartmentType, setSelectedDepartmentType] = useState<DepartmentType | null>(null);
     const [selectedEventPriced, setSelectedEventPriced] = useState<boolean | null>(null);
     //const [showInUsd, setShowInUsd] = useState(false);
@@ -331,9 +331,23 @@ export const PaymentForm: FC = () => {
                 currency = "USD";
             }
 
+            // Функция для преобразования файловых данных в правильный формат
+            const convertAdditionalFields = (fields: Record<string, string | boolean | { name: string; size: number; type: string; lastModified: number }>): Record<string, string | boolean> => {
+                const converted: Record<string, string | boolean> = {};
+                Object.entries(fields).forEach(([key, value]) => {
+                    if (typeof value === 'object' && value !== null && 'name' in value) {
+                        // Для файлов преобразуем в JSON строку или специальный формат
+                        converted[key] = JSON.stringify(value);
+                    } else {
+                        converted[key] = value;
+                    }
+                });
+                return converted;
+            };
+
             const payload = {
                 ...data,
-                additional_fields: additionalFieldValues,
+                additional_fields: convertAdditionalFields(additionalFieldValues),
                 currency
             };
 
@@ -612,6 +626,48 @@ export const PaymentForm: FC = () => {
                                         />
                                     </div>
                                 );
+                            } else if (field.type === "file") {
+                                return (
+                                    <div key={key} className="ml-2">
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            {field.label}
+                                        </label>
+                                        <div className="relative">
+                                            <input
+                                                type="file"
+                                                id={`file-${key}`}
+                                                className="hidden"
+                                                onChange={(e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (file) {
+                                                        handleAdditionalChange(key, {
+                                                            name: file.name,
+                                                            size: file.size,
+                                                            type: file.type,
+                                                            lastModified: file.lastModified
+                                                        });
+                                                    }
+                                                }}
+                                            />
+                                            <label
+                                                htmlFor={`file-${key}`}
+                                                className="flex items-center gap-2 px-4 py-2 bg-[#6B9AB0] hover:bg-[#5A8DA3] text-white rounded-md cursor-pointer transition duration-200 ease-in-out shadow-md hover:shadow-lg"
+                                            >
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                                </svg>
+                                                <span className="text-sm font-medium">
+                                                    {(additionalFieldValues[key] as any)?.name || "Выберите файл"}
+                                                </span>
+                                            </label>
+                                            {(additionalFieldValues[key] as any)?.name && (
+                                                <div className="mt-2 text-xs text-gray-600">
+                                                    Файл: {(additionalFieldValues[key] as any).name} ({((additionalFieldValues[key] as any).size / 1024).toFixed(1)} KB)
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
                             }
 
                             return (
@@ -760,6 +816,50 @@ export const PaymentForm: FC = () => {
                                                                     />
                                                                     <span className="text-black">{field.label}</span>
                                                                 </label>
+                                                            );
+                                                        } else if (field.type === "file") {
+                                                            return (
+                                                                <div key={key} className="ml-2">
+                                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                                        {field.label}
+                                                                    </label>
+                                                                    <div className="relative">
+                                                                        <input
+                                                                            type="file"
+                                                                            id={`payment-file-${key}`}
+                                                                            className="hidden"
+                                                                            onChange={(e) => {
+                                                                                const file = e.target.files?.[0];
+                                                                                if (file) {
+                                                                                    const newValues = {...paymentCategoryAdditionalFieldValues};
+                                                                                    newValues[key] = {
+                                                                                        name: file.name,
+                                                                                        size: file.size,
+                                                                                        type: file.type,
+                                                                                        lastModified: file.lastModified
+                                                                                    };
+                                                                                    setPaymentCategoryAdditionalFieldValues(newValues);
+                                                                                }
+                                                                            }}
+                                                                        />
+                                                                        <label
+                                                                            htmlFor={`payment-file-${key}`}
+                                                                            className="flex items-center gap-2 px-4 py-2 bg-[#6B9AB0] hover:bg-[#5A8DA3] text-white rounded-md cursor-pointer transition duration-200 ease-in-out shadow-md hover:shadow-lg"
+                                                                        >
+                                                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                                                            </svg>
+                                                                            <span className="text-sm font-medium">
+                                                                                {(paymentCategoryAdditionalFieldValues[key] as any)?.name || "Выберите файл"}
+                                                                            </span>
+                                                                        </label>
+                                                                        {(paymentCategoryAdditionalFieldValues[key] as any)?.name && (
+                                                                            <div className="mt-2 text-xs text-gray-600">
+                                                                                Файл: {(paymentCategoryAdditionalFieldValues[key] as any).name} ({((paymentCategoryAdditionalFieldValues[key] as any).size / 1024).toFixed(1)} KB)
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
                                                             );
                                                         } else {
                                                             return (
