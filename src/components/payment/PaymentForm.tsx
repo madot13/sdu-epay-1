@@ -228,13 +228,41 @@ export const PaymentForm: FC = () => {
                 const categoryData = selectedCategory as any;
                 console.log("Selected payment category:", categoryData);
                 
-                // Устанавливаем цену в зависимости от валюты
-                if (watchShowInUsd && categoryData.price_usd) {
-                    setValue("amount", categoryData.price_usd);
-                    setPrice(categoryData.price_usd);
-                } else if (categoryData.price) {
-                    setValue("amount", categoryData.price);
-                    setPrice(categoryData.price);
+                // Проверяем является ли цена произвольной (равна 0) или не указана
+                const isCustomPriceKzt = categoryData.price === 0;
+                const isCustomPriceUsd = categoryData.price_usd === 0;
+                const hasPriceKzt = categoryData.price !== null && categoryData.price !== undefined;
+                const hasPriceUsd = categoryData.price_usd !== null && categoryData.price_usd !== undefined;
+                
+                // Устанавливаем цену в зависимости от валюты и типа цены
+                if (watchShowInUsd) {
+                    if (!hasPriceUsd) {
+                        // Цена USD не указана - очищаем поле
+                        setValue("amount", null);
+                        setPrice(0);
+                    } else if (isCustomPriceUsd) {
+                        // Произвольная цена USD - очищаем поле для ввода пользователем
+                        setValue("amount", null);
+                        setPrice(0);
+                    } else {
+                        // Фиксированная цена USD - устанавливаем значение
+                        setValue("amount", categoryData.price_usd);
+                        setPrice(categoryData.price_usd);
+                    }
+                } else {
+                    if (!hasPriceKzt) {
+                        // Цена KZT не указана - очищаем поле
+                        setValue("amount", null);
+                        setPrice(0);
+                    } else if (isCustomPriceKzt) {
+                        // Произвольная цена KZT - очищаем поле для ввода пользователем
+                        setValue("amount", null);
+                        setPrice(0);
+                    } else {
+                        // Фиксированная цена KZT - устанавливаем значение
+                        setValue("amount", categoryData.price);
+                        setPrice(categoryData.price);
+                    }
                 }
             }
         }
@@ -656,13 +684,41 @@ export const PaymentForm: FC = () => {
                                                     if (selectedCategory) {
                                                         const categoryData = selectedCategory as any;
                                                         
-                                                        // Устанавливаем цену в зависимости от валюты
-                                                        if (watchShowInUsd && categoryData.price_usd) {
-                                                            setValue("amount", categoryData.price_usd);
-                                                            setPrice(categoryData.price_usd);
-                                                        } else if (categoryData.price) {
-                                                            setValue("amount", categoryData.price);
-                                                            setPrice(categoryData.price);
+                                                        // Проверяем является ли цена произвольной (равна 0) или не указана
+                                                        const isCustomPriceKzt = categoryData.price === 0;
+                                                        const isCustomPriceUsd = categoryData.price_usd === 0;
+                                                        const hasPriceKzt = categoryData.price !== null && categoryData.price !== undefined;
+                                                        const hasPriceUsd = categoryData.price_usd !== null && categoryData.price_usd !== undefined;
+                                                        
+                                                        // Устанавливаем цену в зависимости от валюты и типа цены
+                                                        if (watchShowInUsd) {
+                                                            if (!hasPriceUsd) {
+                                                                // Цена USD не указана - очищаем поле
+                                                                setValue("amount", null);
+                                                                setPrice(0);
+                                                            } else if (isCustomPriceUsd) {
+                                                                // Произвольная цена USD - очищаем поле для ввода пользователем
+                                                                setValue("amount", null);
+                                                                setPrice(0);
+                                                            } else {
+                                                                // Фиксированная цена USD - устанавливаем значение
+                                                                setValue("amount", categoryData.price_usd);
+                                                                setPrice(categoryData.price_usd);
+                                                            }
+                                                        } else {
+                                                            if (!hasPriceKzt) {
+                                                                // Цена KZT не указана - очищаем поле
+                                                                setValue("amount", null);
+                                                                setPrice(0);
+                                                            } else if (isCustomPriceKzt) {
+                                                                // Произвольная цена KZT - очищаем поле для ввода пользователем
+                                                                setValue("amount", null);
+                                                                setPrice(0);
+                                                            } else {
+                                                                // Фиксированная цена KZT - устанавливаем значение
+                                                                setValue("amount", categoryData.price);
+                                                                setPrice(categoryData.price);
+                                                            }
                                                         }
                                                         
                                                         // Загружаем дополнительные поля

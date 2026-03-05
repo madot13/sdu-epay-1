@@ -9,6 +9,7 @@ import { PencilIcon, TrashIcon, Loader2 } from "lucide-react";
 import { DeleteModal } from "@/ui/DeleteModal.tsx";
 import { toast } from "react-hot-toast";
 import { EditPacketEventsModal } from "@/components/packet-events/EditPacketEventsModal.tsx";
+import { ReactNode } from "react";
 
 export const PacketEventsPage: FC = () => {
     const [data, setData] = useState<IEventRecord[]>([]);
@@ -30,28 +31,34 @@ export const PacketEventsPage: FC = () => {
         { header: "Категория", accessor: "category", sortable: true },
         { 
             header: "Цена KZT", 
-            accessor: (item: Record<string, any>) => {
+            accessor: (item: Record<string, any>): ReactNode => {
                 const price = item.price;
                 const priced = item.priced !== false; // По умолчанию priced=true
                 
                 if (!priced) return "—";
                 if (price !== null && price !== undefined) {
+                    if (price === 0) {
+                        return <span className="text-gray-500">Произвольная</span>;
+                    }
                     return Number(price) + " ₸";
                 }
-                return "—";
+                return "—"; // Если цена KZT не указана
             }
         },
         { 
             header: "Цена USD", 
-            accessor: (item: Record<string, any>) => {
+            accessor: (item: Record<string, any>): ReactNode => {
                 const priceUsd = item.price_usd;
                 const priced = item.priced !== false; // По умолчанию priced=true
                 
                 if (!priced) return "—";
                 if (priceUsd !== null && priceUsd !== undefined) {
+                    if (priceUsd === 0) {
+                        return <span className="text-gray-500">Произвольная</span>;
+                    }
                     return Number(priceUsd) + " $";
                 }
-                return "—";
+                return "—"; // Если цена USD не указана
             }
         },
     ];
