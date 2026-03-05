@@ -14,37 +14,19 @@ export const EventFilters:FC = () => {
     const [selectedDepartment, setSelectedDepartment] = useState("");
     const [periodFrom, setPeriodFrom] = useState("");
     const [periodTo, setPeriodTo] = useState("");
-    const [active, setActive] = useState("");
     const [eventSuggestions, setEventSuggestions] = useState<{title: string, id: string}[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
-
-    const activeOptions = [
-        { label: "Все", value: "" },
-        { label: "Активные", value: "true" },
-        { label: "Неактивные", value: "false" }
-    ];
 
     const {fetchEvents} = useEventsStore();
 
     const handleSearch = async () => {
-        const filters: any = {
+        await fetchEvents({
             title: name || undefined,
             department_id: selectedDepartment !== "" ? selectedDepartment : undefined,
             period_from: periodFrom || undefined,
             period_to: periodTo || undefined,
             page: 0,
-        };
-
-        // Добавляем фильтр по статусу
-        if (active === "") {
-            // Для "Все" не добавляем фильтр, чтобы получить все записи
-        } else if (active === "true") {
-            filters.active = true;
-        } else if (active === "false") {
-            filters.active = false;
-        }
-
-        await fetchEvents(filters);
+        });
     }
 
     const handleSelectEvent = (event: {title:string, id: string}) => {
@@ -133,18 +115,6 @@ export const EventFilters:FC = () => {
                         value={selectedDepartment}
                         onChange={setSelectedDepartment}
                         triggerClassName="bg-white w-full sm:min-w-[200px] h-[37px] text-black text-sm"
-                        dropdownClassName="bg-gray-100"
-                        optionClassName="text-sm"
-                        activeOptionClassName="bg-blue-200"
-                    />
-                </div>
-                <div className="flex flex-col gap-[10px] flex-1 sm:flex-none">
-                    <label className="text-sm">Статус</label>
-                    <CustomSelect
-                        options={activeOptions}
-                        value={active}
-                        onChange={setActive}
-                        triggerClassName="bg-white w-full sm:min-w-[150px] h-[37px] text-black text-sm"
                         dropdownClassName="bg-gray-100"
                         optionClassName="text-sm"
                         activeOptionClassName="bg-blue-200"
