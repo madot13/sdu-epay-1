@@ -39,7 +39,7 @@ export const AddAdminModal: FC = () => {
     useEffect(() => {
         const fetchDepartments = async () => {
             try {
-                const response = await getDepartments();
+                const response = await getDepartments({ active: true });
                 const formatted = response.data.map((dept: Department) => ({
                     label: dept.name,
                     value: dept.id,

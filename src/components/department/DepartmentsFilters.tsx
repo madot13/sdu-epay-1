@@ -44,7 +44,8 @@ export const DepartmentsFilters:FC = () => {
             }
             try {
                 const response = await getDepartments({
-                    name: name
+                    name: name,
+                    active: true
                 });
                 setDepSuggestions(response.data);
                 setShowSuggestions(true);
