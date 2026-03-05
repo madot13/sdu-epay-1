@@ -39,7 +39,9 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
         const fetchDepts = async () => {
             try {
                 const res = await getDepartments();
-                setDepartments(res.data.map((d: Department) => ({ label: d.name, value: d.id })));
+                // Фильтруем только активные департаменты
+                const activeDepartments = res.data.filter((d: Department) => d.active === true);
+                setDepartments(activeDepartments.map((d: Department) => ({ label: d.name, value: d.id })));
             } catch (e) { console.error(e); }
         };
         if (isOpen) fetchDepts();

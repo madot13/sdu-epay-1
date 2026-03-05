@@ -97,7 +97,10 @@ export const PaymentForm: FC = () => {
                 const data = await getPublicDepartments();
                 setDepartments(data);
 
-                const mapped = data.map((dept: { name: string; id: string }) => ({
+                // Фильтруем только активные департаменты
+                const activeDepartments = data.filter((dept: any) => dept.active === true);
+                
+                const mapped = activeDepartments.map((dept: { name: string; id: string }) => ({
                     label: dept.name,
                     value: dept.id,
                 }));
