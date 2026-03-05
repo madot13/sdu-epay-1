@@ -220,7 +220,13 @@ export const PaymentForm: FC = () => {
     const watchPaymentMethod = watch("paymentMethod");
     const watchPaymentCategoryId = watch("payment_category_id");
 
-    // Автоматическое заполнение цены при выборе категории
+    // Состояния для управления доступностью методов оплаты
+    const [isKaspiDisabled, setIsKaspiDisabled] = useState(false);
+    const [isUsdForced, setIsUsdForced] = useState(false);
+    const [isKztForced, setIsKztForced] = useState(false);
+    const [paymentMethodMessage, setPaymentMethodMessage] = useState("");
+
+    // Умная логика валют и цен
     useEffect(() => {
         if (watchPaymentCategoryId) {
             const selectedCategory = paymentCategoryOptions.find(opt => opt.value === watchPaymentCategoryId);
@@ -228,43 +234,63 @@ export const PaymentForm: FC = () => {
                 const categoryData = selectedCategory as any;
                 console.log("Selected payment category:", categoryData);
                 
-                // Проверяем является ли цена произвольной (равна 0) или не указана
-                const isCustomPriceKzt = categoryData.price === 0;
-                const isCustomPriceUsd = categoryData.price_usd === 0;
-                const hasPriceKzt = categoryData.price !== null && categoryData.price !== undefined;
-                const hasPriceUsd = categoryData.price_usd !== null && categoryData.price_usd !== undefined;
+                const price = categoryData.price || 0;
+                const priceUsd = categoryData.price_usd || 0;
                 
-                // Устанавливаем цену в зависимости от валюты и типа цены
-                if (watchShowInUsd) {
-                    if (!hasPriceUsd) {
-                        // Цена USD не указана - очищаем поле
-                        setValue("amount", null);
-                        setPrice(0);
-                    } else if (isCustomPriceUsd) {
-                        // Произвольная цена USD - очищаем поле для ввода пользователем
-                        setValue("amount", null);
-                        setPrice(0);
+                // Определяем логику валют
+                const hasOnlyKzt = price > 0 && priceUsd === 0;
+                const hasOnlyUsd = price === 0 && priceUsd > 0;
+                const hasBothPrices = price > 0 && priceUsd > 0;
+                const hasCustomPrice = price === 0 && priceUsd === 0;
+                
+                // Сбрасываем состояния
+                setIsUsdForced(false);
+                setIsKztForced(false);
+                setIsKaspiDisabled(false);
+                setPaymentMethodMessage("");
+                
+                if (hasOnlyUsd) {
+                    // Только USD - принудительно включаем USD и блокируем Kaspi
+                    setIsUsdForced(true);
+                    setIsKaspiDisabled(true);
+                    setPaymentMethodMessage("Для данного события оплата через Kaspi недоступна");
+                    setValue("showInUsd", true);
+                    
+                    // Устанавливаем цену USD
+                    setValue("amount", priceUsd);
+                    setPrice(priceUsd);
+                } else if (hasOnlyKzt) {
+                    // Только KZT - принудительно выключаем USD
+                    setIsKztForced(true);
+                    setValue("showInUsd", false);
+                    
+                    // Устанавливаем цену KZT
+                    setValue("amount", price);
+                    setPrice(price);
+                } else if (hasBothPrices) {
+                    // Обе цены - позволяем выбор валюты
+                    // Устанавливаем цену в зависимости от текущего выбора
+                    if (watchShowInUsd) {
+                        setValue("amount", priceUsd);
+                        setPrice(priceUsd);
                     } else {
-                        // Фиксированная цена USD - устанавливаем значение
-                        setValue("amount", categoryData.price_usd);
-                        setPrice(categoryData.price_usd);
+                        setValue("amount", price);
+                        setPrice(price);
                     }
-                } else {
-                    if (!hasPriceKzt) {
-                        // Цена KZT не указана - очищаем поле
-                        setValue("amount", null);
-                        setPrice(0);
-                    } else if (isCustomPriceKzt) {
-                        // Произвольная цена KZT - очищаем поле для ввода пользователем
-                        setValue("amount", null);
-                        setPrice(0);
-                    } else {
-                        // Фиксированная цена KZT - устанавливаем значение
-                        setValue("amount", categoryData.price);
-                        setPrice(categoryData.price);
-                    }
+                } else if (hasCustomPrice) {
+                    // Произвольная цена - позволяем выбор валюты и ввод суммы
+                    setValue("amount", null);
+                    setPrice(0);
                 }
             }
+        } else {
+            // Сброс при отсутствии категории
+            setIsUsdForced(false);
+            setIsKztForced(false);
+            setIsKaspiDisabled(false);
+            setPaymentMethodMessage("");
+            setValue("amount", null);
+            setPrice(0);
         }
     }, [watchPaymentCategoryId, watchShowInUsd, paymentCategoryOptions, setValue, setPrice]);
 
@@ -684,43 +710,6 @@ export const PaymentForm: FC = () => {
                                                     if (selectedCategory) {
                                                         const categoryData = selectedCategory as any;
                                                         
-                                                        // Проверяем является ли цена произвольной (равна 0) или не указана
-                                                        const isCustomPriceKzt = categoryData.price === 0;
-                                                        const isCustomPriceUsd = categoryData.price_usd === 0;
-                                                        const hasPriceKzt = categoryData.price !== null && categoryData.price !== undefined;
-                                                        const hasPriceUsd = categoryData.price_usd !== null && categoryData.price_usd !== undefined;
-                                                        
-                                                        // Устанавливаем цену в зависимости от валюты и типа цены
-                                                        if (watchShowInUsd) {
-                                                            if (!hasPriceUsd) {
-                                                                // Цена USD не указана - очищаем поле
-                                                                setValue("amount", null);
-                                                                setPrice(0);
-                                                            } else if (isCustomPriceUsd) {
-                                                                // Произвольная цена USD - очищаем поле для ввода пользователем
-                                                                setValue("amount", null);
-                                                                setPrice(0);
-                                                            } else {
-                                                                // Фиксированная цена USD - устанавливаем значение
-                                                                setValue("amount", categoryData.price_usd);
-                                                                setPrice(categoryData.price_usd);
-                                                            }
-                                                        } else {
-                                                            if (!hasPriceKzt) {
-                                                                // Цена KZT не указана - очищаем поле
-                                                                setValue("amount", null);
-                                                                setPrice(0);
-                                                            } else if (isCustomPriceKzt) {
-                                                                // Произвольная цена KZT - очищаем поле для ввода пользователем
-                                                                setValue("amount", null);
-                                                                setPrice(0);
-                                                            } else {
-                                                                // Фиксированная цена KZT - устанавливаем значение
-                                                                setValue("amount", categoryData.price);
-                                                                setPrice(categoryData.price);
-                                                            }
-                                                        }
-                                                        
                                                         // Загружаем дополнительные поля
                                                         if (categoryData.additional_fields) {
                                                             const categoryFields = Object.entries(categoryData.additional_fields).map(([name, config]: [string, any]) => ({
@@ -733,9 +722,7 @@ export const PaymentForm: FC = () => {
                                                             setPaymentCategoryAdditionalFields([]);
                                                         }
                                                     } else {
-                                                        // Очищаем цену если категория не найдена
-                                                        setValue("amount", null);
-                                                        setPrice(0);
+                                                        // Очищаем если категория не найдена
                                                         setPaymentCategoryAdditionalFields([]);
                                                     }
                                                 }}
@@ -774,34 +761,51 @@ export const PaymentForm: FC = () => {
                                 />
                             )}
 
-                            {/* Чекбокс рендерится только если есть цена в USD */}
-                            {selectedEventPriceUsd && (
+                            {/* Чекбокс рендерится если есть цена в USD или произвольная цена */}
+                            {watchPaymentCategoryId && (() => {
+                                const selectedCategory = paymentCategoryOptions.find(opt => opt.value === watchPaymentCategoryId);
+                                if (!selectedCategory) return false;
+                                const categoryData = selectedCategory as any;
+                                const hasUsdPrice = categoryData.price_usd > 0;
+                                const hasCustomPrice = categoryData.price === 0 && categoryData.price_usd === 0;
+                                return hasUsdPrice || hasCustomPrice;
+                            })() && (
                                 <Controller
                                     name="showInUsd"
                                     control={control}
                                     render={({ field }) => (
                                         <div className="flex flex-col gap-2">
-                                            <label className="flex items-center gap-3 ml-2 cursor-pointer group">
+                                            <label className={`flex items-center gap-3 ml-2 cursor-pointer group ${isUsdForced || isKztForced ? 'opacity-50 cursor-not-allowed' : ''}`}>
                                                 <input
                                                     type="checkbox"
                                                     checked={field.value || false}
                                                     onChange={(e) => {
+                                                        if (isUsdForced || isKztForced) return; // Блокируем изменение если принудительно
                                                         const isChecked = e.target.checked;
                                                         field.onChange(isChecked);
-                                                        if (isChecked) {
-                                                            setValue("amount", selectedEventPriceUsd);
-                                                            setPrice(selectedEventPriceUsd);
-                                                            setCurrency("USD");
-                                                        } else {
-                                                            setValue("amount", selectedEventPriceKzt);
-                                                            setPrice(selectedEventPriceKzt || 0);
-                                                            setCurrency("KZT");
+                                                        
+                                                        // Используем цены из выбранной категории платежа
+                                                        const selectedCategory = paymentCategoryOptions.find(opt => opt.value === watchPaymentCategoryId);
+                                                        if (selectedCategory) {
+                                                            const categoryData = selectedCategory as any;
+                                                            if (isChecked) {
+                                                                setValue("amount", categoryData.price_usd || null);
+                                                                setPrice(categoryData.price_usd || 0);
+                                                                setCurrency("USD");
+                                                            } else {
+                                                                setValue("amount", categoryData.price || null);
+                                                                setPrice(categoryData.price || 0);
+                                                                setCurrency("KZT");
+                                                            }
                                                         }
                                                     }}
+                                                    disabled={isUsdForced || isKztForced}
                                                     className="w-4 h-4 rounded accent-[#6B9AB0]"
                                                 />
                                                 <span className="text-black group-hover:text-[#6B9AB0] transition-colors">
                                                     {t('paymentPage.inputs.showInUsd')}
+                                                    {isUsdForced && " (только USD)"}
+                                                    {isKztForced && " (только KZT)"}
                                                 </span>
                                             </label>
                                         </div>
@@ -822,8 +826,13 @@ export const PaymentForm: FC = () => {
                                             if (watchShowInUsd && value === "KaspiBank") return;
                                             setValue("paymentMethod", value);
                                         }}
-                                        disableKaspi={watchShowInUsd} // Disable Kaspi if showing in USD
+                                        disableKaspi={watchShowInUsd || isKaspiDisabled} // Disable Kaspi if showing in USD or forced disabled
                                     />
+                                    {paymentMethodMessage && (
+                                        <p className="text-yellow-600 text-sm -mt-2 ml-2">
+                                            ⚠️ {paymentMethodMessage}
+                                        </p>
+                                    )}
                                     {errors.paymentMethod && (
                                         <p className="text-red-500 text-sm -mt-2 ml-2">{errors.paymentMethod.message}</p>
                                     )}

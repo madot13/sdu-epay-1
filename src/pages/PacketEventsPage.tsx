@@ -33,32 +33,42 @@ export const PacketEventsPage: FC = () => {
             header: "Цена KZT", 
             accessor: (item: Record<string, any>): ReactNode => {
                 const price = item.price;
+                const priceUsd = item.price_usd;
                 const priced = item.priced !== false; // По умолчанию priced=true
                 
                 if (!priced) return "—";
-                if (price !== null && price !== undefined) {
-                    if (price === 0) {
-                        return <span className="text-gray-500">Произвольная</span>;
-                    }
+                
+                // "Произвольная" только если обе цены равны 0
+                if (price === 0 && priceUsd === 0) {
+                    return <span className="text-gray-500">Произвольная</span>;
+                }
+                
+                if (price !== null && price !== undefined && price > 0) {
                     return Number(price) + " ₸";
                 }
-                return "—"; // Если цена KZT не указана
+                
+                return "—"; // Если цена KZT не указана или равна 0 (но USD > 0)
             }
         },
         { 
             header: "Цена USD", 
             accessor: (item: Record<string, any>): ReactNode => {
+                const price = item.price;
                 const priceUsd = item.price_usd;
                 const priced = item.priced !== false; // По умолчанию priced=true
                 
                 if (!priced) return "—";
-                if (priceUsd !== null && priceUsd !== undefined) {
-                    if (priceUsd === 0) {
-                        return <span className="text-gray-500">Произвольная</span>;
-                    }
+                
+                // "Произвольная" только если обе цены равны 0
+                if (price === 0 && priceUsd === 0) {
+                    return <span className="text-gray-500">Произвольная</span>;
+                }
+                
+                if (priceUsd !== null && priceUsd !== undefined && priceUsd > 0) {
                     return Number(priceUsd) + " $";
                 }
-                return "—"; // Если цена USD не указана
+                
+                return "—"; // Если цена USD не указана или равна 0 (но KZT > 0)
             }
         },
     ];
