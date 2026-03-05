@@ -815,137 +815,130 @@ export const PaymentForm: FC = () => {
                             />
                         )}
 
-                        {/* Combined additional info section */}
-                        {(eventAdditionalFields.length > 0 || paymentCategoryAdditionalFields.length > 0) && (
-                            <div className="flex flex-col gap-4 mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                                <h3 className="text-lg font-semibold text-gray-800 mb-2">Additional info</h3>
+                        {/* Event additional fields */}
+                        {eventAdditionalFields.length > 0 && (
+                            <div className="flex flex-col gap-2">
+                                {eventAdditionalFields.map((field) => {
+                                    const uniqueKey = `event_${field.name}`;
+                                    return (
+                                        <CustomInput
+                                            key={uniqueKey}
+                                            icon={<UserIcon className="text-[#6B9AB0]" />}
+                                            type={field.type}
+                                            value={(eventAdditionalFieldValues[field.name] as string) || ""}
+                                            onChange={(e) => {
+                                                setEventAdditionalFieldValues(prev => ({ ...prev, [field.name]: e.target.value }));
+                                            }}
+                                            placeholder={field.label}
+                                            required={field.required}
+                                        />
+                                    );
+                                })}
+                            </div>
+                        )}
 
-                                {eventAdditionalFields.length > 0 && (
-                                    <div className="flex flex-col gap-2">
-                                        <h4 className="text-sm font-medium text-gray-700 mb-1">Event fields</h4>
-                                        {eventAdditionalFields.map((field) => {
-                                            const uniqueKey = `event_${field.name}`;
-                                            return (
-                                                <CustomInput
-                                                    key={uniqueKey}
-                                                    icon={<UserIcon className="text-[#6B9AB0]" />}
-                                                    type={field.type}
-                                                    value={(eventAdditionalFieldValues[field.name] as string) || ""}
+                        {/* Payment category additional fields */}
+                        {paymentCategoryAdditionalFields.length > 0 && (
+                            <div className="flex flex-col gap-2">
+                                {paymentCategoryAdditionalFields.map((field) => {
+                                    const uniqueKey = `payment_${field.name}`;
+
+                                    if (field.type === "checkbox") {
+                                        return (
+                                            <label key={uniqueKey} className="flex items-center gap-2 ml-2 cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={Boolean(paymentCategoryAdditionalFieldValues[field.name])}
                                                     onChange={(e) => {
-                                                        setEventAdditionalFieldValues(prev => ({ ...prev, [field.name]: e.target.value }));
+                                                        setPaymentCategoryAdditionalFieldValues(prev => ({ ...prev, [field.name]: e.target.checked }));
                                                     }}
-                                                    placeholder={field.label}
-                                                    required={field.required}
+                                                    className="w-4 h-4 rounded accent-[#6B9AB0]"
                                                 />
-                                            );
-                                        })}
-                                    </div>
-                                )}
-
-                                {paymentCategoryAdditionalFields.length > 0 && (
-                                    <div className="flex flex-col gap-2">
-                                        <h4 className="text-sm font-medium text-gray-700 mb-1">Payment type fields</h4>
-                                        {paymentCategoryAdditionalFields.map((field) => {
-                                            const uniqueKey = `payment_${field.name}`;
-
-                                            if (field.type === "checkbox") {
-                                                return (
-                                                    <label key={uniqueKey} className="flex items-center gap-2 ml-2 cursor-pointer">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={Boolean(paymentCategoryAdditionalFieldValues[field.name])}
-                                                            onChange={(e) => {
-                                                                setPaymentCategoryAdditionalFieldValues(prev => ({ ...prev, [field.name]: e.target.checked }));
-                                                            }}
-                                                            className="w-4 h-4 rounded accent-[#6B9AB0]"
-                                                        />
-                                                        <span className="text-black">{field.label}</span>
-                                                    </label>
-                                                );
-                                            } else if (field.type === "file") {
-                                                return (
-                                                    <div key={uniqueKey} className="ml-2">
-                                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                            {field.label}
-                                                            {field.required && <span className="text-red-500 ml-1">*</span>}
-                                                        </label>
-                                                        <div className="relative">
-                                                            <input
-                                                                type="file"
-                                                                id={`payment-file-${uniqueKey}`}
-                                                                className="hidden"
-                                                                onChange={(e) => {
-                                                                    const file = e.target.files?.[0];
-                                                                    if (file) {
-                                                                        setPaymentCategoryAdditionalFieldValues(prev => ({
-                                                                            ...prev,
-                                                                            [field.name]: { name: file.name, size: file.size, type: file.type, lastModified: file.lastModified }
-                                                                        }));
-                                                                    }
-                                                                }}
-                                                            />
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => document.getElementById(`payment-file-${uniqueKey}`)?.click()}
-                                                                className="flex items-center justify-center gap-2 rounded-[5px] p-[13px] text-[16px] cursor-pointer select-none border transition-colors w-full text-white bg-[#006799] border-[#6B9AB0] hover:bg-[#004C71]"
-                                                            >
-                                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                                                </svg>
-                                                                <span className="text-sm font-medium">
-                                                                    {(paymentCategoryAdditionalFieldValues[field.name] as any)?.name || "Выберите файл"}
-                                                                </span>
-                                                            </button>
-                                                            {(paymentCategoryAdditionalFieldValues[field.name] as any)?.name && (
-                                                                <div className="mt-2 text-xs text-gray-600">
-                                                                    Файл: {(paymentCategoryAdditionalFieldValues[field.name] as any).name} ({((paymentCategoryAdditionalFieldValues[field.name] as any).size / 1024).toFixed(1)} KB)
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                );
-                                            } else if (field.type === "select") {
-                                                return (
-                                                    <div key={uniqueKey} className="ml-2">
-                                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                            {field.label}
-                                                            {field.required && <span className="text-red-500 ml-1">*</span>}
-                                                        </label>
-                                                        <select
-                                                            value={(paymentCategoryAdditionalFieldValues[field.name] as string) || ""}
-                                                            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                                                                setPaymentCategoryAdditionalFieldValues(prev => ({ ...prev, [field.name]: e.target.value }));
-                                                            }}
-                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#6B9AB0] focus:border-transparent"
-                                                            required={field.required}
-                                                        >
-                                                            <option value="">Выберите опцию</option>
-                                                            {field.options?.map((option: string) => (
-                                                                <option key={option} value={option}>
-                                                                    {option}
-                                                                </option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
-                                                );
-                                            } else {
-                                                return (
-                                                    <CustomInput
-                                                        key={uniqueKey}
-                                                        icon={<UserIcon className="text-[#6B9AB0]" />}
-                                                        type={field.type}
-                                                        value={(paymentCategoryAdditionalFieldValues[field.name] as string) || ""}
+                                                <span className="text-black">{field.label}</span>
+                                            </label>
+                                        );
+                                    } else if (field.type === "file") {
+                                        return (
+                                            <div key={uniqueKey} className="ml-2">
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    {field.label}
+                                                    {field.required && <span className="text-red-500 ml-1">*</span>}
+                                                </label>
+                                                <div className="relative">
+                                                    <input
+                                                        type="file"
+                                                        id={`payment-file-${uniqueKey}`}
+                                                        className="hidden"
                                                         onChange={(e) => {
-                                                            setPaymentCategoryAdditionalFieldValues(prev => ({ ...prev, [field.name]: e.target.value }));
+                                                            const file = e.target.files?.[0];
+                                                            if (file) {
+                                                                setPaymentCategoryAdditionalFieldValues(prev => ({
+                                                                    ...prev,
+                                                                    [field.name]: { name: file.name, size: file.size, type: file.type, lastModified: file.lastModified }
+                                                                }));
+                                                            }
                                                         }}
-                                                        placeholder={field.label}
-                                                        required={field.required}
                                                     />
-                                                );
-                                            }
-                                        })}
-                                    </div>
-                                )}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => document.getElementById(`payment-file-${uniqueKey}`)?.click()}
+                                                        className="flex items-center justify-center gap-2 rounded-[5px] p-[13px] text-[16px] cursor-pointer select-none border transition-colors w-full text-white bg-[#006799] border-[#6B9AB0] hover:bg-[#004C71]"
+                                                    >
+                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                                        </svg>
+                                                        <span className="text-sm font-medium">
+                                                            {(paymentCategoryAdditionalFieldValues[field.name] as any)?.name || "Выберите файл"}
+                                                        </span>
+                                                    </button>
+                                                    {(paymentCategoryAdditionalFieldValues[field.name] as any)?.name && (
+                                                        <div className="mt-2 text-xs text-gray-600">
+                                                            Файл: {(paymentCategoryAdditionalFieldValues[field.name] as any).name} ({((paymentCategoryAdditionalFieldValues[field.name] as any).size / 1024).toFixed(1)} KB)
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    } else if (field.type === "select") {
+                                        return (
+                                            <div key={uniqueKey} className="ml-2">
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    {field.label}
+                                                    {field.required && <span className="text-red-500 ml-1">*</span>}
+                                                </label>
+                                                <select
+                                                    value={(paymentCategoryAdditionalFieldValues[field.name] as string) || ""}
+                                                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                                                        setPaymentCategoryAdditionalFieldValues(prev => ({ ...prev, [field.name]: e.target.value }));
+                                                    }}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#6B9AB0] focus:border-transparent"
+                                                    required={field.required}
+                                                >
+                                                    <option value="">Выберите опцию</option>
+                                                    {field.options?.map((option: string) => (
+                                                        <option key={option} value={option}>
+                                                            {option}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        );
+                                    } else {
+                                        return (
+                                            <CustomInput
+                                                key={uniqueKey}
+                                                icon={<UserIcon className="text-[#6B9AB0]" />}
+                                                type={field.type}
+                                                value={(paymentCategoryAdditionalFieldValues[field.name] as string) || ""}
+                                                onChange={(e) => {
+                                                    setPaymentCategoryAdditionalFieldValues(prev => ({ ...prev, [field.name]: e.target.value }));
+                                                }}
+                                                placeholder={field.label}
+                                                required={field.required}
+                                            />
+                                        );
+                                    }
+                                })}
                             </div>
                         )}
 
