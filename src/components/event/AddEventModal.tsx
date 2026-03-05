@@ -18,7 +18,6 @@ import { getUsers } from "@/api/endpoints/users.ts";
 import { IUser } from "@/types/users.ts";
 
 interface CustomField {
-    key: string;
     value: string;
 }
 
@@ -43,14 +42,14 @@ export const AddEventModal: FC = () => {
 
     // Функции для управления дополнительными полями
     const addCustomField = () => {
-        setCustomFields([...customFields, { key: "", value: "" }]);
+        setCustomFields([...customFields, { value: "" }]);
     };
 
     const removeCustomField = (index: number) => {
         setCustomFields(customFields.filter((_, i) => i !== index));
     };
 
-    const updateCustomField = (index: number, field: 'key' | 'value', value: string) => {
+    const updateCustomField = (index: number, field: 'value', value: string) => {
         const updatedFields = [...customFields];
         updatedFields[index][field] = value;
         setCustomFields(updatedFields);
@@ -126,9 +125,9 @@ export const AddEventModal: FC = () => {
         try {
             // Подготавливаем additional_fields из customFields
             const additional_fields: Record<string, any> = {};
-            customFields.forEach((field) => {
-                if (field.key.trim() && field.value.trim()) {
-                    additional_fields[field.key] = {
+            customFields.forEach((field, index) => {
+                if (field.value.trim()) {
+                    additional_fields[`field_${index}`] = {
                         type: "text",
                         value: field.value
                     };
@@ -258,12 +257,6 @@ export const AddEventModal: FC = () => {
                         
                         {customFields.map((field, index) => (
                             <div key={index} className="flex gap-2 items-center">
-                                <CustomInput
-                                    placeholder="Название поля"
-                                    value={field.key}
-                                    onChange={(e) => updateCustomField(index, 'key', e.target.value)}
-                                    className="flex-1"
-                                />
                                 <CustomInput
                                     placeholder="Значение"
                                     value={field.value}

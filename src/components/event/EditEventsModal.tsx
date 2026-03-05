@@ -6,14 +6,19 @@ import {CustomSelect} from "@/ui/CustomSelect.tsx";
 import {CustomInput} from "@/ui/CustomInput.tsx";
 import {useEventsStore} from "@/store/useEventsStore.ts";
 import {toast} from "react-hot-toast";
-import { AddAdditionalFields } from "@/components/department/AddAdditionalFields.tsx";
 import {
     InformationCircleIcon,
+    TrashIcon,
+    PlusIcon
 } from "@heroicons/react/24/outline";
 import {CustomButton} from "@/ui/CustomButton.tsx";
 import {Calendar} from "primereact/calendar";
 import { getUsers } from "@/api/endpoints/users.ts";
 import { IUser } from "@/types/users.ts";
+
+interface CustomField {
+    value: string;
+}
 
 interface EditEventsModalProps {
     isOpen: boolean;
@@ -43,7 +48,7 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
             ? [new Date(eventData.period_from), new Date(eventData.period_till)]
             : null
     );
-    const [additionalFields, setAdditionalFields] = useState<{name:string; type:string; value?: any}[]>([]);
+    const [customFields, setCustomFields] = useState<CustomField[]>([]);
     const [errors, setErrors] = useState({
         title: false,
         manager: false,
@@ -54,6 +59,21 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
     const [managers, setManagers] = useState<{ label: string; value: string }[]>([]);
 
     const {updateEvent, fetchEvents} = useEventsStore();
+
+    // Функции для управления дополнительными полями
+    const addCustomField = () => {
+        setCustomFields([...customFields, { value: "" }]);
+    };
+
+    const removeCustomField = (index: number) => {
+        setCustomFields(customFields.filter((_, i) => i !== index));
+    };
+
+    const updateCustomField = (index: number, field: 'value', value: string) => {
+        const updatedFields = [...customFields];
+        updatedFields[index][field] = value;
+        setCustomFields(updatedFields);
+    };
 
     useEffect(() => {
         if (isOpen) {
@@ -67,12 +87,11 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
                     : null
             );
             const fields = eventData.additional_fields
-                ? Object.entries(eventData.additional_fields).map(([key, value]) => ({
-                    name: key,
-                    type: value.type,
+                ? Object.entries(eventData.additional_fields).map(([, value]) => ({
+                    value: (value as any).value || ''
                 }))
                 : [];
-            setAdditionalFields(fields);
+            setCustomFields(fields);
         }
     }, [isOpen, eventData]);
 
@@ -147,18 +166,14 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
         }
 
         try {
-            // Подготавливаем additional_fields
+            // Подготавливаем additional_fields из customFields
             const additional_fields: Record<string, any> = {};
-            additionalFields.forEach((field) => {
-                if (field.type === 'file' && field.value) {
-                    // Для файлов копируем весь объект с value
-                    additional_fields[field.name] = {
-                        type: field.type,
+            customFields.forEach((field, index) => {
+                if (field.value.trim()) {
+                    additional_fields[`field_${index}`] = {
+                        type: "text",
                         value: field.value
                     };
-                } else {
-                    // Для других типов только type
-                    additional_fields[field.name] = { type: field.type };
                 }
             });
 
@@ -251,11 +266,34 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
 
                 {/* Дополнительные поля */}
                 <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium text-gray-700">Дополнительные поля</label>
-                    <AddAdditionalFields 
-                        value={additionalFields} 
-                        onChange={setAdditionalFields} 
-                    />
+                    <div className="flex justify-start">
+                        <CustomButton
+                            variant="default"
+                            className="h-[38px] font-bold gap-[5px] px-[20px] flex rounded-[4px]"
+                            onClick={addCustomField}
+                        >
+                            <PlusIcon />
+                            Добавить
+                        </CustomButton>
+                    </div>
+                    
+                    {customFields.map((field, index) => (
+                        <div key={index} className="flex gap-2 items-center">
+                            <CustomInput
+                                placeholder="Значение"
+                                value={field.value}
+                                onChange={(e) => updateCustomField(index, 'value', e.target.value)}
+                                className="flex-1"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => removeCustomField(index)}
+                                className="p-2 text-red-500 hover:text-red-700 transition-colors"
+                            >
+                                <TrashIcon className="w-4 h-4" />
+                            </button>
+                        </div>
+                    ))}
                 </div>
 
                 <CustomButton onClick={handleSubmit} className="w-full">
