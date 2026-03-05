@@ -941,9 +941,20 @@ export const PaymentForm: FC = () => {
                             )
                         }
                         {!loading ? (
-                            <CustomButton type="submit" variant="submit">{t('paymentPage.payBtn')}</CustomButton>
+                            <CustomButton 
+                                type="submit" 
+                                variant="submit"
+                                className="bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-[#1E40AF] px-6 py-3 text-white font-medium rounded-lg transition duration-200 ease-in-out shadow-lg hover:shadow-xl"
+                            >
+                                {t('paymentPage.payBtn')}
+                            </CustomButton>
                         ) : (
-                            <CustomButton type="submit" disabled={true} variant="disabled">
+                            <CustomButton 
+                                type="submit" 
+                                disabled={true} 
+                                variant="disabled"
+                                className="bg-[#2563EB] px-6 py-3 text-white font-medium rounded-lg opacity-75 shadow-lg"
+                            >
                                 <PulseLoader size={6} color={"#ffff"} />
                             </CustomButton>
                         )}
