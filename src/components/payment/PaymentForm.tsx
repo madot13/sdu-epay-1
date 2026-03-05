@@ -448,6 +448,32 @@ export const PaymentForm: FC = () => {
                 return;
             }
 
+            // Валидация обязательных дополнительных полей
+            // Проверяем обязательные поля события
+            const hasMissingEventFields = eventAdditionalFields.some(field => {
+                if (field.required && !eventAdditionalFieldValues[field.name]) {
+                    console.error(`❌ Required event field missing: ${field.name}`);
+                    toast.error(`Поле "${field.label}" обязательно для заполнения`);
+                    return true;
+                }
+                return false;
+            });
+
+            if (hasMissingEventFields) return;
+
+            // Проверяем обязательные поля категории платежа
+            const hasMissingPaymentFields = paymentCategoryAdditionalFields.some(field => {
+                const value = paymentCategoryAdditionalFieldValues[field.name];
+                if (field.required && (!value || (typeof value === 'string' && value.trim() === ''))) {
+                    console.error(`❌ Required payment field missing: ${field.name}`);
+                    toast.error(`Поле "${field.label}" обязательно для заполнения`);
+                    return true;
+                }
+                return false;
+            });
+
+            if (hasMissingPaymentFields) return;
+
             // Дополнительная валидация для произвольной цены
             if (isCustomPrice && (!data.amount || data.amount <= 0)) {
                 console.error("❌ Custom price requires amount:", data.amount);
@@ -457,7 +483,11 @@ export const PaymentForm: FC = () => {
 
             const payload = {
                 ...data,
-                additional_fields: convertAdditionalFields(additionalFieldValues),
+                additional_fields: convertAdditionalFields({
+                    ...additionalFieldValues,
+                    ...eventAdditionalFieldValues,
+                    ...paymentCategoryAdditionalFieldValues
+                }),
                 currency
             };
 
@@ -1013,6 +1043,154 @@ export const PaymentForm: FC = () => {
                                         </>
                                     )}
                                 />
+                            )}
+
+                            {/* Дополнительная информация - объединенные поля события и категории платежа */}
+                            {(eventAdditionalFields.length > 0 || paymentCategoryAdditionalFields.length > 0) && (
+                                <div className="flex flex-col gap-4 mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Дополнительная информация</h3>
+                                    
+                                    {/* Дополнительные поля события */}
+                                    {eventAdditionalFields.length > 0 && (
+                                        <div className="flex flex-col gap-2">
+                                            <h4 className="text-sm font-medium text-gray-700 mb-1">Поля события</h4>
+                                            {eventAdditionalFields.map((field) => {
+                                                const key = field.name;
+                                                return (
+                                                    <CustomInput
+                                                        key={key}
+                                                        icon={<UserIcon className="text-[#6B9AB0]" />}
+                                                        type={field.type}
+                                                        value={eventAdditionalFieldValues[key] || ""}
+                                                        onChange={(e) => {
+                                                            const newValues = {...eventAdditionalFieldValues};
+                                                            newValues[key] = e.target.value;
+                                                            setEventAdditionalFieldValues(newValues);
+                                                        }}
+                                                        placeholder={field.label}
+                                                        required={field.required}
+                                                    />
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+
+                                    {/* Дополнительные поля категории платежа */}
+                                    {paymentCategoryAdditionalFields.length > 0 && (
+                                        <div className="flex flex-col gap-2">
+                                            <h4 className="text-sm font-medium text-gray-700 mb-1">Поля типа платежа</h4>
+                                            {paymentCategoryAdditionalFields.map((field) => {
+                                                const key = field.name;
+                                                
+                                                if (field.type === "checkbox") {
+                                                    return (
+                                                        <label key={key} className="flex items-center gap-2 ml-2 cursor-pointer">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={!!paymentCategoryAdditionalFieldValues[key]}
+                                                                onChange={(e) => {
+                                                                    const newValues = {...paymentCategoryAdditionalFieldValues};
+                                                                    newValues[key] = e.target.checked;
+                                                                    setPaymentCategoryAdditionalFieldValues(newValues);
+                                                                }}
+                                                                className="w-4 h-4 rounded accent-[#6B9AB0]"
+                                                            />
+                                                            <span className="text-black">{field.label}</span>
+                                                        </label>
+                                                    );
+                                                } else if (field.type === "file") {
+                                                    return (
+                                                        <div key={key} className="ml-2">
+                                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                                {field.label}
+                                                                {field.required && <span className="text-red-500 ml-1">*</span>}
+                                                            </label>
+                                                            <div className="relative">
+                                                                <input
+                                                                    type="file"
+                                                                    id={`payment-file-${key}`}
+                                                                    className="hidden"
+                                                                    onChange={(e) => {
+                                                                        const file = e.target.files?.[0];
+                                                                        if (file) {
+                                                                            const newValues = {...paymentCategoryAdditionalFieldValues};
+                                                                            newValues[key] = {
+                                                                                name: file.name,
+                                                                                size: file.size,
+                                                                                type: file.type,
+                                                                                lastModified: file.lastModified
+                                                                            };
+                                                                            setPaymentCategoryAdditionalFieldValues(newValues);
+                                                                        }
+                                                                    }}
+                                                                />
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => document.getElementById(`payment-file-${key}`)?.click()}
+                                                                    className={`flex items-center justify-center gap-2 rounded-[5px] p-[13px] text-[16px] cursor-pointer select-none border transition-colors w-full text-white bg-[#006799] border-[#6B9AB0] hover:bg-[#004C71] ${(paymentCategoryAdditionalFieldValues[key] as any)?.name ? 'bg-[#006799]' : ''}`}
+                                                                >
+                                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                                                    </svg>
+                                                                    <span className="text-sm font-medium">
+                                                                        {(paymentCategoryAdditionalFieldValues[key] as any)?.name || "Выберите файл"}
+                                                                    </span>
+                                                                </button>
+                                                                {(paymentCategoryAdditionalFieldValues[key] as any)?.name && (
+                                                                    <div className="mt-2 text-xs text-gray-600">
+                                                                        Файл: {(paymentCategoryAdditionalFieldValues[key] as any).name} ({((paymentCategoryAdditionalFieldValues[key] as any).size / 1024).toFixed(1)} KB)
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                } else if (field.type === "select") {
+                                                    return (
+                                                        <div key={key} className="ml-2">
+                                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                                {field.label}
+                                                                {field.required && <span className="text-red-500 ml-1">*</span>}
+                                                            </label>
+                                                            <select
+                                                                value={typeof paymentCategoryAdditionalFieldValues[key] === 'string' ? paymentCategoryAdditionalFieldValues[key] : ""}
+                                                                onChange={(e) => {
+                                                                    const newValues = {...paymentCategoryAdditionalFieldValues};
+                                                                    newValues[key] = e.target.value;
+                                                                    setPaymentCategoryAdditionalFieldValues(newValues);
+                                                                }}
+                                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#6B9AB0] focus:border-transparent"
+                                                                required={field.required}
+                                                            >
+                                                                <option value="">Выберите опцию</option>
+                                                                {field.options?.map((option: string) => (
+                                                                    <option key={option} value={option}>
+                                                                        {option}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                    );
+                                                } else {
+                                                    return (
+                                                        <CustomInput
+                                                            key={key}
+                                                            icon={<UserIcon className="text-[#6B9AB0]" />}
+                                                            type={field.type}
+                                                            value={typeof paymentCategoryAdditionalFieldValues[key] === 'string' ? paymentCategoryAdditionalFieldValues[key] : ""}
+                                                            onChange={(e) => {
+                                                                const newValues = {...paymentCategoryAdditionalFieldValues};
+                                                                newValues[key] = e.target.value;
+                                                                setPaymentCategoryAdditionalFieldValues(newValues);
+                                                            }}
+                                                            placeholder={field.label}
+                                                            required={field.required}
+                                                        />
+                                                    );
+                                                }
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
                             )}
 
                             {/* Чекбокс рендерится только для произвольной цены или когда обе цены доступны */}

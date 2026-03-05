@@ -9,6 +9,7 @@ export type InputProps = {
     onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
     error?: string;
     disabled?: boolean;
+    required?: boolean;
 };
 
 export const CustomInput: FC<InputProps> = ({
@@ -20,6 +21,7 @@ export const CustomInput: FC<InputProps> = ({
     onChange,
     error,
     disabled = false,
+    required = false,
 }) => {
     return (
         <div className="relative">
@@ -39,6 +41,7 @@ export const CustomInput: FC<InputProps> = ({
                 onChange={onChange}
                 placeholder={placeholder}
                 disabled={disabled}
+                required={required}
                 className={`bg-[#F3F3F3] border border-[#6B9AB0] rounded-[5px] ring-[#6B9AB0] p-[13px] pl-[65px] w-full ${className}  ${error ? 'border-red-500' : ''}`}
             />
         </div>
