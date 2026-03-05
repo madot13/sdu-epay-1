@@ -467,11 +467,12 @@ export const PaymentForm: FC = () => {
                             toast.error("Ошибка при создании платежа. Пожалуйста, попробуйте еще раз.");
                         }
                     } else {
-                        // Для фиксированных цен - отправляем amount, бэкенд решит использовать его или цену из категории
+                        // Для фиксированных цен - не отправляем amount, бэкенд возьмет цену из категории
                         console.log("🔍 Using orderHalyk endpoint");
                         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                        const { paymentMethod, department_id, showInUsd, ...dataWithoutPaymentMethodAndDepartment } = payload;
-                        console.log("🔍 Sending to orderHalyk:", dataWithoutPaymentMethodAndDepartment);
+                        const { paymentMethod, department_id, amount, showInUsd, ...dataWithoutPaymentMethodAndDepartment } = payload;
+                        console.log("🔍 Sending to orderHalyk (without amount):", dataWithoutPaymentMethodAndDepartment);
+                        console.log("🔍 Additional fields:", dataWithoutPaymentMethodAndDepartment.additional_fields);
                         try {
                             const halykData = await orderHalyk({
                                 ...dataWithoutPaymentMethodAndDepartment,
