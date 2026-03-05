@@ -415,11 +415,15 @@ export const PaymentForm: FC = () => {
 
             console.log("🔍 Payload for order:", payload);
             console.log("🔍 Selected payment category:", selectedPaymentCategory);
+            console.log("🔍 selectedEventPriced:", selectedEventPriced);
+            console.log("🔍 isCustomPrice:", isCustomPrice);
+            console.log("🔍 paymentMethod:", data.paymentMethod);
 
             if (selectedDepartmentType === "EVENT_BASED") {
                 if (data.paymentMethod === "KaspiBank") {
                     if (selectedEventPriced === false || isCustomPrice) {
                         // Для произвольных цен (событий или категорий)
+                        console.log("🔍 Using orderKaspiCustomPrice endpoint");
                         // eslint-disable-next-line @typescript-eslint/no-unused-vars
                         const { paymentMethod, department_id, promo_code, showInUsd, ...customPriceData } = payload;
                         const kaspiData = await orderKaspiCustomPrice({
@@ -431,6 +435,7 @@ export const PaymentForm: FC = () => {
                         setPaymentData(kaspiData);
                     } else {
                         // Для фиксированных цен
+                        console.log("🔍 Using orderKaspi endpoint");
                         // eslint-disable-next-line @typescript-eslint/no-unused-vars
                         const { paymentMethod, department_id, showInUsd, ...dataWithoutPaymentMethodAndDepartment } = payload;
                         const kaspiData = await orderKaspi({
