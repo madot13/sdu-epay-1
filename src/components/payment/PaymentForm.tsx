@@ -590,7 +590,7 @@ export const PaymentForm: FC = () => {
                                             onChange={(e) => handleAdditionalChange(key, e.target.checked)}
                                             className="w-4 h-4 rounded accent-[#6B9AB0]"
                                         />
-                                        <span className="text-black text-sm">{field.label}</span>
+                                        <span className="text-black text-base">{field.label}</span>
                                     </label>
                                 );
                             }else if (field.type === "date") {
@@ -758,7 +758,7 @@ export const PaymentForm: FC = () => {
                                                                         }}
                                                                         className="w-4 h-4 rounded accent-[#6B9AB0]"
                                                                     />
-                                                                    <span className="text-black text-sm">{field.label}</span>
+                                                                    <span className="text-black text-base">{field.label}</span>
                                                                 </label>
                                                             );
                                                         } else {
