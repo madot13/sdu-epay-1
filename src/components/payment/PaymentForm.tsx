@@ -828,8 +828,10 @@ export const PaymentForm: FC = () => {
                                                 setOrderField("payment_category_id", val);
 
                                                 const selectedCategory = paymentCategoryOptions.find(opt => opt.value === val);
+                                                console.log("🔍 Selected category from options:", selectedCategory);
                                                 if (selectedCategory) {
                                                     const categoryData = selectedCategory as any;
+                                                    console.log("🔍 Category data:", categoryData);
                                                     setSelectedPaymentCategory(categoryData); // Сохраняем выбранную категорию
                                                     if (categoryData.additional_fields) {
                                                         const categoryFields = Object.entries(categoryData.additional_fields).map(([name, config]: [string, any]) => ({
@@ -842,6 +844,7 @@ export const PaymentForm: FC = () => {
                                                         setPaymentCategoryAdditionalFields([]);
                                                     }
                                                 } else {
+                                                    console.log("🔍 No category found for value:", val);
                                                     setSelectedPaymentCategory(null);
                                                     setPaymentCategoryAdditionalFields([]);
                                                 }
