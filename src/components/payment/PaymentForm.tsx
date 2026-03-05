@@ -967,14 +967,13 @@ export const PaymentForm: FC = () => {
                             </div>
                         )}
 
-                        {/* showInUsd checkbox — only when both prices or custom price */}
+                        {/* showInUsd checkbox — only for custom price */}
                         {watchPaymentCategoryId && (() => {
                             const selectedCategory = paymentCategoryOptions.find(opt => opt.value === watchPaymentCategoryId);
                             if (!selectedCategory) return false;
                             const categoryData = selectedCategory as any;
-                            const hasBothPrices = categoryData.price > 0 && categoryData.price_usd > 0;
                             const hasCustomPrice = categoryData.price === 0 && categoryData.price_usd === 0;
-                            return hasBothPrices || hasCustomPrice;
+                            return hasCustomPrice;
                         })() && (
                             <Controller
                                 name="showInUsd"
