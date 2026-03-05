@@ -168,19 +168,29 @@ export const PaymentForm: FC = () => {
                 
                 const selectedEvent = eventOptions.find(opt => opt.value === currentEventId);
                 if (selectedEvent) {
+                    console.log("🔍 Found selected event:", selectedEvent);
                     try {
                         const eventData = await getEventById(currentEventId);
+                        console.log("🔍 Event data from API:", eventData);
                         if (eventData.additional_fields) {
                             const eventFields = Object.entries(eventData.additional_fields).map(([name, config]: [string, any]) => ({
                                 name,
                                 type: config.type,
                                 label: name
                             }));
+                            console.log("🔍 Mapped event fields:", eventFields);
                             setEventAdditionalFields(eventFields);
+                        } else {
+                            console.log("🔍 No additional fields in event data");
+                            setEventAdditionalFields([]);
                         }
                     } catch (error) {
                         console.error("Error fetching event additional fields:", error);
+                        setEventAdditionalFields([]);
                     }
+                } else {
+                    console.log("🔍 No selected event found for currentEventId:", currentEventId);
+                    setEventAdditionalFields([]);
                 }
                 
                 const paymentCategories = paymentTypes.map((pt: any) => ({
@@ -816,6 +826,7 @@ export const PaymentForm: FC = () => {
                         )}
 
                         {/* Event additional fields */}
+                        {console.log("🔍 Rendering event additional fields:", eventAdditionalFields.length, eventAdditionalFields)}
                         {eventAdditionalFields.length > 0 && (
                             <div className="flex flex-col gap-2">
                                 {eventAdditionalFields.map((field) => {
