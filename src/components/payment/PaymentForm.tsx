@@ -755,14 +755,14 @@ export const PaymentForm: FC = () => {
                                 />
                             )}
 
-                            {/* Чекбокс рендерится если есть цена в USD или произвольная цена */}
+                            {/* Чекбокс рендерится только для произвольной цены или когда обе цены доступны */}
                             {watchPaymentCategoryId && (() => {
                                 const selectedCategory = paymentCategoryOptions.find(opt => opt.value === watchPaymentCategoryId);
                                 if (!selectedCategory) return false;
                                 const categoryData = selectedCategory as any;
-                                const hasUsdPrice = categoryData.price_usd > 0;
+                                const hasBothPrices = categoryData.price > 0 && categoryData.price_usd > 0;
                                 const hasCustomPrice = categoryData.price === 0 && categoryData.price_usd === 0;
-                                return hasUsdPrice || hasCustomPrice;
+                                return hasBothPrices || hasCustomPrice;
                             })() && (
                                 <Controller
                                     name="showInUsd"

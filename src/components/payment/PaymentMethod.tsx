@@ -6,13 +6,15 @@ export interface PaymentMethodProps {
     error?: string;
     onChange: (value: string) => void;
     disableKaspi?: boolean; // Optional prop to disable KaspiBank
+    disableHalyk?: boolean; // Optional prop to disable HalykBank
 }
 
-export const PaymentMethod: FC<PaymentMethodProps> = ({ error, onChange, disableKaspi }) => {
+export const PaymentMethod: FC<PaymentMethodProps> = ({ error, onChange, disableKaspi, disableHalyk }) => {
     const {t} = useTranslation();
     const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
     const handleSelectMethod = (method: string) => {
         if (method === "KaspiBank" && disableKaspi) return; // Prevent selection if Kaspi is disabled
+        if (method === "HalykBank" && disableHalyk) return; // Prevent selection if Halyk is disabled
         setSelectedMethod(method);
         onChange(method);
     };
@@ -22,7 +24,11 @@ export const PaymentMethod: FC<PaymentMethodProps> = ({ error, onChange, disable
             setSelectedMethod("HalykBank"); // Automatically switch to HalykBank if Kaspi is disabled
             onChange("HalykBank");
         }
-    }, [disableKaspi]);
+        if (disableHalyk && selectedMethod === "HalykBank") {
+            setSelectedMethod("KaspiBank"); // Automatically switch to KaspiBank if Halyk is disabled
+            onChange("KaspiBank");
+        }
+    }, [disableKaspi, disableHalyk]);
 
     return (
         <div>
@@ -34,6 +40,7 @@ export const PaymentMethod: FC<PaymentMethodProps> = ({ error, onChange, disable
                     selected={selectedMethod === "HalykBank"}
                     onClick={() => handleSelectMethod("HalykBank")}
                     error={error}
+                    disabled={disableHalyk} // Pass disabled state to the component
                 />
                 <PaymentMethodItem
                     icon="/icons/KaspiBank.svg"
