@@ -23,7 +23,7 @@ export const DepartmentsPage:FC = () => {
     const columns = [
         {header: "Департамент", accessor: "name", sortable: true},
         { 
-            header: "Статус", 
+            header: "Активный", 
             accessor: (item: Record<string, any>): ReactNode => {
                 const isActive = item.active !== false;
                 return (

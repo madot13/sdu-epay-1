@@ -8,6 +8,7 @@ import { OrderDetailsModal } from "@/components/order/OrderDetailsModal.tsx";
 import { OrderTransactionsModal } from "@/components/order/OrderTransactionsModal.tsx";
 import { Order } from "@/types/orders.ts";
 import { CustomButton } from "@/ui/CustomButton.tsx";
+import { ReactNode } from "react";
 
 export const OrdersPage: FC = () => {
     const { orders, fetchOrders, total } = useOrdersStore();
@@ -27,11 +28,34 @@ export const OrdersPage: FC = () => {
         { header: "Тип", accessor: "type_display", sortable: true },
         { 
             header: "Статус", 
-            accessor: "status_display",
-            sortable: true,
-            cellClassName: (_value: any, row: any) => {
-                return `font-semibold ${getStatusColor(row.status)}`;
-            }
+            accessor: (item: Record<string, any>): ReactNode => {
+                const status = item.status;
+                let bgColor = "bg-gray-100";
+                let textColor = "text-gray-800";
+                let statusText = getStatusText(status);
+                
+                switch (status) {
+                    case "SUCCESS":
+                        bgColor = "bg-green-100";
+                        textColor = "text-green-800";
+                        break;
+                    case "FAILURE":
+                        bgColor = "bg-red-100";
+                        textColor = "text-red-800";
+                        break;
+                    case "PENDING":
+                        bgColor = "bg-yellow-100";
+                        textColor = "text-yellow-800";
+                        break;
+                }
+                
+                return (
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${bgColor} ${textColor}`}>
+                        {statusText}
+                    </span>
+                );
+            },
+            sortable: true
         },
         { header: "Сумма", accessor: "amount_display", sortable: true },
         { header: "Итого", accessor: "final_amount_display", sortable: true },
@@ -119,19 +143,6 @@ export const OrdersPage: FC = () => {
 
     const handleSort = (column: string, direction: 'asc' | 'desc') => {
         setSort({ column, direction });
-    };
-
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case "SUCCESS":
-                return "text-green-600 font-semibold";
-            case "FAILURE":
-                return "text-red-600 font-semibold";
-            case "PENDING":
-                return "text-yellow-600 font-semibold";
-            default:
-                return "";
-        }
     };
 
     const getStatusText = (status: string) => {
