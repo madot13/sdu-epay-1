@@ -86,8 +86,6 @@ export const PaymentForm: FC = () => {
     const [paymentCategoryAdditionalFieldValues, setPaymentCategoryAdditionalFieldValues] = useState<Record<string, string | boolean>>({});
     const [selectedDepartmentType, setSelectedDepartmentType] = useState<DepartmentType | null>(null);
     const [selectedEventPriced, setSelectedEventPriced] = useState<boolean | null>(null);
-    const [selectedEventPriceUsd, setSelectedEventPriceUsd] = useState<number | null>(null);
-    const [selectedEventPriceKzt, setSelectedEventPriceKzt] = useState<number | null>(null);
     //const [showInUsd, setShowInUsd] = useState(false);
 
 
@@ -534,8 +532,6 @@ export const PaymentForm: FC = () => {
                                     setOrderField("event_id", ""); // Reset in store too
                                     setEventOptions([]); // Clear event options
                                     setSelectedEventPriced(null);
-                                    setSelectedEventPriceKzt(null);
-                                    setSelectedEventPriceUsd(null);
                                     setPrice(0);
 
                                     // Reset residency status
@@ -652,8 +648,6 @@ export const PaymentForm: FC = () => {
                                                 if (selectedEvent && "price" in selectedEvent) {
                                                     setPrice(Number((selectedEvent as IEvent).price));
                                                     setSelectedEventPriced((selectedEvent as any).priced ?? true);
-                                                    setSelectedEventPriceKzt(Number((selectedEvent as any).price || 0));
-                                                    setSelectedEventPriceUsd((selectedEvent as any).price_usd || null);
                                                 }
                                             }}
                                             triggerClassName={"text-white"}
