@@ -517,8 +517,6 @@ export const PaymentForm: FC = () => {
         }
     };
 
-    const formatDate = (date: Date) => date.toISOString().split("T")[0];
-
     useEffect(() => {
         const url = paymentData?.redirect_url;
         if (url && typeof url === "string" && url.length > 0) {
