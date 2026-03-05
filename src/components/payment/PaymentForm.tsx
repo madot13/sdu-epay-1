@@ -652,7 +652,7 @@ export const PaymentForm: FC = () => {
                                             <button
                                                 type="button"
                                                 onClick={() => document.getElementById(`file-${key}`)?.click()}
-                                                className="bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-[#1E40AF] px-4 py-2 text-white font-medium rounded-md transition duration-200 ease-in-out shadow-md hover:shadow-lg cursor-pointer flex items-center gap-2"
+                                                className={`flex items-center justify-between gap-2 rounded-[5px] p-[16px] text-[16px] cursor-pointer select-none border transition-colors w-full text-white bg-[#006799] border-[#6B9AB0] hover:bg-[#004C71] ${(additionalFieldValues[key] as any)?.name ? 'bg-[#006799]' : ''}`}
                                             >
                                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -846,7 +846,7 @@ export const PaymentForm: FC = () => {
                                                                         <button
                                                                             type="button"
                                                                             onClick={() => document.getElementById(`payment-file-${key}`)?.click()}
-                                                                            className="bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-[#1E40AF] px-4 py-2 text-white font-medium rounded-md transition duration-200 ease-in-out shadow-md hover:shadow-lg cursor-pointer flex items-center gap-2"
+                                                                            className={`flex items-center justify-between gap-2 rounded-[5px] p-[16px] text-[16px] cursor-pointer select-none border transition-colors w-full text-white bg-[#006799] border-[#6B9AB0] hover:bg-[#004C71] ${(paymentCategoryAdditionalFieldValues[key] as any)?.name ? 'bg-[#006799]' : ''}`}
                                                                         >
                                                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
