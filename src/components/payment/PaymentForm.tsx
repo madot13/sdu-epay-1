@@ -345,10 +345,20 @@ export const PaymentForm: FC = () => {
                 const converted: Record<string, string | boolean> = {};
                 Object.entries(fields).forEach(([key, value]) => {
                     if (typeof value === 'object' && value !== null && 'name' in value) {
-                        // Для файлов НЕ преобразуем в JSON строку, а извлекаем только имя файла
-                        // Это предотвращает ошибки парсинга в платежном шлюзе
-                        converted[key] = (value as any).name || 'file';
-                        console.log(`🔍 Converting file field ${key}:`, value, '→', converted[key]);
+                        // Для файлов извлекаем только имя файла и очищаем его от спецсимволов
+                        const fileName = (value as any).name || 'file';
+                        // Очищаем имя файла от пробелов и спецсимволов
+                        const cleanFileName = fileName
+                            .replace(/[^a-zA-Z0-9._-]/g, '_') // Заменяем недопустимые символы на _
+                            .replace(/\s+/g, '_') // Заменяем пробелы на _
+                            .substring(0, 100); // Ограничиваем длину
+                        
+                        converted[key] = cleanFileName;
+                        console.log(`🔍 Converting file field ${key}:`, {
+                            original: value,
+                            fileName: fileName,
+                            cleanFileName: cleanFileName
+                        });
                     } else {
                         converted[key] = value;
                     }
