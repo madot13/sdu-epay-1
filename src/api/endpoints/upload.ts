@@ -1,4 +1,4 @@
-import { publicApi } from '@/api';
+import { publicApi } from '@/api/api.ts';
 import { AxiosProgressEvent } from 'axios';
 
 export interface UploadResponse {
