@@ -32,6 +32,7 @@ export interface UpdateEventPayload {
     manager_email: string;
     priced: boolean;
     without_period: boolean;
+    active?: boolean;
     period_from?: string | null;
     period_till?: string | null;
     department_id: string;

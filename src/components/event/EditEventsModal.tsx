@@ -25,9 +25,11 @@ interface EditEventsModalProps {
         without_period: boolean;
         period_from: string;
         period_till: string;
+        active: boolean;
         department: {
             id: string;
             name: string;
+            active: boolean;
         };
         additional_fields?: Record<string, { type: string }>;
     };
@@ -38,19 +40,20 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
     const [selectedManager, setSelectedManager] = useState(eventData.manager_email);
     const [withoutPeriod, setWithoutPeriod] = useState(eventData.without_period);
     const [selectedDepartment, setSelectedDepartment] = useState(eventData.department.id);
+    const [isActive, setIsActive] = useState(eventData.active);
     const [dates, setDates] = useState<Date[] | null>(
         eventData.period_from && eventData.period_till
             ? [new Date(eventData.period_from), new Date(eventData.period_till)]
             : null
     );
     const [additionalFields, setAdditionalFields] = useState<{ name: string; type: string; value?: any }[]>([]);
+    const [departments, setDepartments] = useState<{ label: string; value: string; active: boolean }[]>([]);
     const [errors, setErrors] = useState({
         title: false,
         manager: false,
         department: false,
         dates: false,
     });
-    const [departments, setDepartments] = useState<{ label: string; value: string }[]>([]);
     const [managers, setManagers] = useState<{ label: string; value: string }[]>([]);
 
     const {updateEvent, fetchEvents} = useEventsStore();
@@ -61,11 +64,18 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
             setSelectedManager(eventData.manager_email);
             setWithoutPeriod(eventData.without_period);
             setSelectedDepartment(eventData.department.id);
+            setIsActive(eventData.active);
             setDates(
                 eventData.period_from && eventData.period_till
                     ? [new Date(eventData.period_from), new Date(eventData.period_till)]
                     : null
             );
+            setErrors({
+                title: false,
+                manager: false,
+                department: false,
+                dates: false,
+            });
             const fields = eventData.additional_fields
                 ? Object.entries(eventData.additional_fields).map(([key, value]) => ({
                     name: key,
@@ -84,6 +94,7 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
                 const formatted = response.data.map((dept: Department) => ({
                     label: dept.name,
                     value: dept.id,
+                    active: dept.active,
                 }));
                 setDepartments(formatted);
             } catch (error) {
@@ -163,6 +174,7 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
                 manager_email: selectedManager,
                 department_id: selectedDepartment,
                 without_period: withoutPeriod,
+                active: isActive,
                 priced: false, // Добавляем чтобы бэкенд не требовал цену
                 additional_fields: Object.keys(additional_fields).length > 0 ? additional_fields : undefined,
                 ...(withoutPeriod
@@ -247,6 +259,25 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
                 )}
 
                 <AddAdditionalFields value={additionalFields} onChange={setAdditionalFields} />
+
+                <div className="flex items-center gap-3">
+                    <input
+                        type="checkbox"
+                        id="active"
+                        checked={isActive}
+                        onChange={(e) => setIsActive(e.target.checked)}
+                        disabled={!eventData.department.active}
+                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 disabled:opacity-50"
+                    />
+                    <label htmlFor="active" className="text-sm font-medium text-gray-700">
+                        Активное событие
+                        {!eventData.department.active && (
+                            <span className="ml-2 text-xs text-orange-600">
+                                (Департамент неактивен)
+                            </span>
+                        )}
+                    </label>
+                </div>
 
                 <CustomButton onClick={handleSubmit} className="w-full">
                     Сохранить
