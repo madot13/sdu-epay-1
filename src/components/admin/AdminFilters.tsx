@@ -14,19 +14,37 @@ const roleOptions = [
     { label: "Manager", value: "MANAGER" },
 ];
 
+const activeOptions = [
+    { label: "Все", value: "" },
+    { label: "Активные", value: "true" },
+    { label: "Неактивные", value: "false" }
+];
+
 export const AdminFilters: FC = () => {
     const [email, setEmail] = useState("");
     const [mailSuggestions, setMailSuggestions] = useState<{ username: string; id: string }[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [selectedRole, setSelectedRole] = useState<"SUPER_ADMIN" | "ADMIN" | "MANAGER" | "">("");
+    const [selectedActive, setSelectedActive] = useState<string>("");
 
     const { fetchUsers } = useUsersStore();
 
     const handleSearch = async () => {
-        await fetchUsers({
+        const params: any = {
             username: email || undefined,
             role: selectedRole !== "" ? selectedRole : undefined,
-        });
+        };
+        
+        // Добавляем фильтр активности
+        if (selectedActive === "") {
+            // Для "Все" не добавляем фильтр
+        } else if (selectedActive === "true") {
+            params.active = true;
+        } else if (selectedActive === "false") {
+            params.active = false;
+        }
+        
+        await fetchUsers(params);
     };
 
     const handleSelectEvent = (mail: { username: string; id: string }) => {
@@ -97,6 +115,19 @@ export const AdminFilters: FC = () => {
                         value={selectedRole}
                         onChange={(value: string) => setSelectedRole(value as any)}
                         placeholder="Choose role"
+                        triggerClassName="bg-white w-full sm:w-[150px] h-[37px] text-black text-sm"
+                        dropdownClassName="bg-gray-100"
+                        optionClassName="text-sm"
+                        activeOptionClassName="bg-blue-200"
+                    />
+                </div>
+                <div className="flex flex-col gap-[10px] flex-1 sm:flex-none">
+                    <label className="text-sm">Статус</label>
+                    <CustomSelect
+                        options={activeOptions}
+                        value={selectedActive}
+                        onChange={(value: string) => setSelectedActive(value)}
+                        placeholder="Выберите статус"
                         triggerClassName="bg-white w-full sm:w-[150px] h-[37px] text-black text-sm"
                         dropdownClassName="bg-gray-100"
                         optionClassName="text-sm"

@@ -75,6 +75,7 @@ export const orderSelfHalyk = async (order: Omit<{
 
 export const orderKaspiCustomPrice = async (order: {
     event_id: string;
+    event_payment_type_id?: string;
     fullname: string;
     email: string;
     cellphone: string;
@@ -90,6 +91,7 @@ export const orderKaspiCustomPrice = async (order: {
 
 export const orderHalykCustomPrice = async (order: {
     event_id: string;
+    event_payment_type_id?: string;
     fullname: string;
     email: string;
     cellphone: string;

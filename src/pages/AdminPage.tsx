@@ -27,7 +27,7 @@ export const AdminPage: FC = () => {
     // Update sorted users when original users or sort changes
     useEffect(() => {
         if (!sort) {
-            setSortedUsers(users.filter((user) => user.active));
+            setSortedUsers(users); // Показываем всех пользователей, фильтрация через фильтры
             return;
         }
 
@@ -108,6 +108,19 @@ export const AdminPage: FC = () => {
         { header: "Почта", accessor: "username", sortable: true },
         { header: "Департамент", accessor: "department", sortable: true },
         { header: "Роль", accessor: "role", sortable: true },
+        { 
+            header: "Активный", 
+            accessor: (user: any) => (
+                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    user.active 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                }`}>
+                    {user.active ? 'Да' : 'Нет'}
+                </span>
+            ),
+            sortable: true
+        },
     ];
 
 

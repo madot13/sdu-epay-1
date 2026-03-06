@@ -22,6 +22,7 @@ export interface UserQuery {
     username?: string;
     department_id?: string;
     role?: "SUPER_ADMIN" | "ADMIN" | "MANAGER" | null | undefined;
+    active?: boolean;
     page?: number;
     size?: number;
 }
@@ -32,4 +33,5 @@ export interface UpdateUserPayload {
     password: string | undefined;
     role: string;
     department_id: string;
+    active: boolean;
 }

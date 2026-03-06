@@ -21,6 +21,7 @@ interface EditAdminModalProps {
         username: string;
         name: string;
         role: string;
+        active: boolean;
         department: {
             id: string;
             name: string;
@@ -34,6 +35,7 @@ export const EditAdminModal: FC<EditAdminModalProps> = ({ isOpen, onClose, admin
     const [password, setPassword] = useState("");
     const [selectedRole, setSelectedRole] = useState(adminData.role);
     const [selectedDepartment, setSelectedDepartment] = useState(adminData.department.id);
+    const [isActive, setIsActive] = useState(adminData.active);
     const [departments, setDepartments] = useState<{ label: string; value: string }[]>([]);
     const [errors, setErrors] = useState({
         username: false,
@@ -51,6 +53,7 @@ export const EditAdminModal: FC<EditAdminModalProps> = ({ isOpen, onClose, admin
             setPassword("");
             setSelectedRole(adminData.role);
             setSelectedDepartment(adminData.department.id);
+            setIsActive(adminData.active);
             setErrors({
                 username: false,
                 name: false,
@@ -123,6 +126,7 @@ export const EditAdminModal: FC<EditAdminModalProps> = ({ isOpen, onClose, admin
                 password: password || undefined,
                 role: selectedRole,
                 department_id: selectedDepartment,
+                active: isActive,
             });
 
             await fetchUsers();
@@ -180,6 +184,18 @@ export const EditAdminModal: FC<EditAdminModalProps> = ({ isOpen, onClose, admin
                     optionClassName="text-sm"
                     activeOptionClassName="bg-blue-200"
                 />
+                <div className="flex items-center gap-3">
+                    <input
+                        type="checkbox"
+                        id="active"
+                        checked={isActive}
+                        onChange={(e) => setIsActive(e.target.checked)}
+                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                    />
+                    <label htmlFor="active" className="text-sm font-medium text-gray-700">
+                        Активный пользователь
+                    </label>
+                </div>
                 <CustomButton onClick={handleUpdate} className="w-full">
                     Сохранить изменения
                 </CustomButton>
