@@ -209,7 +209,8 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
             console.log("isActive value being sent:", isActive);
             console.log("Checkbox checked state:", isActive);
 
-            await updateEvent(eventData.id, updatePayload);
+            const response = await updateEvent(eventData.id, updatePayload);
+            console.log("Backend response after update:", response);
 
             await fetchEvents();
 
