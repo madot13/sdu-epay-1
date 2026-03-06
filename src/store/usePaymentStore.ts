@@ -30,7 +30,7 @@ const initialOrder: IOrder = {
     cellphone: '',
     additional: '',
     additional_fields: null,
-    payment_category_id: ''
+    event_payment_type_id: ''
 }
 
 

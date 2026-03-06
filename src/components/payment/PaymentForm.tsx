@@ -220,6 +220,7 @@ export const PaymentForm: FC = () => {
 
     const watchShowInUsd = watch("showInUsd");
     const watchPaymentMethod = watch("paymentMethod");
+
     const watchEventPaymentTypeId = watch("event_payment_type_id");
 
     const [isKaspiDisabled, setIsKaspiDisabled] = useState(false);
@@ -271,8 +272,8 @@ export const PaymentForm: FC = () => {
     }, [paymentCategoryOptions, setValue, setPrice, setIsKztForced, setIsUsdForced, setIsCustomPrice]);
 
     useEffect(() => {
-        if (watchPaymentCategoryId) {
-            const selectedCategory = paymentCategoryOptions.find(opt => opt.value === watchPaymentCategoryId);
+        if (watchEventPaymentTypeId) {
+            const selectedCategory = paymentCategoryOptions.find(opt => opt.value === watchEventPaymentTypeId);
             if (selectedCategory) {
                 const categoryData = selectedCategory as any;
                 
@@ -332,14 +333,14 @@ export const PaymentForm: FC = () => {
             setValue("amount", null);
             setPrice(0);
         }
-    }, [watchPaymentCategoryId, watchShowInUsd, paymentCategoryOptions, setValue, setPrice]);
+    }, [watchEventPaymentTypeId, watchShowInUsd, paymentCategoryOptions, setValue, setPrice]);
 
     useEffect(() => {
-        if (!watchPaymentCategoryId) {
+        if (!watchEventPaymentTypeId) {
             setValue("amount", null);
             setPrice(0);
         }
-    }, [watchPaymentCategoryId, setValue, setPrice]);
+    }, [watchEventPaymentTypeId, setValue, setPrice]);
 
     const handleAdditionalChange = (key: string, value: any) => {
         const formattedValue = value instanceof Date ? formatDate(value) : value;
@@ -1209,8 +1210,8 @@ export const PaymentForm: FC = () => {
                         )}
 
                         {/* showInUsd checkbox — only when both prices or custom price */}
-                        {watchPaymentCategoryId && (() => {
-                            const selectedCategory = paymentCategoryOptions.find(opt => opt.value === watchPaymentCategoryId);
+                        {watchEventPaymentTypeId && (() => {
+                            const selectedCategory = paymentCategoryOptions.find(opt => opt.value === watchEventPaymentTypeId);
                             if (!selectedCategory) return false;
                             const categoryData = selectedCategory as any;
                             const hasBothPrices = categoryData.price > 0 && categoryData.price_usd > 0;
@@ -1231,7 +1232,7 @@ export const PaymentForm: FC = () => {
                                                     const isChecked = e.target.checked;
                                                     field.onChange(isChecked);
 
-                                                    const selectedCategory = paymentCategoryOptions.find(opt => opt.value === watchPaymentCategoryId);
+                                                    const selectedCategory = paymentCategoryOptions.find(opt => opt.value === watchEventPaymentTypeId);
                                                     if (selectedCategory) {
                                                         const categoryData = selectedCategory as any;
                                                         if (isChecked) {
