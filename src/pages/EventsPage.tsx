@@ -25,6 +25,19 @@ export const EventsPage:FC = () => {
         { header: "Email", accessor: "manager_email", sortable: true },
         { header: "Период с", accessor: "period_from", sortable: true },
         { header: "Период по", accessor: "period_till", sortable: true },
+        { 
+            header: "Активный", 
+            accessor: (event: any) => (
+                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    event.active 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                }`}>
+                    {event.active ? 'Да' : 'Нет'}
+                </span>
+            ),
+            sortable: true
+        },
     ];
 
     useEffect(() => {

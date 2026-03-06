@@ -9,6 +9,7 @@ export interface IEvent {
     period_from?: string,
     period_till?: string,
     department_id?: string;
+    active?: boolean;
     additional_fields?: Record<string, any>;
 }
 
@@ -23,6 +24,7 @@ export type EventQuery = {
     department_id?: string | null;
     period_from?: string | null;
     period_to?: string | null;
+    active?: boolean;
 };
 
 export interface UpdateEventPayload {

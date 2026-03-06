@@ -14,8 +14,15 @@ export const EventFilters:FC = () => {
     const [selectedDepartment, setSelectedDepartment] = useState("");
     const [periodFrom, setPeriodFrom] = useState("");
     const [periodTo, setPeriodTo] = useState("");
+    const [activeStatus, setActiveStatus] = useState("");
     const [eventSuggestions, setEventSuggestions] = useState<{title: string, id: string}[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
+
+    const activeOptions = [
+        { label: "Все", value: "" },
+        { label: "Активные", value: "true" },
+        { label: "Неактивные", value: "false" }
+    ];
 
     const {fetchEvents} = useEventsStore();
 
@@ -25,6 +32,7 @@ export const EventFilters:FC = () => {
             department_id: selectedDepartment !== "" ? selectedDepartment : undefined,
             period_from: periodFrom || undefined,
             period_to: periodTo || undefined,
+            active: activeStatus ? activeStatus === "true" : undefined,
             page: 0,
         });
     }
@@ -136,6 +144,18 @@ export const EventFilters:FC = () => {
                         value={periodTo}
                         onChange={(e) => setPeriodTo(e.target.value)}
                         className="bg-white h-[37px] p-2 border border-[#6B9AB0] rounded-[4px] text-sm"
+                    />
+                </div>
+                <div className="flex flex-col gap-[10px] flex-1 sm:flex-none">
+                    <label className="text-sm">Статус</label>
+                    <CustomSelect
+                        options={activeOptions}
+                        value={activeStatus}
+                        onChange={setActiveStatus}
+                        triggerClassName="bg-white w-full sm:min-w-[150px] h-[37px] text-black text-sm border-[#6B9AB0]"
+                        dropdownClassName="bg-gray-100"
+                        optionClassName="text-sm"
+                        activeOptionClassName="bg-blue-200"
                     />
                 </div>
                 <CustomButton
