@@ -75,9 +75,10 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
             filters.department_id = currentDepartment.trim();
         }
 
-        // Явно добавляем active фильтр, даже если это "Все"
+        // Явно добавляем active фильтр
         if (currentActive === "") {
-            // Для "Все" не добавляем фильтр, чтобы получить все записи
+            // Для "Все" отправляем null, чтобы получить все записи
+            filters.active = null;
         } else if (currentActive === "true") {
             filters.active = true;
         } else if (currentActive === "false") {
