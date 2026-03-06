@@ -65,6 +65,8 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
             setWithoutPeriod(eventData.without_period);
             setSelectedDepartment(eventData.department.id);
             setIsActive(eventData.active);
+            console.log("Event data:", eventData);
+            console.log("Department active:", eventData.department?.active);
             setDates(
                 eventData.period_from && eventData.period_till
                     ? [new Date(eventData.period_from), new Date(eventData.period_till)]
@@ -184,6 +186,7 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
             };
 
             console.log("Full update payload:", updatePayload);
+            console.log("isActive value:", isActive);
 
             await updateEvent(eventData.id, updatePayload);
 
@@ -266,12 +269,12 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
                         id="active"
                         checked={isActive}
                         onChange={(e) => setIsActive(e.target.checked)}
-                        disabled={!eventData.department.active}
+                        disabled={!eventData.department?.active}
                         className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 disabled:opacity-50"
                     />
                     <label htmlFor="active" className="text-sm font-medium text-gray-700">
                         Активное событие
-                        {!eventData.department.active && (
+                        {!eventData.department?.active && (
                             <span className="ml-2 text-xs text-orange-600">
                                 (Департамент неактивен)
                             </span>
