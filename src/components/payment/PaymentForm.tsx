@@ -1215,38 +1215,36 @@ export const PaymentForm: FC = () => {
                                 name="showInUsd"
                                 control={control}
                                 render={({ field }) => (
-                                    <div className="flex flex-col gap-2">
-                                        <label className={`flex items-center gap-3 ml-2 cursor-pointer group ${isUsdForced || isKztForced ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                                            <input
-                                                type="checkbox"
-                                                checked={field.value || false}
-                                                onChange={(e) => {
-                                                    if (isUsdForced || isKztForced) return;
-                                                    const isChecked = e.target.checked;
-                                                    field.onChange(isChecked);
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            {...field}
+                                            type="checkbox"
+                                            id="showInUsd"
+                                            checked={field.value || false}
+                                            disabled={isUsdForced || isKztForced}
+                                            onChange={(e) => {
+                                                if (isUsdForced || isKztForced) return;
+                                                const isChecked = e.target.checked;
+                                                field.onChange(isChecked);
 
-                                                    const selectedCategory = paymentCategoryOptions.find(opt => opt.value === watchPaymentCategoryId);
-                                                    if (selectedCategory) {
-                                                        const categoryData = selectedCategory as any;
-                                                        if (isChecked) {
-                                                            setValue("amount", categoryData.price_usd || null);
-                                                            setPrice(categoryData.price_usd || 0);
-                                                            setCurrency("USD");
-                                                        } else {
-                                                            setValue("amount", categoryData.price || null);
-                                                            setPrice(categoryData.price || 0);
-                                                            setCurrency("KZT");
-                                                        }
+                                                const selectedCategory = paymentCategoryOptions.find(opt => opt.value === watchPaymentCategoryId);
+                                                if (selectedCategory) {
+                                                    const categoryData = selectedCategory as any;
+                                                    if (isChecked) {
+                                                        setValue("amount", categoryData.price_usd || null);
+                                                        setPrice(categoryData.price_usd || 0);
+                                                        setCurrency("USD");
+                                                    } else {
+                                                        setValue("amount", categoryData.price || null);
+                                                        setPrice(categoryData.price || 0);
+                                                        setCurrency("KZT");
                                                     }
-                                                }}
-                                                disabled={isUsdForced || isKztForced}
-                                                className="w-4 h-4 rounded accent-[#6B9AB0]"
-                                            />
-                                            <span className="text-black group-hover:text-[#6B9AB0] transition-colors">
-                                                {t('paymentPage.inputs.showInUsd')}
-                                                {isUsdForced && " (только USD)"}
-                                                {isKztForced && " (только KZT)"}
-                                            </span>
+                                                }
+                                            }}
+                                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                                        />
+                                        <label htmlFor="showInUsd" className="text-sm font-medium text-gray-700">
+                                            Pay in USD
                                         </label>
                                     </div>
                                 )}
@@ -1329,34 +1327,42 @@ export const PaymentForm: FC = () => {
                                     <Controller
                                         name="amount"
                                         control={control}
-                                        render={({ field }) => (
-                                            <>
-                                                <CustomInput
-                                                    {...field}
-                                                    disabled={!isCustomPrice || !!watchPaymentCategoryId}
-                                                    icon={watchShowInUsd
-                                                        ? <CurrencyDollarIcon className={errors.amount ? "text-red-500" : "text-[#6B9AB0]"} />
-                                                        : <TengeIcon color={errors.amount ? "#fb2c36" : "#6B9AB0"} />
-                                                    }
-                                                    type="number"
-                                                    onChange={(e) => {
-                                                        field.onChange(e);
-                                                        setOrderField("amount", Number(e.target.value));
-                                                    }}
-                                                    placeholder={
-                                                        watchPaymentCategoryId 
-                                                            ? "Цена установлена в категории платежа"
-                                                            : isCustomPrice 
-                                                                ? "Введите сумму" 
-                                                                : t('paymentPage.inputs.amountPH')
-                                                    }
-                                                    error={errors.amount?.message}
-                                                />
-                                                {errors.amount && (
-                                                    <p className="text-red-500 text-sm -mt-4 ml-2">{errors.amount.message}</p>
-                                                )}
-                                            </>
-                                        )}
+                                        render={({ field }) => {
+                                            // Проверяем есть ли цена в выбранной категории
+                                            const selectedCategory = watchPaymentCategoryId 
+                                                ? paymentCategoryOptions.find(opt => opt.value === watchPaymentCategoryId) as any
+                                                : null;
+                                            const hasFixedPrice = selectedCategory && (selectedCategory.price > 0 || selectedCategory.price_usd > 0);
+                                            
+                                            return (
+                                                <>
+                                                    <CustomInput
+                                                        {...field}
+                                                        disabled={!isCustomPrice || hasFixedPrice}
+                                                        icon={watchShowInUsd
+                                                            ? <CurrencyDollarIcon className={errors.amount ? "text-red-500" : "text-[#6B9AB0]"} />
+                                                            : <TengeIcon color={errors.amount ? "#fb2c36" : "#6B9AB0"} />
+                                                        }
+                                                        type="number"
+                                                        onChange={(e) => {
+                                                            field.onChange(e);
+                                                            setOrderField("amount", Number(e.target.value));
+                                                        }}
+                                                        placeholder={
+                                                            hasFixedPrice
+                                                                ? "Цена фиксирована"
+                                                                : isCustomPrice 
+                                                                    ? "Введите сумму" 
+                                                                    : t('paymentPage.inputs.amountPH')
+                                                        }
+                                                        error={errors.amount?.message}
+                                                    />
+                                                    {errors.amount && (
+                                                        <p className="text-red-500 text-sm -mt-4 ml-2">{errors.amount.message}</p>
+                                                    )}
+                                                </>
+                                            );
+                                        }}
                                     />
                                 )}
 
