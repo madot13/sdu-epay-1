@@ -91,5 +91,5 @@ export interface IOrder {
     additional_fields?: Record<string, any> | null;
     amount?: number;
     currency?: "KZT" | "USD";
-    event_payment_type_id?: string;
+    payment_category_id?: string;
 }

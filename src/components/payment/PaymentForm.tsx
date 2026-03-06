@@ -41,7 +41,7 @@ interface FormValues {
     promo_code: string | null;
     department_id: string;
     event_id: string | null;
-    event_payment_type_id: string | null;
+    payment_category_id: string | null;
     additional: string;
     paymentMethod: string;
     amount: number | null;
@@ -65,7 +65,7 @@ export const usePaymentSchema = (departmentType: DepartmentType | null, eventPri
         event_id: departmentType === "EVENT_BASED"
             ? yup.string().required(t("paymentPage.errors.event_id"))
             : yup.string().optional(),
-        event_payment_type_id: yup.string().optional(),
+        payment_category_id: yup.string().optional(),
         additional: yup.string().optional(),
         paymentMethod: yup.string().required(t("paymentPage.errors.paymentMethod")),
         amount: departmentType === "SELF_PAY" || (departmentType === "EVENT_BASED" && (eventPriced === false || isCustomPrice === true))
@@ -160,7 +160,7 @@ export const PaymentForm: FC = () => {
             cellphone: '',
             department_id: '',
             event_id: '',
-            event_payment_type_id: '',
+            payment_category_id: '',
             additional: '',
             promo_code: null,
             paymentMethod: '',
@@ -220,8 +220,7 @@ export const PaymentForm: FC = () => {
 
     const watchShowInUsd = watch("showInUsd");
     const watchPaymentMethod = watch("paymentMethod");
-
-    const watchEventPaymentTypeId = watch("event_payment_type_id");
+    const watchPaymentCategoryId = watch("payment_category_id");
 
     const [isKaspiDisabled, setIsKaspiDisabled] = useState(false);
     const [isUsdForced, setIsUsdForced] = useState(false);
@@ -236,7 +235,7 @@ export const PaymentForm: FC = () => {
             });
             
             if (mainCategory) {
-                setValue("event_payment_type_id", mainCategory.value);
+                setValue("payment_category_id", mainCategory.value);
                 setSelectedPaymentCategory(mainCategory as any); // Устанавливаем выбранную категорию
                 
                 const price = (mainCategory as any).price || 0;
@@ -272,8 +271,8 @@ export const PaymentForm: FC = () => {
     }, [paymentCategoryOptions, setValue, setPrice, setIsKztForced, setIsUsdForced, setIsCustomPrice]);
 
     useEffect(() => {
-        if (watchEventPaymentTypeId) {
-            const selectedCategory = paymentCategoryOptions.find(opt => opt.value === watchEventPaymentTypeId);
+        if (watchPaymentCategoryId) {
+            const selectedCategory = paymentCategoryOptions.find(opt => opt.value === watchPaymentCategoryId);
             if (selectedCategory) {
                 const categoryData = selectedCategory as any;
                 
@@ -333,14 +332,14 @@ export const PaymentForm: FC = () => {
             setValue("amount", null);
             setPrice(0);
         }
-    }, [watchEventPaymentTypeId, watchShowInUsd, paymentCategoryOptions, setValue, setPrice]);
+    }, [watchPaymentCategoryId, watchShowInUsd, paymentCategoryOptions, setValue, setPrice]);
 
     useEffect(() => {
-        if (!watchEventPaymentTypeId) {
+        if (!watchPaymentCategoryId) {
             setValue("amount", null);
             setPrice(0);
         }
-    }, [watchEventPaymentTypeId, setValue, setPrice]);
+    }, [watchPaymentCategoryId, setValue, setPrice]);
 
     const handleAdditionalChange = (key: string, value: any) => {
         const formattedValue = value instanceof Date ? formatDate(value) : value;
@@ -456,7 +455,7 @@ export const PaymentForm: FC = () => {
 
                     // Гарантируем, что в запрос уходит сумма именно из выбранной категории
                     let finalAmount = amount ?? null;
-                    if (selectedPaymentCategory && data.event_payment_type_id === selectedPaymentCategory.value) {
+                    if (selectedPaymentCategory && data.payment_category_id === selectedPaymentCategory.value) {
                         const categoryData = selectedPaymentCategory as any;
                         if (currency === "USD" && categoryData.price_usd) {
                             finalAmount = Number(categoryData.price_usd);
@@ -469,10 +468,10 @@ export const PaymentForm: FC = () => {
                     // Сразу используем kaspi-custom-price с суммой из категории.
                     const currentEvent = eventOptions.find((e: Option) => e.value === currentEventId) as any;
                     const eventHasNoDirectPrice = currentEvent && Number(currentEvent?.price || 0) === 0 && (currentEvent?.price_usd == null || Number(currentEvent?.price_usd) === 0);
-                    const useCustomPriceDirectly = eventHasNoDirectPrice && data.event_payment_type_id && selectedPaymentCategory && (finalAmount ?? 0) > 0;
+                    const useCustomPriceDirectly = eventHasNoDirectPrice && data.payment_category_id && selectedPaymentCategory && (finalAmount ?? 0) > 0;
 
                     // #region agent log
-                    debugLog("PaymentForm.tsx:kaspi-branch", "kaspi priced branch", { hypothesisId: "K1", currentEventId, eventOptionsLen: eventOptions.length, currentEventFound: !!currentEvent, currentEventPrice: currentEvent?.price, currentEventPriceUsd: currentEvent?.price_usd, eventHasNoDirectPrice, useCustomPriceDirectly, finalAmount, hasPaymentCategoryId: !!data.event_payment_type_id });
+                    debugLog("PaymentForm.tsx:kaspi-branch", "kaspi priced branch", { hypothesisId: "K1", currentEventId, eventOptionsLen: eventOptions.length, currentEventFound: !!currentEvent, currentEventPrice: currentEvent?.price, currentEventPriceUsd: currentEvent?.price_usd, eventHasNoDirectPrice, useCustomPriceDirectly, finalAmount, hasPaymentCategoryId: !!data.payment_category_id });
                     // #endregion
 
                     if (useCustomPriceDirectly) {
@@ -484,7 +483,6 @@ export const PaymentForm: FC = () => {
                             const kaspiData = await orderKaspiCustomPrice({
                                 ...dataWithoutPaymentMethodAndDepartment,
                                 event_id: data.event_id!,
-                                event_payment_type_id: data.event_payment_type_id || undefined,
                                 amount: finalAmount!,
                                 currency: "KZT"  // Kaspi только KZT
                             });
@@ -542,7 +540,6 @@ export const PaymentForm: FC = () => {
                                 const kaspiData = await orderKaspiCustomPrice({
                                     ...dataWithoutPaymentMethodAndDepartment,
                                     event_id: data.event_id!,
-                                    event_payment_type_id: data.event_payment_type_id || undefined,
                                     amount: finalAmount ?? 0,
                                     currency: "KZT"  // Kaspi только KZT
                                 });
@@ -567,15 +564,15 @@ export const PaymentForm: FC = () => {
                 } else if (data.paymentMethod === "HalykBank") {
                     if (selectedEventPriced === false || isCustomPrice) {
                         // Только для произвольных цен БЕЗ категорий платежа
-                        if (data.event_payment_type_id) {
-                            // Если есть категория - отправляем реальный event_id
-                            console.log("🔍 Using orderHalyk endpoint (with category, real event_id)");
+                        if (data.payment_category_id) {
+                            // Если есть категория - используем обычный эндпоинт с event_id: null
+                            console.log("🔍 Using orderHalyk endpoint (with category, event_id: null)");
                             // eslint-disable-next-line @typescript-eslint/no-unused-vars
                             const { paymentMethod, department_id, showInUsd, ...dataWithoutPaymentMethodAndDepartment } = payload;
                             try {
                                 const halykData = await orderHalyk({
                                     ...dataWithoutPaymentMethodAndDepartment,
-                                    event_id: currentEventId,  // Отправляем реальный ID события
+                                    event_id: null,  // Явно устанавливаем null для категорий
                                     currency
                                 });
                                 setPaymentData(halykData);
@@ -596,7 +593,6 @@ export const PaymentForm: FC = () => {
                             const halykData = await orderHalykCustomPrice({
                                 ...customPriceData,
                                 event_id: customPriceData.event_id!,
-                                event_payment_type_id: customPriceData.event_payment_type_id || undefined,
                                 amount: customPriceData.amount!,
                                 currency
                             });
@@ -617,7 +613,7 @@ export const PaymentForm: FC = () => {
 
                         // Гарантируем, что в запрос уходит сумма именно из выбранной категории
                         let finalAmount = amount ?? null;
-                        if (selectedPaymentCategory && data.event_payment_type_id === selectedPaymentCategory.value) {
+                        if (selectedPaymentCategory && data.payment_category_id === selectedPaymentCategory.value) {
                             const categoryData = selectedPaymentCategory as any;
                             if (currency === "USD" && categoryData.price_usd) {
                                 finalAmount = Number(categoryData.price_usd);
@@ -630,10 +626,10 @@ export const PaymentForm: FC = () => {
                         // Сразу используем event-custom-price с суммой из категории.
                         const currentEvent = eventOptions.find((e: Option) => e.value === currentEventId) as any;
                         const eventHasNoDirectPrice = currentEvent && Number(currentEvent?.price || 0) === 0 && (currentEvent?.price_usd == null || Number(currentEvent?.price_usd) === 0);
-                        const useCustomPriceDirectly = eventHasNoDirectPrice && data.event_payment_type_id && selectedPaymentCategory && (finalAmount ?? 0) > 0;
+                        const useCustomPriceDirectly = eventHasNoDirectPrice && data.payment_category_id && selectedPaymentCategory && (finalAmount ?? 0) > 0;
 
                         // #region agent log
-                        debugLog("PaymentForm.tsx:halyk-branch", "halyk priced branch", { hypothesisId: "H1", currentEventId, eventOptionsLen: eventOptions.length, currentEventFound: !!currentEvent, currentEventPrice: currentEvent?.price, currentEventPriceUsd: currentEvent?.price_usd, eventHasNoDirectPrice, useCustomPriceDirectly, finalAmount, hasPaymentCategoryId: !!data.event_payment_type_id });
+                        debugLog("PaymentForm.tsx:halyk-branch", "halyk priced branch", { hypothesisId: "H1", currentEventId, eventOptionsLen: eventOptions.length, currentEventFound: !!currentEvent, currentEventPrice: currentEvent?.price, currentEventPriceUsd: currentEvent?.price_usd, eventHasNoDirectPrice, useCustomPriceDirectly, finalAmount, hasPaymentCategoryId: !!data.payment_category_id });
                         // #endregion
 
                         if (useCustomPriceDirectly) {
@@ -645,8 +641,7 @@ export const PaymentForm: FC = () => {
                                 const halykData = await orderHalykCustomPrice({
                                     ...dataWithoutPaymentMethodAndDepartment,
                                     event_id: data.event_id!,
-                                    event_payment_type_id: data.event_payment_type_id || undefined,
-                                    amount: finalAmount || 0,
+                                    amount: finalAmount!,
                                     currency
                                 });
                                 // #region agent log
@@ -705,7 +700,6 @@ export const PaymentForm: FC = () => {
                                     const halykData = await orderHalykCustomPrice({
                                         ...dataWithoutPaymentMethodAndDepartment,
                                         event_id: data.event_id!,
-                                        event_payment_type_id: data.event_payment_type_id || undefined,
                                         amount: finalAmount ?? 0,
                                         currency
                                     });
@@ -857,8 +851,8 @@ export const PaymentForm: FC = () => {
                                     setSelectedEventPriced(null);
                                     setPrice(0);
 
-                                    setValue("event_payment_type_id", null);
-                                    setOrderField("event_payment_type_id", "");
+                                    setValue("payment_category_id", null);
+                                    setOrderField("payment_category_id", "");
                                     setPaymentCategoryOptions([]);
                                     setPaymentCategoryAdditionalFields([]);
                                     setPaymentCategoryAdditionalFieldValues({});
@@ -1058,7 +1052,7 @@ export const PaymentForm: FC = () => {
                         {/* Payment category select */}
                         {currentEventId && paymentCategoryOptions.length > 0 && (
                             <Controller
-                                name="event_payment_type_id"
+                                name="payment_category_id"
                                 control={control}
                                 render={({ field }) => (
                                     <>
@@ -1068,7 +1062,7 @@ export const PaymentForm: FC = () => {
                                             value={field.value || ''}
                                             onChange={(val) => {
                                                 field.onChange(val);
-                                                setOrderField("event_payment_type_id", val);
+                                                setOrderField("payment_category_id", val);
 
                                                 const selectedCategory = paymentCategoryOptions.find(opt => opt.value === val);
                                                 console.log("🔍 Selected category from options:", selectedCategory);
@@ -1094,10 +1088,10 @@ export const PaymentForm: FC = () => {
                                             }}
                                             triggerClassName={"text-white"}
                                             placeholder={t('paymentPage.inputs.selectPaymentTypePH')}
-                                            error={errors.event_payment_type_id?.message}
+                                            error={errors.payment_category_id?.message}
                                         />
-                                        {errors.event_payment_type_id && (
-                                            <p className="text-red-500 text-sm -mt-2 ml-2">{errors.event_payment_type_id.message}</p>
+                                        {errors.payment_category_id && (
+                                            <p className="text-red-500 text-sm -mt-2 ml-2">{errors.payment_category_id.message}</p>
                                         )}
                                     </>
                                 )}
@@ -1210,8 +1204,8 @@ export const PaymentForm: FC = () => {
                         )}
 
                         {/* showInUsd checkbox — only when both prices or custom price */}
-                        {watchEventPaymentTypeId && (() => {
-                            const selectedCategory = paymentCategoryOptions.find(opt => opt.value === watchEventPaymentTypeId);
+                        {watchPaymentCategoryId && (() => {
+                            const selectedCategory = paymentCategoryOptions.find(opt => opt.value === watchPaymentCategoryId);
                             if (!selectedCategory) return false;
                             const categoryData = selectedCategory as any;
                             const hasBothPrices = categoryData.price > 0 && categoryData.price_usd > 0;
@@ -1232,7 +1226,7 @@ export const PaymentForm: FC = () => {
                                                     const isChecked = e.target.checked;
                                                     field.onChange(isChecked);
 
-                                                    const selectedCategory = paymentCategoryOptions.find(opt => opt.value === watchEventPaymentTypeId);
+                                                    const selectedCategory = paymentCategoryOptions.find(opt => opt.value === watchPaymentCategoryId);
                                                     if (selectedCategory) {
                                                         const categoryData = selectedCategory as any;
                                                         if (isChecked) {
