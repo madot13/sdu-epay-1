@@ -1217,7 +1217,6 @@ export const PaymentForm: FC = () => {
                                 render={({ field }) => (
                                     <div className="flex items-center gap-2">
                                         <input
-                                            {...field}
                                             type="checkbox"
                                             id="showInUsd"
                                             checked={field.value || false}
