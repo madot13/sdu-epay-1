@@ -8,6 +8,7 @@ export const orderKaspi = async (order: Omit<{
     promo_code: string | null;
     department_id: string;
     event_id: string | null;
+    event_payment_type_id?: string | null;
     additional: string;
     paymentMethod: string;
     amount?: number | null;
@@ -26,6 +27,7 @@ export const orderHalyk = async (order: Omit<{
     promo_code: string | null;
     department_id: string;
     event_id: string | null;
+    event_payment_type_id?: string | null;
     additional: string;
     paymentMethod: string;
     amount?: number | null;
@@ -75,6 +77,7 @@ export const orderSelfHalyk = async (order: Omit<{
 
 export const orderKaspiCustomPrice = async (order: {
     event_id: string;
+    event_payment_type_id?: string | null;
     fullname: string;
     email: string;
     cellphone: string;
@@ -90,6 +93,7 @@ export const orderKaspiCustomPrice = async (order: {
 
 export const orderHalykCustomPrice = async (order: {
     event_id: string;
+    event_payment_type_id?: string | null;
     fullname: string;
     email: string;
     cellphone: string;
