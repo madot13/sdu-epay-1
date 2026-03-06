@@ -77,8 +77,8 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
 
         // Явно добавляем active фильтр
         if (currentActive === "") {
-            // Для "Все" отправляем null, чтобы получить все записи
-            filters.active = null;
+            // Для "Все" отправляем пустую строку, чтобы обойти фильтрацию
+            filters.active = "";
         } else if (currentActive === "true") {
             filters.active = true;
         } else if (currentActive === "false") {
