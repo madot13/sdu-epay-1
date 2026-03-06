@@ -24,6 +24,8 @@ export const FileUpload: FC<FileUploadProps> = ({
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleFileSelect = async (file: File) => {
+        console.log("🔍 FileUpload handleFileSelect called:", { fileName: file.name, size: file.size });
+        
         // Check file size
         if (file.size > maxSize * 1024 * 1024) {
             alert(`Файл слишком большой. Максимальный размер: ${maxSize}MB`);
@@ -65,7 +67,9 @@ export const FileUpload: FC<FileUploadProps> = ({
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        console.log("🔍 FileUpload handleInputChange called");
         const file = e.target.files?.[0];
+        console.log("🔍 Selected file:", file);
         if (file) {
             handleFileSelect(file);
         }
