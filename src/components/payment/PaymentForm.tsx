@@ -464,14 +464,12 @@ export const PaymentForm: FC = () => {
                         }
                     }
 
-                    // Событие с ценой только в категории (у события price=0, price_usd=null) — бэкенд /kaspi отклонит.
-                    // Сразу используем kaspi-custom-price с суммой из категории.
-                    const currentEvent = eventOptions.find((e: Option) => e.value === currentEventId) as any;
-                    const eventHasNoDirectPrice = currentEvent && Number(currentEvent?.price || 0) === 0 && (currentEvent?.price_usd == null || Number(currentEvent?.price_usd) === 0);
-                    const useCustomPriceDirectly = eventHasNoDirectPrice && data.event_payment_type_id && selectedPaymentCategory && (finalAmount ?? 0) > 0;
+                    // Если есть категория с ценой, используем обычный эндпоинт kaspi
+                    // Custom price только для произвольных сумм без категорий
+                    const useCustomPriceDirectly = false; // Отключаем custom price для категорий
 
                     // #region agent log
-                    debugLog("PaymentForm.tsx:kaspi-branch", "kaspi priced branch", { hypothesisId: "K1", currentEventId, eventOptionsLen: eventOptions.length, currentEventFound: !!currentEvent, currentEventPrice: currentEvent?.price, currentEventPriceUsd: currentEvent?.price_usd, eventHasNoDirectPrice, useCustomPriceDirectly, finalAmount, hasPaymentCategoryId: !!data.event_payment_type_id });
+                    debugLog("PaymentForm.tsx:kaspi-branch", "kaspi priced branch", { hypothesisId: "K1", currentEventId, eventOptionsLen: eventOptions.length, useCustomPriceDirectly, finalAmount, hasPaymentCategoryId: !!data.event_payment_type_id });
                     // #endregion
 
                     if (useCustomPriceDirectly) {
@@ -624,14 +622,12 @@ export const PaymentForm: FC = () => {
                             }
                         }
 
-                        // Событие с ценой только в категории (у события price=0, price_usd=null) — бэкенд /epay отклонит.
-                        // Сразу используем event-custom-price с суммой из категории.
-                        const currentEvent = eventOptions.find((e: Option) => e.value === currentEventId) as any;
-                        const eventHasNoDirectPrice = currentEvent && Number(currentEvent?.price || 0) === 0 && (currentEvent?.price_usd == null || Number(currentEvent?.price_usd) === 0);
-                        const useCustomPriceDirectly = eventHasNoDirectPrice && data.event_payment_type_id && selectedPaymentCategory && (finalAmount ?? 0) > 0;
+                        // Если есть категория с ценой, используем обычный эндпоинт halyk
+                        // Custom price только для произвольных сумм без категорий
+                        const useCustomPriceDirectly = false; // Отключаем custom price для категорий
 
                         // #region agent log
-                        debugLog("PaymentForm.tsx:halyk-branch", "halyk priced branch", { hypothesisId: "H1", currentEventId, eventOptionsLen: eventOptions.length, currentEventFound: !!currentEvent, currentEventPrice: currentEvent?.price, currentEventPriceUsd: currentEvent?.price_usd, eventHasNoDirectPrice, useCustomPriceDirectly, finalAmount, hasPaymentCategoryId: !!data.event_payment_type_id });
+                        debugLog("PaymentForm.tsx:halyk-branch", "halyk priced branch", { hypothesisId: "H1", currentEventId, eventOptionsLen: eventOptions.length, useCustomPriceDirectly, finalAmount, hasPaymentCategoryId: !!data.event_payment_type_id });
                         // #endregion
 
                         if (useCustomPriceDirectly) {
@@ -1337,7 +1333,7 @@ export const PaymentForm: FC = () => {
                                             <>
                                                 <CustomInput
                                                     {...field}
-                                                    disabled={!isCustomPrice}
+                                                    disabled={!isCustomPrice || !!watchPaymentCategoryId}
                                                     icon={watchShowInUsd
                                                         ? <CurrencyDollarIcon className={errors.amount ? "text-red-500" : "text-[#6B9AB0]"} />
                                                         : <TengeIcon color={errors.amount ? "#fb2c36" : "#6B9AB0"} />
@@ -1347,7 +1343,13 @@ export const PaymentForm: FC = () => {
                                                         field.onChange(e);
                                                         setOrderField("amount", Number(e.target.value));
                                                     }}
-                                                    placeholder={isCustomPrice ? "Введите сумму" : t('paymentPage.inputs.amountPH')}
+                                                    placeholder={
+                                                        watchPaymentCategoryId 
+                                                            ? "Цена установлена в категории платежа"
+                                                            : isCustomPrice 
+                                                                ? "Введите сумму" 
+                                                                : t('paymentPage.inputs.amountPH')
+                                                    }
                                                     error={errors.amount?.message}
                                                 />
                                                 {errors.amount && (
