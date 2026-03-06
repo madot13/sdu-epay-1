@@ -78,7 +78,7 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
                 department: false,
                 dates: false,
             });
-            const fields = eventData.additional_fields
+            const fields = eventData.additional_fields && eventData.additional_fields !== null
                 ? Object.entries(eventData.additional_fields).map(([key, value]) => ({
                     name: key,
                     type: value.type,
@@ -187,19 +187,23 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
                 }
             });
 
-            const updatePayload = {
+            const updatePayload: any = {
                 title,
                 manager_email: selectedManager,
                 department_id: selectedDepartment,
                 without_period: withoutPeriod,
                 active: isActive,
                 priced: false, // Добавляем чтобы бэкенд не требовал цену
-                additional_fields: Object.keys(additional_fields).length > 0 ? additional_fields : undefined,
                 ...(withoutPeriod
                     ? {}
                     : { period_from: from!, period_till: till! }
                 ),
             };
+
+            // Only add additional_fields if it has content
+            if (Object.keys(additional_fields).length > 0) {
+                updatePayload.additional_fields = additional_fields;
+            }
 
             console.log("Full update payload:", updatePayload);
             console.log("isActive value:", isActive);
