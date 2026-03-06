@@ -1011,12 +1011,7 @@ export const PaymentForm: FC = () => {
                                                 const eventPriceUsd = Number(eventData.price_usd || 0);
                                                 setPrice(eventPrice);
 
-                                                // Используем флаг priced от бэкенда, если он есть.
-                                                // Если его нет, считаем событие платным, если есть цена в любой валюте.
-                                                const isPricedFlag =
-                                                    typeof eventData.priced === "boolean"
-                                                        ? eventData.priced
-                                                        : eventPrice > 0 || eventPriceUsd > 0;
+                                                const isPricedFlag = eventPrice > 0 || eventPriceUsd > 0;
 
                                                 setSelectedEventPriced(isPricedFlag);
                                             }
