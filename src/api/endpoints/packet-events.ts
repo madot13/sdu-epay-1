@@ -3,7 +3,9 @@ import { IEventRecord, CreateEventPayload } from "@/types/packetevents";
 
 export const packetEventsApi = {
     getAll: async (params?: any) => {
+        console.log("🔍 API Call packetEventsApi.getAll with params:", params);
         const response = await publicApi.get<IEventRecord[]>('event-payment-types', { params });
+        console.log("🔍 API Response:", response.data);
         return response.data;
     },
     create: (data: CreateEventPayload) => api.post('event-payment-types', data),

@@ -86,6 +86,8 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
         }
 
         console.log("🔍 Prepared filters:", filters);
+        console.log("🔍 currentActive value:", currentActive);
+        console.log("🔍 filters.active value:", filters.active);
         onSearch(filters);
     };
 
