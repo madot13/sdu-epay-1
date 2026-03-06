@@ -15,13 +15,13 @@ interface EditDepartmentModalProps {
         id:string;
         name: string;
         active?: boolean;
-        additional_fields?: Record<string, { type: string }>;
+        additional_fields?: Record<string, { type: string; value?: any }>;
     },
 }
 
 
 export const EditDepartmentModal: FC<EditDepartmentModalProps> = ({isOpen, onClose, departmentData}) => {
-    const [additionalFields, setAdditionalFields] = useState<{ name: string; type: string }[]>([]);
+    const [additionalFields, setAdditionalFields] = useState<{ name: string; type: string; value?: any }[]>([]);
     const [name, setName] = useState(departmentData.name);
     const [active, setActive] = useState(departmentData.active !== false);
 
@@ -32,19 +32,54 @@ export const EditDepartmentModal: FC<EditDepartmentModalProps> = ({isOpen, onClo
             setName(departmentData.name);
             setActive(departmentData.active !== false);
             const fields = departmentData.additional_fields
-                ? Object.entries(departmentData.additional_fields).map(([key, value]) => ({
-                    name: key,
-                    type: value.type,
-                }))
+                ? Object.entries(departmentData.additional_fields).map(([key, value]) => {
+                    const field: { name: string; type: string; value?: any } = {
+                        name: key,
+                        type: value.type,
+                    };
+                    
+                    // If it's a file type and value doesn't exist, create empty value object
+                    if (value.type === 'file' && !value.value) {
+                        field.value = {
+                            url: "",
+                            key: "",
+                            bucket: "",
+                            filename: "",
+                            content_type: "",
+                            size: 0
+                        };
+                    } else if (value.value !== undefined) {
+                        field.value = value.value;
+                    }
+                    
+                    return field;
+                })
                 : [];
             setAdditionalFields(fields);
         }
     }, [isOpen, departmentData]);
 
     const handleUpdate = async () => {
-        const additional_fields: Record<string, { type: string }> = {};
+        const additional_fields: Record<string, { type: string; value?: any }> = {};
         additionalFields.forEach((field) => {
-            additional_fields[field.name] = { type: field.type };
+            const fieldData: { type: string; value?: any } = { type: field.type };
+            
+            if (field.type === 'file') {
+                // For file types, always include a value object (even if empty)
+                fieldData.value = field.value || {
+                    url: "",
+                    key: "",
+                    bucket: "",
+                    filename: "",
+                    content_type: "",
+                    size: 0
+                };
+            } else if (field.value !== undefined) {
+                // For other types, include value only if it exists
+                fieldData.value = field.value;
+            }
+            
+            additional_fields[field.name] = fieldData;
         });
 
         try {

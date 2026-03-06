@@ -164,10 +164,26 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
             const additional_fields: Record<string, any> = {};
             additionalFields.forEach((field) => {
                 if (field.name.trim() && field.type) {
-                    additional_fields[field.name] = {
-                        type: field.type,
-                        ...(field.value && { value: field.value })
-                    };
+                    if (field.type === 'file') {
+                        // Для file типа всегда включаем value, даже если пустое
+                        additional_fields[field.name] = {
+                            type: field.type,
+                            value: field.value || {
+                                url: "",
+                                key: "",
+                                bucket: "",
+                                filename: "",
+                                content_type: "",
+                                size: 0
+                            }
+                        };
+                    } else {
+                        // Для остальных типов включаем value только если оно есть
+                        additional_fields[field.name] = {
+                            type: field.type,
+                            ...(field.value && { value: field.value })
+                        };
+                    }
                 }
             });
 
