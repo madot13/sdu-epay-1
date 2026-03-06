@@ -1,21 +1,25 @@
 import { FC, useRef, useState } from "react";
 import { CloudArrowUpIcon } from "@heroicons/react/24/outline";
+import { uploadFileToMinio, UploadResponse } from "@/api/endpoints/upload.ts";
 
 interface FileUploadProps {
     onChange: (file: File | null, url?: string) => void;
     placeholder?: string;
     accept?: string;
     maxSize?: number; // in MB
+    folder?: string; // folder path in MinIO
 }
 
 export const FileUpload: FC<FileUploadProps> = ({
     onChange,
     placeholder = "Выберите файл",
     accept = "*/*",
-    maxSize = 10
+    maxSize = 10,
+    folder = "payments"
 }) => {
     const [isDragging, setIsDragging] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
     const [fileName, setFileName] = useState<string>("");
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -28,17 +32,27 @@ export const FileUpload: FC<FileUploadProps> = ({
 
         setFileName(file.name);
         setUploading(true);
+        setUploadProgress(0);
 
         try {
-            // Здесь будет загрузка в MiniO
-            // Временно создаем локальный URL
-            const url = URL.createObjectURL(file);
-            onChange(file, url);
+            // Загружаем файл в MinIO
+            const uploadResponse: UploadResponse = await uploadFileToMinio(
+                file, 
+                folder,
+                (progress) => setUploadProgress(progress)
+            );
+            
+            console.log("File uploaded successfully:", uploadResponse);
+            onChange(file, uploadResponse.url);
         } catch (error) {
             console.error("File upload error:", error);
-            alert("Ошибка загрузки файла");
+            alert("Ошибка загрузки файла в MinIO");
+            // В случае ошибки, откатываем изменения
+            setFileName("");
+            onChange(null);
         } finally {
             setUploading(false);
+            setUploadProgress(0);
         }
     };
 
@@ -106,6 +120,17 @@ export const FileUpload: FC<FileUploadProps> = ({
                     <p className="mt-2 text-sm text-gray-600">
                         {uploading ? "Загрузка..." : placeholder}
                     </p>
+                    {uploading && (
+                        <div className="mt-2">
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div 
+                                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                    style={{ width: `${uploadProgress}%` }}
+                                ></div>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1">{uploadProgress}%</p>
+                        </div>
+                    )}
                     <p className="text-xs text-gray-500">
                         Макс. размер: {maxSize}MB
                     </p>

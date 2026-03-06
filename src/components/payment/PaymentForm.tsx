@@ -368,20 +368,30 @@ export const PaymentForm: FC = () => {
                 currency = "USD";
             }
 
-            const convertAdditionalFields = (fields: Record<string, string | boolean | { name: string; size: number; type: string; lastModified: number }>): Record<string, string | boolean> => {
+            const convertAdditionalFields = (fields: Record<string, string | boolean | { file: File; url: string; name: string; size: number; type: string; lastModified: number }>): Record<string, string | boolean> => {
                 const converted: Record<string, string | boolean> = {};
                 Object.entries(fields).forEach(([key, value]) => {
-                    if (typeof value === 'object' && value !== null && 'name' in value) {
+                    if (typeof value === 'object' && value !== null && 'file' in value && 'url' in value) {
+                        // Для загруженных файлов отправляем только URL из MinIO
+                        const fileData = value as any;
+                        converted[key] = fileData.url || '';
+                        console.log(`🔍 Converting file field ${key}:`, { url: fileData.url, fileName: fileData.file?.name });
+                    } else if (typeof value === 'object' && value !== null && 'name' in value) {
+                        // Фоллбэк для старого формата (если есть)
                         const fileName = (value as any).name || 'file';
                         const cleanFileName = fileName
                             .replace(/[^a-zA-Z0-9._-]/g, '_')
                             .replace(/\s+/g, '_')
                             .substring(0, 100);
                         converted[key] = cleanFileName;
-                    } else {
+                    } else if (typeof value === 'string' || typeof value === 'boolean' || typeof value === 'number') {
                         converted[key] = value;
+                    } else {
+                        // Для других типов объектов преобразуем в строку
+                        converted[key] = String(value);
                     }
                 });
+                console.log("🔍 Converted additional fields:", converted);
                 return converted;
             };
 
