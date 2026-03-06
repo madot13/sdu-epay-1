@@ -144,8 +144,8 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                 email: selectedManager,
                 category: category || undefined,
                 priced: !withoutFixedPrice,
-                price: withoutFixedPrice ? 0 : price,
-                price_usd: withoutFixedPrice ? 0 : (priceUsd > 0 ? priceUsd : undefined),
+                price: withoutFixedPrice ? null : price,
+                price_usd: withoutFixedPrice ? null : (priceUsd > 0 ? priceUsd : undefined),
                 is_main: isMain, // Используем is_main для соответствия бэкенду
                 additional_fields: Object.keys(allAdditionalFields).length > 0 ? allAdditionalFields : undefined
             });

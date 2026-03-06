@@ -8,8 +8,8 @@ export interface IEventRecord {
     department_id?: string;
     email: string;
     category?: string;
-    price?: number;
-    price_usd?: number;
+    price?: number | null;
+    price_usd?: number | null;
     priced?: boolean;
     active?: boolean;
     event_active?: boolean; // API может возвращать event_active

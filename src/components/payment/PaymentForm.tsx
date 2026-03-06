@@ -276,13 +276,14 @@ export const PaymentForm: FC = () => {
             if (selectedCategory) {
                 const categoryData = selectedCategory as any;
                 
-                const price = categoryData.price || 0;
-                const priceUsd = categoryData.price_usd || 0;
+                const price = categoryData.price ?? 0;
+                const priceUsd = categoryData.price_usd ?? 0;
                 
                 const hasOnlyKzt = price > 0 && priceUsd === 0;
                 const hasOnlyUsd = price === 0 && priceUsd > 0;
                 const hasBothPrices = price > 0 && priceUsd > 0;
-                const hasCustomPrice = price === 0 && priceUsd === 0;
+                // Произвольная цена если price или price_usd равны null
+                const hasCustomPrice = price === null || priceUsd === null;
                 
                 setIsUsdForced(false);
                 setIsKztForced(false);
@@ -1208,7 +1209,8 @@ export const PaymentForm: FC = () => {
                             if (!selectedCategory) return false;
                             const categoryData = selectedCategory as any;
                             const hasBothPrices = categoryData.price > 0 && categoryData.price_usd > 0;
-                            const hasCustomPrice = categoryData.price === 0 && categoryData.price_usd === 0;
+                            // Произвольная цена если price или price_usd равны null
+                            const hasCustomPrice = categoryData.price === null || categoryData.price_usd === null;
                             return hasBothPrices || hasCustomPrice;
                         })() && (
                             <Controller
@@ -1331,7 +1333,8 @@ export const PaymentForm: FC = () => {
                                             const selectedCategory = watchPaymentCategoryId 
                                                 ? paymentCategoryOptions.find(opt => opt.value === watchPaymentCategoryId) as any
                                                 : null;
-                                            const hasFixedPrice = selectedCategory && (selectedCategory.price > 0 || selectedCategory.price_usd > 0);
+                                            // Произвольная цена если price или price_usd равны null
+                                            const hasFixedPrice = selectedCategory && selectedCategory.price !== null && selectedCategory.price_usd !== null && (selectedCategory.price > 0 || selectedCategory.price_usd > 0);
                                             
                                             return (
                                                 <>
