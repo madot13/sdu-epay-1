@@ -11,7 +11,7 @@ interface EventsState {
     error: string | null;
     fetchEvents: (query?:EventQuery) => Promise<void>;
     addEvent: (event: CreateEventPayload) => Promise<void>;
-    updateEvent: (id: string, payload: UpdateEventPayload) => Promise<void>;
+    updateEvent: (id: string, payload: UpdateEventPayload) => Promise<IEvent>;
     deleteEvent: (id: string) => Promise<void>;
 }
 
@@ -57,7 +57,8 @@ export const useEventsStore = create<EventsState>((set) => ({
     updateEvent: async (id, payload) => {
         set({loading:true, error: null});
         try{
-            await updateEvent(id, payload);
+            const response = await updateEvent(id, payload);
+            return response;
         }catch (err){
             const message = err instanceof Error ? err.message : String(err);
             set({ error: message, loading: false });
