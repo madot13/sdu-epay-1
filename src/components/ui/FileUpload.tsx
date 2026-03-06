@@ -35,21 +35,29 @@ export const FileUpload: FC<FileUploadProps> = ({
         setUploadProgress(0);
 
         try {
+            console.log("🔍 Starting file upload to MinIO:", { fileName: file.name, size: file.size, type: file.type, folder });
+            
             // Загружаем файл в MinIO
             const uploadResponse: UploadResponse = await uploadFileToMinio(
                 file, 
                 folder,
-                (progress) => setUploadProgress(progress)
+                (progress) => {
+                    console.log("🔍 Upload progress:", progress + "%");
+                    setUploadProgress(progress);
+                }
             );
             
-            console.log("File uploaded successfully:", uploadResponse);
+            console.log("🔍 File uploaded successfully to MinIO:", uploadResponse);
             onChange(file, uploadResponse.url);
         } catch (error) {
-            console.error("File upload error:", error);
-            alert("Ошибка загрузки файла в MinIO");
-            // В случае ошибки, откатываем изменения
-            setFileName("");
-            onChange(null);
+            console.error("🔍 File upload error:", error);
+            console.log("🔍 Falling back to local URL (temporary)");
+            
+            // Временный фоллбэк, если MinIO недоступен
+            const localUrl = URL.createObjectURL(file);
+            onChange(file, localUrl);
+            
+            alert("Внимание: файл загружен локально. Сервер хранения файлов временно недоступен.");
         } finally {
             setUploading(false);
             setUploadProgress(0);
