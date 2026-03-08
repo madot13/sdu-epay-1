@@ -20,7 +20,7 @@ export const PacketEventsPage: FC = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedItem, setSelectedItem] = useState<IEventRecord | null>(null);
-    const [filters, setFilters] = useState<any>({ active: true });
+    const [filters, setFilters] = useState<any>({});
     const [updateTrigger, setUpdateTrigger] = useState(0); // Force re-render trigger
     // ✅ ДОБАВЛЕНО: стейт сортировки
     const [sort, setSort] = useState<{ column: string; direction: 'asc' | 'desc' } | null>(null);
@@ -90,9 +90,11 @@ export const PacketEventsPage: FC = () => {
         },
     ];
 
-    const loadData = useCallback(async (currentFilters: any = filters) => {
+    const loadData = useCallback(async (currentFilters: any = {}) => {
         setLoading(true);
         try {
+            console.log("🔍 Loading data with filters:", currentFilters);
+            
             const result = await packetEventsApi.getAll(currentFilters);
 
             let items: any[] = [];
@@ -194,7 +196,7 @@ export const PacketEventsPage: FC = () => {
                 // Force data refresh with a small delay to ensure backend updates
                 setTimeout(async () => {
                     console.log("🔍 Force refreshing data after deletion");
-                    await loadData({ ...filters, active: true });
+                    await loadData(filters);
                     // Force table re-render
                     setUpdateTrigger(prev => prev + 1);
                 }, 100);
