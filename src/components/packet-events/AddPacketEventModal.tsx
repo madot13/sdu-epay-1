@@ -5,7 +5,7 @@ import { CustomSelect } from "@/ui/CustomSelect.tsx";
 import { CustomButton } from "@/ui/CustomButton.tsx";
 import { PlusIcon, UserCircleIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
-import { getDepartments } from "@/api/endpoints/departments.ts";
+import { getPublicDepartments } from "@/api/endpoints/departments.ts";
 import { getPublicEventsById } from "@/api/endpoints/events.ts";
 import { getUsers } from "@/api/endpoints/users.ts";
 import { Department } from "@/types/departments.ts";
@@ -40,10 +40,9 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
     useEffect(() => {
         const fetchDepts = async () => {
             try {
-                const res = await getDepartments();
-                // Фильтруем только активные департаменты
-                const activeDepartments = res.data.filter((d: Department) => d.active === true);
-                setDepartments(activeDepartments.map((d: Department) => ({ label: d.name, value: d.id })));
+                const res = await getPublicDepartments();
+                // getPublicDepartments уже возвращает только активные департаменты
+                setDepartments(res.map((d: Department) => ({ label: d.name, value: d.id })));
             } catch (e) { console.error(e); }
         };
         if (isOpen) fetchDepts();
