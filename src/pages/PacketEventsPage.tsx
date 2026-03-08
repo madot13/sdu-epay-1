@@ -22,6 +22,7 @@ export const PacketEventsPage: FC = () => {
     const [selectedItem, setSelectedItem] = useState<IEventRecord | null>(null);
     const [filters, setFilters] = useState<any>({});
     const [updateTrigger, setUpdateTrigger] = useState(0); // Force re-render trigger
+    const [renderTrigger, setRenderTrigger] = useState(0); // Force table re-render
     // ✅ ДОБАВЛЕНО: стейт сортировки
     const [sort, setSort] = useState<{ column: string; direction: 'asc' | 'desc' } | null>(null);
 
@@ -34,6 +35,7 @@ export const PacketEventsPage: FC = () => {
             header: "Активный", 
             accessor: (item: Record<string, any>): ReactNode => {
                 const isActive = item.active === true || item.event_active === true;
+                console.log("🔍 Rendering Active column for item:", item.id, "active:", item.active, "isActive:", isActive);
                 return (
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                         isActive 
@@ -205,6 +207,7 @@ export const PacketEventsPage: FC = () => {
                     await loadData(filters);
                     // Force table re-render
                     setUpdateTrigger(prev => prev + 1);
+                    setRenderTrigger(prev => prev + 1);
                 }, 100);
                 
                 // If edit modal is open with the same item, update its data
@@ -234,7 +237,7 @@ export const PacketEventsPage: FC = () => {
                 <PacketEventsFilter onSearch={handleSearch} />
                 <div className="overflow-x-auto bg-white rounded-lg shadow-sm border border-gray-100 mt-4">
                     <CustomTable
-                        key={`table-${data.length}-${total}-${updateTrigger}`}
+                        key={`table-${data.length}-${total}-${updateTrigger}-${renderTrigger}`}
                         columns={columns}
                         data={mappedData}
                         onSort={handleSort}
