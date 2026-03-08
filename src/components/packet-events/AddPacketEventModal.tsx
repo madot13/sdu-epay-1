@@ -40,8 +40,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
     useEffect(() => {
         const fetchDepts = async () => {
             try {
-                const res = await getPublicDepartments();
-                // getPublicDepartments уже возвращает только активные департаменты
+                const res = await getPublicDepartments(true);
                 setDepartments(res.map((d: Department) => ({ label: d.name, value: d.id })));
             } catch (e) { console.error(e); }
         };

@@ -36,10 +36,13 @@ export const OrdersFilters: FC<OrdersFiltersProps> = ({ onFiltersChange }) => {
 
     const formatDate = (date: Date | null) => {
         if (!date) return null;
-        // Try timestamp format
-        const timestamp = date.getTime();
-        console.log("🔍 Formatted date (timestamp):", timestamp, "from date:", date);
-        return timestamp;
+        // Use local date in YYYY-MM-DD format without timezone conversion
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const formatted = `${year}-${month}-${day}`;
+        console.log("🔍 Formatted date (local):", formatted, "from date:", date);
+        return formatted;
     };
 
     // Auto-search when filters change
@@ -60,12 +63,7 @@ export const OrdersFilters: FC<OrdersFiltersProps> = ({ onFiltersChange }) => {
                 onFiltersChange(filters);
             } else {
                 // Fallback to direct fetchOrders call
-                const result = await fetchOrders(filters);
-                console.log("🔍 Orders received:", result?.data?.slice(0, 3)?.map(o => ({
-                    id: o.id,
-                    created_at: o.created_at,
-                    date_only: o.created_at?.split('T')[0]
-                })));
+                await fetchOrders(filters);
             }
         };
 

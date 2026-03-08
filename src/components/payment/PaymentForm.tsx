@@ -104,12 +104,10 @@ export const PaymentForm: FC = () => {
     useEffect(() => {
         const fetchDepartments = async () => {
             try {
-                const data = await getPublicDepartments();
+                const data = await getPublicDepartments(true);
                 setDepartments(data);
-
-                const activeDepartments = data.filter((dept: any) => dept.active === true);
                 
-                const mapped = activeDepartments.map((dept: { name: string; id: string }) => ({
+                const mapped = data.map((dept: { name: string; id: string }) => ({
                     label: dept.name,
                     value: dept.id,
                 }));

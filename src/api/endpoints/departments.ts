@@ -24,8 +24,9 @@ export const getDepartmentById = async (id:string) => {
     return data;
 }
 
-export const getPublicDepartments = async () => {
-    const {data} = await publicApi.get('/departments/public');
+export const getPublicDepartments = async (activeOnly: boolean = true) => {
+    const queryString = activeOnly ? '?active=true' : '';
+    const {data} = await publicApi.get(`/departments/public${queryString}`);
 
     return data;
 }
