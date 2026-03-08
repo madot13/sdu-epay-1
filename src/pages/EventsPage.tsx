@@ -77,6 +77,9 @@ export const EventsPage:FC = () => {
             } else if (sort.column === 'period_from' || sort.column === 'period_till') {
                 aValue = a[sort.column] ? new Date(a[sort.column]).getTime() : 0;
                 bValue = b[sort.column] ? new Date(b[sort.column]).getTime() : 0;
+            } else if (sort.column === 'custom-5') { // Active column
+                aValue = a.active;
+                bValue = b.active;
             }
             
             if (aValue == null) aValue = '';
@@ -86,6 +89,13 @@ export const EventsPage:FC = () => {
             if (typeof aValue === 'string' && typeof bValue === 'string') {
                 const cmp = aValue.localeCompare(bValue, 'ru');
                 return sort.direction === 'asc' ? cmp : -cmp;
+            }
+
+            // For boolean values (Active column)
+            if (typeof aValue === 'boolean' && typeof bValue === 'boolean') {
+                return sort.direction === 'asc' 
+                    ? (aValue ? 1 : -1) - (bValue ? 1 : -1)
+                    : (bValue ? 1 : -1) - (aValue ? 1 : -1);
             }
 
             if (aValue < bValue) return sort.direction === 'asc' ? -1 : 1;

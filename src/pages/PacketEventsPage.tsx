@@ -158,12 +158,25 @@ export const PacketEventsPage: FC = () => {
         if (!sort) return mapped;
 
         return [...mapped].sort((a: any, b: any) => {
-            let aValue = a[sort.column] ?? '';
-            let bValue = b[sort.column] ?? '';
+            let aValue: any = a[sort.column] ?? '';
+            let bValue: any = b[sort.column] ?? '';
+
+            // Handle Active column sorting (custom-4 for Active column)
+            if (sort.column === 'custom-4') {
+                aValue = a.active === true || a.event_active === true;
+                bValue = b.active === true || b.event_active === true;
+            }
 
             if (typeof aValue === 'string' && typeof bValue === 'string') {
                 const cmp = aValue.localeCompare(bValue, 'ru');
                 return sort.direction === 'asc' ? cmp : -cmp;
+            }
+
+            // For boolean values (Active column)
+            if (typeof aValue === 'boolean' && typeof bValue === 'boolean') {
+                return sort.direction === 'asc' 
+                    ? (aValue ? 1 : -1) - (bValue ? 1 : -1)
+                    : (bValue ? 1 : -1) - (aValue ? 1 : -1);
             }
 
             if (aValue < bValue) return sort.direction === 'asc' ? -1 : 1;

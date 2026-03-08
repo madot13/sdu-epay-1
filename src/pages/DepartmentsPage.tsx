@@ -52,8 +52,21 @@ export const DepartmentsPage:FC = () => {
         }
 
         const sorted = [...departments].sort((a, b) => {
-            const aValue = a[sort.column as keyof typeof departments[0]] || '';
-            const bValue = b[sort.column as keyof typeof departments[0]] || '';
+            let aValue: any = a[sort.column as keyof typeof departments[0]] || '';
+            let bValue: any = b[sort.column as keyof typeof departments[0]] || '';
+
+            // Handle Active column sorting (custom-1 for Active column)
+            if (sort.column === 'custom-1') {
+                aValue = a.active !== false;
+                bValue = b.active !== false;
+            }
+
+            // For boolean values (Active column)
+            if (typeof aValue === 'boolean' && typeof bValue === 'boolean') {
+                return sort.direction === 'asc' 
+                    ? (aValue ? 1 : -1) - (bValue ? 1 : -1)
+                    : (bValue ? 1 : -1) - (aValue ? 1 : -1);
+            }
             
             if (aValue < bValue) return sort.direction === 'asc' ? -1 : 1;
             if (aValue > bValue) return sort.direction === 'asc' ? 1 : -1;
