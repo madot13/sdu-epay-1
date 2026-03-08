@@ -35,8 +35,19 @@ export const getEventByIdAuth = async (id: string) => {
     return data;
 }
 
-export const getPublicEventsById = async (id: string): Promise<IEvent[]> => {
-    const { data } = await publicApi.get(`/events/public?department_id=${id}`);
+export const getPublicEventsById = async (id: string, query?: EventQuery): Promise<IEvent[]> => {
+    const queryString = query
+    ? '&' + new URLSearchParams(
+        Object.entries(query).reduce((acc, [key, value]) => {
+            if (value !== undefined && value !== null) {
+                acc[key] = String(value);
+            }
+            return acc;
+        }, {} as Record<string, string>)
+    ).toString()
+        : '';
+
+    const { data } = await publicApi.get(`/events/public?department_id=${id}${queryString}`);
 
     return data;
 }

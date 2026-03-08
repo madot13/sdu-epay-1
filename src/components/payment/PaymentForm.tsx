@@ -125,7 +125,8 @@ export const PaymentForm: FC = () => {
         const fetchEvents = async () => {
             if (!selectedDepartmentId) return;
             try {
-                const data = await getPublicEventsById(selectedDepartmentId);
+                // Filter active events via API parameter
+                const data = await getPublicEventsById(selectedDepartmentId, { active: true });
                 
                 const mapped = data.map((event: IEvent) => ({
                     label: event.title || '',
@@ -177,7 +178,8 @@ export const PaymentForm: FC = () => {
             }
 
             try {
-                const response = await packetEventsApi.getAll({ event_id: currentEventId });
+                // Filter active payment types via API parameter
+                const response = await packetEventsApi.getAll({ event_id: currentEventId, active: true });
                 
                 const paymentTypes = Array.isArray(response) ? response : (response as any).data || [];
                 
