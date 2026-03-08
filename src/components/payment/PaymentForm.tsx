@@ -1353,7 +1353,7 @@ export const PaymentForm: FC = () => {
 
                         {selectedDepartmentType === "EVENT_BASED" ? (
                             <>
-                                {selectedEventPriced !== false && (
+                                {selectedDepartmentType === "EVENT_BASED" && (
                                     <Controller
                                         name="promo_code"
                                         control={control}
