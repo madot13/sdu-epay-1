@@ -83,11 +83,18 @@ export const EditDepartmentModal: FC<EditDepartmentModalProps> = ({isOpen, onClo
         });
 
         try {
-            await updateDepartment(departmentData.id, {
+            const payload: any = {
                 name,
                 active,
-                additional_fields,
-            });
+            };
+            
+            // Only add additional_fields if it has content
+            if (Object.keys(additional_fields).length > 0) {
+                payload.additional_fields = additional_fields;
+            }
+            
+            console.log("Department update payload:", payload);
+            await updateDepartment(departmentData.id, payload);
             onClose();
             toast.success("Департамент успешно изменен");
         } catch (error: any) {
