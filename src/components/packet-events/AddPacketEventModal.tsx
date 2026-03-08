@@ -41,6 +41,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
         const fetchDepts = async () => {
             try {
                 const res = await getPublicDepartments(true);
+                console.log("🔍 Departments received:", res);
                 setDepartments(res.map((d: Department) => ({ label: d.name, value: d.id })));
             } catch (e) { console.error(e); }
         };
@@ -74,8 +75,8 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
         const fetchEvents = async () => {
             if (department) {
                 try {
-                    const eventsData = await getPublicEventsById(department);
-                    setEvents(eventsData
+                    const data = await getPublicEventsById(department, { active: true });
+                    setEvents(data
                         .filter((event: IEvent) => event.title && event.id)
                         .map((event: IEvent) => ({ 
                             label: event.title!, 
@@ -91,6 +92,29 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
         };
         fetchEvents();
     }, [department]);
+
+    // Check if event has existing payment types and auto-set isMain if none exist
+    useEffect(() => {
+        const checkExistingPaymentTypes = async () => {
+            if (selectedEvent) {
+                try {
+                    const response = await packetEventsApi.getAll({ event_id: selectedEvent });
+                    const paymentTypes = Array.isArray(response) ? response : (response as any).data || [];
+                    
+                    console.log("🔍 Existing payment types for event:", paymentTypes.length);
+                    
+                    // Auto-set isMain to true if no payment types exist
+                    if (paymentTypes.length === 0) {
+                        setIsMain(true);
+                        console.log("🔍 Auto-setting isMain to true - no existing payment types");
+                    }
+                } catch (error) {
+                    console.error("Error checking existing payment types:", error);
+                }
+            }
+        };
+        checkExistingPaymentTypes();
+    }, [selectedEvent]);
 
     const handleSubmit = async () => {
         if (!selectedManager || !department || !selectedEvent) {
@@ -280,6 +304,11 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                             Главный тип оплаты (Main)
                         </label>
                     </div>
+                    {selectedEvent && (
+                        <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded">
+                            💡 Первый тип оплаты для события автоматически устанавливается как основной
+                        </div>
+                    )}
 
                     {!withoutFixedPrice && (
                         <div className="flex flex-col gap-4">
