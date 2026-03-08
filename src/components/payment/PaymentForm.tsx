@@ -259,21 +259,12 @@ export const PaymentForm: FC = () => {
                     setValue("showInUsd", false);
                     setValue("amount", price);
                     setPrice(price);
-                    
-                    // Reset to default payment method for KZT
-                    setIsKaspiDisabled(false);
-                    setPaymentMethodMessage("");
                 } else if (price === 0 && priceUsd > 0) {
                     setIsUsdForced(true);
                     setIsKztForced(false);
                     setValue("showInUsd", true);
                     setValue("amount", priceUsd);
                     setPrice(priceUsd);
-                    
-                    // Auto-select HalykBank and disable Kaspi for USD
-                    setValue("paymentMethod", "HalykBank");
-                    setIsKaspiDisabled(true);
-                    setPaymentMethodMessage("Для USD платежей доступен только HalykBank");
                 } else if (price > 0 && priceUsd > 0) {
                     setIsUsdForced(false);
                     setIsKztForced(false);
@@ -286,57 +277,6 @@ export const PaymentForm: FC = () => {
                     setIsCustomPrice(true);
                     setValue("amount", null);
                     setPrice(0);
-                }
-            } else {
-                // If no main category but there's only one category, select it
-                if (paymentCategoryOptions.length === 1) {
-                    const singleCategory = paymentCategoryOptions[0] as any;
-                    setValue("event_payment_type_id", singleCategory.value);
-                    setSelectedPaymentCategory(singleCategory);
-                    
-                    // Load additional fields for single category
-                    if (singleCategory.additional_fields) {
-                        const categoryFields = Object.entries(singleCategory.additional_fields).map(([name, config]: [string, any]) => ({
-                            name,
-                            type: config.type,
-                            label: name
-                        }));
-                        setPaymentCategoryAdditionalFields(categoryFields);
-                    } else {
-                        setPaymentCategoryAdditionalFields([]);
-                    }
-                    
-                    const price = singleCategory.price || 0;
-                    const priceUsd = singleCategory.price_usd || 0;
-                    
-                    if (price > 0 && priceUsd === 0) {
-                        setIsKztForced(true);
-                        setIsUsdForced(false);
-                        setValue("showInUsd", false);
-                        setValue("amount", price);
-                        setPrice(price);
-                        
-                        // Reset to default payment method for KZT
-                        setIsKaspiDisabled(false);
-                        setPaymentMethodMessage("");
-                    } else if (price === 0 && priceUsd > 0) {
-                        setIsUsdForced(true);
-                        setIsKztForced(false);
-                        setValue("showInUsd", true);
-                        setValue("amount", priceUsd);
-                        setPrice(priceUsd);
-                        
-                        // Auto-select HalykBank and disable Kaspi for USD
-                        setValue("paymentMethod", "HalykBank");
-                        setIsKaspiDisabled(true);
-                        setPaymentMethodMessage("Для USD платежей доступен только HalykBank");
-                    } else if (price === 0 && priceUsd === 0) {
-                        setIsUsdForced(false);
-                        setIsKztForced(false);
-                        setIsCustomPrice(true);
-                        setValue("amount", null);
-                        setPrice(0);
-                    }
                 }
             }
         }
@@ -1142,7 +1082,7 @@ export const PaymentForm: FC = () => {
                         )}
 
                         {/* Payment category select */}
-                        {currentEventId && paymentCategoryOptions.length > 1 && (
+                        {currentEventId && paymentCategoryOptions.length > 0 && (
                             <Controller
                                 name="event_payment_type_id"
                                 control={control}
@@ -1188,15 +1128,6 @@ export const PaymentForm: FC = () => {
                                     </>
                                 )}
                             />
-                        )}
-
-                        {/* Single payment category info */}
-                        {currentEventId && paymentCategoryOptions.length === 1 && (
-                            <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                                <div className="text-xs text-gray-500">
-                                    Единственный доступный тип платежа для этого события
-                                </div>
-                            </div>
                         )}
 
                         {/* Payment category additional fields */}
