@@ -89,10 +89,15 @@ export const PacketEventsPage: FC = () => {
         },
     ];
 
-    const loadData = useCallback(async (currentFilters: any = filters) => {
+    const loadData = useCallback(async (currentFilters: any = { active: true }) => {
         setLoading(true);
         try {
-            const result = await packetEventsApi.getAll(currentFilters);
+            // Ensure active filter is always present
+            const filtersWithActive = { ...currentFilters, active: true };
+            console.log("🔍 loadData called with currentFilters:", currentFilters);
+            console.log("🔍 Final filtersWithActive:", filtersWithActive);
+            
+            const result = await packetEventsApi.getAll(filtersWithActive);
 
             let items: any[] = [];
             if (result && typeof result === 'object') {
@@ -129,7 +134,8 @@ export const PacketEventsPage: FC = () => {
     }, []);
 
     useEffect(() => {
-        loadData(filters);
+        console.log("🔍 useEffect triggered with filters:", filters);
+        loadData({ ...filters, active: true });
     }, [first, rows, filters]);
 
     // ✅ ДОБАВЛЕНО: обработчик сортировки
@@ -186,9 +192,18 @@ export const PacketEventsPage: FC = () => {
     const handleConfirmDelete = async () => {
         if (selectedItem?.id) {
             try {
+                console.log("🔍 Deleting item:", selectedItem.id);
                 await packetEventsApi.delete(selectedItem.id);
                 toast.success("Запись успешно удалена");
-                loadData(filters);
+                
+                console.log("🔍 Reloading data with filters:", { ...filters, active: true });
+                await loadData({ ...filters, active: true });
+                
+                // Force reload after a short delay to ensure UI updates
+                setTimeout(async () => {
+                    console.log("🔍 Force reloading data after deletion");
+                    await loadData({ ...filters, active: true });
+                }, 500);
                 
                 // If edit modal is open with the same item, update its data
                 if (isEditModalOpen) {
@@ -199,6 +214,7 @@ export const PacketEventsPage: FC = () => {
                 setIsDeleteModalOpen(false);
                 setSelectedItem(null);
             } catch (err) {
+                console.error("🔍 Delete error:", err);
                 toast.error("Ошибка при удалении");
             }
         }
