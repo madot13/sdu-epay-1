@@ -214,12 +214,32 @@ export const PaymentForm: FC = () => {
                 setValue("event_payment_type_id", "");
                 setOrderField("event_payment_type_id", "");
                 
+                // Clear payment category additional field values
+                setPaymentCategoryAdditionalFieldValues({});
+                setPaymentCategoryAdditionalFields([]);
+                setSelectedPaymentCategory(null);
+                
                 // Auto-select main payment type if exists
                 const mainPaymentType = paymentTypes.find((pt: any) => pt.is_main === true);
                 if (mainPaymentType) {
                     setValue("event_payment_type_id", mainPaymentType.id);
                     setOrderField("event_payment_type_id", mainPaymentType.id);
                     console.log("🔍 Auto-selected main payment type in PaymentForm:", mainPaymentType.category || mainPaymentType.id);
+                    
+                    // Load additional fields for the auto-selected main payment type
+                    if (mainPaymentType.additional_fields) {
+                        const categoryFields = Object.entries(mainPaymentType.additional_fields).map(([name, config]: [string, any]) => ({
+                            name,
+                            type: config.type,
+                            label: name
+                        }));
+                        setPaymentCategoryAdditionalFields(categoryFields);
+                        setSelectedPaymentCategory(mainPaymentType);
+                        console.log("🔍 Loaded additional fields for auto-selected main payment type:", categoryFields);
+                    } else {
+                        setPaymentCategoryAdditionalFields([]);
+                        setSelectedPaymentCategory(null);
+                    }
                 }
             } catch (error) {
                 console.error("Error fetching payment categories:", error);
