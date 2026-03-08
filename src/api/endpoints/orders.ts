@@ -14,6 +14,9 @@ export const getOrders = async (query?: OrderQuery): Promise<OrdersResponse> => 
         ).toString()
         : '';
 
+    console.log('🔍 Orders API URL:', `/orders${queryString}`);
+    console.log('🔍 Orders API query:', query);
+    
     const { data } = await api.get(`/orders${queryString}`);
     return data;
 }

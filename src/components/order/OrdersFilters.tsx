@@ -43,7 +43,7 @@ export const OrdersFilters: FC = () => {
     // Auto-search when filters change
     useEffect(() => {
         const searchWithFilters = async () => {
-            await fetchOrders({
+            const filters = {
                 id: orderId ? Number(orderId) : null,
                 type: (type as "KASPI" | "EPAY") || null,
                 status: (status as "PENDING" | "SUCCESS" | "FAILURE") || null,
@@ -51,7 +51,9 @@ export const OrdersFilters: FC = () => {
                 end_date: formatDate(endDate),
                 page: 0,
                 size: 10,
-            });
+            };
+            console.log("🔍 Orders filters being sent:", filters);
+            await fetchOrders(filters);
         };
 
         // Debounce search to avoid too many requests
