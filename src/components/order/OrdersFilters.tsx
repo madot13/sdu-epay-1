@@ -6,8 +6,13 @@ import { Calendar } from "primereact/calendar";
 import { exportOrders } from "@/api/endpoints/orders.ts";
 import { toast } from "react-hot-toast";
 import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
+import { OrderQuery } from "@/types/orders.ts";
 
-export const OrdersFilters: FC = () => {
+interface OrdersFiltersProps {
+    onFiltersChange?: (filters: OrderQuery) => void;
+}
+
+export const OrdersFilters: FC<OrdersFiltersProps> = ({ onFiltersChange }) => {
     const [orderId, setOrderId] = useState("");
     const [type, setType] = useState("");
     const [status, setStatus] = useState("");
@@ -50,21 +55,27 @@ export const OrdersFilters: FC = () => {
                 size: 10,
             };
             console.log("🔍 Orders filters being sent:", filters);
-            const result = await fetchOrders(filters);
-            console.log("🔍 Orders received:", result?.data?.slice(0, 3)?.map(o => ({
-                id: o.id,
-                created_at: o.created_at,
-                date_only: o.created_at?.split('T')[0]
-            })));
+            
+            if (onFiltersChange) {
+                onFiltersChange(filters);
+            } else {
+                // Fallback to direct fetchOrders call
+                const result = await fetchOrders(filters);
+                console.log("🔍 Orders received:", result?.data?.slice(0, 3)?.map(o => ({
+                    id: o.id,
+                    created_at: o.created_at,
+                    date_only: o.created_at?.split('T')[0]
+                })));
+            }
         };
 
         // Debounce search to avoid too many requests
         const timeoutId = setTimeout(searchWithFilters, 300);
         return () => clearTimeout(timeoutId);
-    }, [orderId, type, status, startDate, endDate, fetchOrders]);
+    }, [orderId, type, status, startDate, endDate, fetchOrders, onFiltersChange]);
 
     const handleSearch = async () => {
-        await fetchOrders({
+        const filters = {
             id: orderId ? Number(orderId) : null,
             type: (type as "KASPI" | "EPAY") || null,
             status: (status as "PENDING" | "SUCCESS" | "FAILURE") || null,
@@ -72,7 +83,13 @@ export const OrdersFilters: FC = () => {
             end_date: formatDate(endDate),
             page: 0,
             size: 10,
-        });
+        };
+        
+        if (onFiltersChange) {
+            onFiltersChange(filters);
+        } else {
+            await fetchOrders(filters);
+        }
     };
 
     const handleExport = async () => {

@@ -6,7 +6,7 @@ import { useOrdersStore } from "@/store/useOrdersStore.ts";
 import { Paginator } from "primereact/paginator";
 import { OrderDetailsModal } from "@/components/order/OrderDetailsModal.tsx";
 import { OrderTransactionsModal } from "@/components/order/OrderTransactionsModal.tsx";
-import { Order } from "@/types/orders.ts";
+import { Order, OrderQuery } from "@/types/orders.ts";
 import { CustomButton } from "@/ui/CustomButton.tsx";
 import { ReactNode } from "react";
 
@@ -19,6 +19,7 @@ export const OrdersPage: FC = () => {
     const [isTransactionsModalOpen, setIsTransactionsModalOpen] = useState(false);
     const [sort, setSort] = useState<{ column: string; direction: 'asc' | 'desc' } | null>(null);
     const [sortedOrders, setSortedOrders] = useState<any[]>([]);
+    const [currentFilters, setCurrentFilters] = useState<OrderQuery>({ page: 0, size: 10 });
 
     const columns = [
         { header: "ID", accessor: "id", sortable: true },
@@ -61,6 +62,13 @@ export const OrdersPage: FC = () => {
         { header: "Итого", accessor: "final_amount_display", sortable: true },
         { header: "Дата создания", accessor: "created_at_display", sortable: true },
     ];
+
+    const handleUpdateFilters = (filters: OrderQuery) => {
+        const newFilters = { ...filters, page: 0, size: rows };
+        setCurrentFilters(newFilters);
+        setFirst(0); // Reset to first page when filters change
+        fetchOrders(newFilters);
+    };
 
     useEffect(() => {
         fetchOrders({ page: 0, size: 10 });
@@ -135,10 +143,9 @@ export const OrdersPage: FC = () => {
         setFirst(event.first);
         setRows(event.rows);
 
-        await fetchOrders({
-            page: event.first / event.rows,
-            size: event.rows,
-        });
+        const newFilters = { ...currentFilters, page: event.first / event.rows, size: event.rows };
+        setCurrentFilters(newFilters);
+        await fetchOrders(newFilters);
     };
 
     const handleSort = (column: string, direction: 'asc' | 'desc') => {
@@ -196,7 +203,7 @@ export const OrdersPage: FC = () => {
                 <h1 className="text-2xl lg:text-[32px] font-bold mb-4 lg:mb-6">
                     Заказы
                 </h1>
-                <OrdersFilters />
+                <OrdersFilters onFiltersChange={handleUpdateFilters} />
                 <div className="overflow-x-auto">
                     <CustomTable
                         columns={columns}
