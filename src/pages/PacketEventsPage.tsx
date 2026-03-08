@@ -189,6 +189,13 @@ export const PacketEventsPage: FC = () => {
                 await packetEventsApi.delete(selectedItem.id);
                 toast.success("Запись успешно удалена");
                 loadData(filters);
+                
+                // If edit modal is open with the same item, update its data
+                if (isEditModalOpen) {
+                    setSelectedItem(null);
+                    setIsEditModalOpen(false);
+                }
+                
                 setIsDeleteModalOpen(false);
                 setSelectedItem(null);
             } catch (err) {
