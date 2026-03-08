@@ -20,7 +20,8 @@ export const PacketEventsPage: FC = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedItem, setSelectedItem] = useState<IEventRecord | null>(null);
-    const [filters, setFilters] = useState<any>({});
+    const [filters, setFilters] = useState<any>({ active: true });
+    const [updateTrigger, setUpdateTrigger] = useState(0); // Force re-render trigger
     // ✅ ДОБАВЛЕНО: стейт сортировки
     const [sort, setSort] = useState<{ column: string; direction: 'asc' | 'desc' } | null>(null);
 
@@ -89,15 +90,10 @@ export const PacketEventsPage: FC = () => {
         },
     ];
 
-    const loadData = useCallback(async (currentFilters: any = { active: true }) => {
+    const loadData = useCallback(async (currentFilters: any = filters) => {
         setLoading(true);
         try {
-            // Ensure active filter is always present
-            const filtersWithActive = { ...currentFilters, active: true };
-            console.log("🔍 loadData called with currentFilters:", currentFilters);
-            console.log("🔍 Final filtersWithActive:", filtersWithActive);
-            
-            const result = await packetEventsApi.getAll(filtersWithActive);
+            const result = await packetEventsApi.getAll(currentFilters);
 
             let items: any[] = [];
             if (result && typeof result === 'object') {
@@ -134,8 +130,7 @@ export const PacketEventsPage: FC = () => {
     }, []);
 
     useEffect(() => {
-        console.log("🔍 useEffect triggered with filters:", filters);
-        loadData({ ...filters, active: true });
+        loadData(filters);
     }, [first, rows, filters]);
 
     // ✅ ДОБАВЛЕНО: обработчик сортировки
@@ -196,14 +191,13 @@ export const PacketEventsPage: FC = () => {
                 await packetEventsApi.delete(selectedItem.id);
                 toast.success("Запись успешно удалена");
                 
-                console.log("🔍 Reloading data with filters:", { ...filters, active: true });
-                await loadData({ ...filters, active: true });
-                
-                // Force reload after a short delay to ensure UI updates
+                // Force data refresh with a small delay to ensure backend updates
                 setTimeout(async () => {
-                    console.log("🔍 Force reloading data after deletion");
+                    console.log("🔍 Force refreshing data after deletion");
                     await loadData({ ...filters, active: true });
-                }, 500);
+                    // Force table re-render
+                    setUpdateTrigger(prev => prev + 1);
+                }, 100);
                 
                 // If edit modal is open with the same item, update its data
                 if (isEditModalOpen) {
@@ -232,6 +226,7 @@ export const PacketEventsPage: FC = () => {
                 <PacketEventsFilter onSearch={handleSearch} />
                 <div className="overflow-x-auto bg-white rounded-lg shadow-sm border border-gray-100 mt-4">
                     <CustomTable
+                        key={`table-${data.length}-${total}-${updateTrigger}`}
                         columns={columns}
                         data={mappedData}
                         onSort={handleSort}
