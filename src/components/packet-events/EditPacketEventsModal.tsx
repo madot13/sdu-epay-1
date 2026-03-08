@@ -151,8 +151,8 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
 
             // Затем, если этот тип оплаты отмечен как Main, снимаем флаг с других типов
             if (isMain) {
-                await packetEventsApi.clearMainFlag(eventData.event_id!, eventData.id!);
-                console.log("🔍 Cleared main flag from other payment types for event:", eventData.event_id);
+                await packetEventsApi.clearMainFlag(form.event_id!, eventData.id!);
+                console.log("🔍 Cleared main flag from other payment types for event:", form.event_id);
             }
 
             toast.success("Данные успешно обновлены");
