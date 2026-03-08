@@ -1247,17 +1247,26 @@ export const PaymentForm: FC = () => {
                                                         setValue("amount", categoryData.price_usd || null);
                                                         setPrice(categoryData.price_usd || 0);
                                                         setCurrency("USD");
+                                                        
+                                                        // Auto-select HalykBank and disable Kaspi for USD
+                                                        setValue("paymentMethod", "HalykBank");
+                                                        setIsKaspiDisabled(true);
+                                                        setPaymentMethodMessage("Для USD платежей доступен только HalykBank");
                                                     } else {
                                                         setValue("amount", categoryData.price || null);
                                                         setPrice(categoryData.price || 0);
                                                         setCurrency("KZT");
+                                                        
+                                                        // Re-enable Kaspi when USD is unchecked
+                                                        setIsKaspiDisabled(false);
+                                                        setPaymentMethodMessage("");
                                                     }
                                                 }
                                             }}
                                             className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
                                         />
                                         <label htmlFor="showInUsd" className="text-sm font-medium text-gray-700">
-                                            Pay in USD
+                                            Show in USD
                                         </label>
                                     </div>
                                 )}
@@ -1274,6 +1283,13 @@ export const PaymentForm: FC = () => {
                                         error={errors.paymentMethod?.message}
                                         onChange={(value) => {
                                             if (watchShowInUsd && value === "KaspiBank") return;
+                                            
+                                            // Show warning if trying to change from HalykBank to another method while USD is enabled
+                                            if (watchShowInUsd && watchPaymentMethod === "HalykBank" && value !== "HalykBank") {
+                                                toast.error("Для USD платежей можно использовать только HalykBank");
+                                                return;
+                                            }
+                                            
                                             setValue("paymentMethod", value);
                                         }}
                                         disableKaspi={watchShowInUsd || isKaspiDisabled}
