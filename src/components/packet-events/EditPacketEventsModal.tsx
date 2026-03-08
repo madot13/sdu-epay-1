@@ -3,14 +3,13 @@ import { CustomModal } from "@/ui/CustomModal.tsx";
 import { CustomInput } from "@/ui/CustomInput.tsx";
 import { CustomButton } from "@/ui/CustomButton.tsx";
 import { CustomSelect } from "@/ui/CustomSelect.tsx";
-import { CurrencyDollarIcon, TagIcon } from "@heroicons/react/24/outline";
+import { CurrencyDollarIcon, TagIcon, UserCircleIcon } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
 import { packetEventsApi } from "@/api/endpoints/packet-events";
 import { IEventRecord } from "@/types/packetevents";
 import { AddAdditionalFields } from "@/components/department/AddAdditionalFields.tsx";
 import { getUsers } from "@/api/endpoints/users.ts";
 import { IUser } from "@/types/users.ts";
-import { getPublicEventsById } from "@/api/endpoints/events.ts";
 
 interface Props {
     isOpen: boolean;
@@ -26,7 +25,6 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
     const [isActive, setIsActive] = useState(true); // Добавляем состояние для активного статуса
     const [customFields, setCustomFields] = useState<{name:string; type:string; value?: any}[]>([]);
     const [managers, setManagers] = useState<{ label: string; value: string }[]>([]);
-    const [events, setEvents] = useState<{ label: string; value: string }[]>([]);
 
     useEffect(() => {
         setForm({ ...eventData });
@@ -72,28 +70,6 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
 
         fetchManagers();
     }, []);
-
-    useEffect(() => {
-        const fetchEvents = async () => {
-            if (eventData.department_id) {
-                try {
-                    const data = await getPublicEventsById(eventData.department_id, { active: true });
-                    setEvents(data
-                        .filter((event: any) => event.title && event.id)
-                        .map((event: any) => ({ 
-                            label: event.title, 
-                            value: event.id 
-                        })));
-                } catch (e) { 
-                    console.error(e); 
-                    setEvents([]);
-                }
-            } else {
-                setEvents([]);
-            }
-        };
-        fetchEvents();
-    }, [eventData.department_id]);
 
     const handleSave = async () => {
         // Проверка на наличие ID (решает ошибку 2345)
@@ -178,12 +154,12 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
                     activeOptionClassName="bg-blue-200"
                 />
                 
-                <CustomSelect 
-                    placeholder="Выберите событие"
-                    options={events}
-                    value={form.event_id || ""}
-                    onChange={(value) => setForm({...form, event_id: value})}
-                    triggerClassName="bg-white border-[#6B9AB0] h-[45px]"
+                <CustomInput
+                    icon={<UserCircleIcon className="text-[#6B9AB0]" />}
+                    placeholder="Событие"
+                    value={form.title || ""}
+                    disabled={true}
+                    className="bg-gray-100 cursor-not-allowed"
                 />
                 
                 <CustomInput

@@ -278,6 +278,36 @@ export const PaymentForm: FC = () => {
                     setValue("amount", null);
                     setPrice(0);
                 }
+            } else {
+                // If no main category but there's only one category, select it
+                if (paymentCategoryOptions.length === 1) {
+                    const singleCategory = paymentCategoryOptions[0] as any;
+                    setValue("event_payment_type_id", singleCategory.value);
+                    setSelectedPaymentCategory(singleCategory);
+                    
+                    const price = singleCategory.price || 0;
+                    const priceUsd = singleCategory.price_usd || 0;
+                    
+                    if (price > 0 && priceUsd === 0) {
+                        setIsKztForced(true);
+                        setIsUsdForced(false);
+                        setValue("showInUsd", false);
+                        setValue("amount", price);
+                        setPrice(price);
+                    } else if (price === 0 && priceUsd > 0) {
+                        setIsUsdForced(true);
+                        setIsKztForced(false);
+                        setValue("showInUsd", true);
+                        setValue("amount", priceUsd);
+                        setPrice(priceUsd);
+                    } else if (price === 0 && priceUsd === 0) {
+                        setIsUsdForced(false);
+                        setIsKztForced(false);
+                        setIsCustomPrice(true);
+                        setValue("amount", null);
+                        setPrice(0);
+                    }
+                }
             }
         }
     }, [paymentCategoryOptions, setValue, setPrice, setIsKztForced, setIsUsdForced, setIsCustomPrice]);
@@ -1082,7 +1112,7 @@ export const PaymentForm: FC = () => {
                         )}
 
                         {/* Payment category select */}
-                        {currentEventId && paymentCategoryOptions.length > 0 && (
+                        {currentEventId && paymentCategoryOptions.length > 1 && (
                             <Controller
                                 name="event_payment_type_id"
                                 control={control}
@@ -1128,6 +1158,18 @@ export const PaymentForm: FC = () => {
                                     </>
                                 )}
                             />
+                        )}
+
+                        {/* Single payment category info */}
+                        {currentEventId && paymentCategoryOptions.length === 1 && (
+                            <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                <div className="text-sm font-medium text-gray-700 mb-1">
+                                    Тип платежа: {(paymentCategoryOptions[0] as any).label}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                    Единственный доступный тип платежа для этого события
+                                </div>
+                            </div>
                         )}
 
                         {/* Payment category additional fields */}
