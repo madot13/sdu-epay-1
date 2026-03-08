@@ -22,6 +22,7 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
     const [form, setForm] = useState<IEventRecord>({} as IEventRecord);
     const [withoutFixedPrice, setWithoutFixedPrice] = useState(false);
     const [isMain, setIsMain] = useState(false); // Добавляем состояние для главного типа оплаты
+    const [isActive, setIsActive] = useState(true); // Добавляем состояние для активного статуса
     const [customFields, setCustomFields] = useState<{name:string; type:string; value?: any}[]>([]);
     const [managers, setManagers] = useState<{ label: string; value: string }[]>([]);
 
@@ -31,6 +32,8 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
         setWithoutFixedPrice(eventData.price === null || eventData.price_usd === null);
         // Устанавливаем главный тип оплаты
         setIsMain(eventData.is_main || false); // Используем is_main из бэкенда
+        // Устанавливаем активный статус
+        setIsActive(eventData.active !== false); // Используем active из бэкенда
         
         // Загружаем дополнительные поля если они есть
         if (eventData.additional_fields) {
@@ -115,6 +118,7 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
             // Сначала обновляем текущий тип оплаты
             await packetEventsApi.update(eventData.id, {
                 ...form,
+                active: isActive, // Добавляем активный статус
                 price: withoutFixedPrice ? null : (form.price || 0),
                 price_usd: withoutFixedPrice ? null : (form.price_usd || 0),
                 is_main: isMain, // Используем is_main для соответствия бэкенду
@@ -182,6 +186,19 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
                     />
                     <label htmlFor="without-fixed-price-edit" className="text-sm text-gray-700">
                         Без фиксированной цены
+                    </label>
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <input
+                        type="checkbox"
+                        id="active-status-edit"
+                        checked={isActive}
+                        onChange={(e) => setIsActive(e.target.checked)}
+                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <label htmlFor="active-status-edit" className="text-sm text-gray-700">
+                        Активный тип платежа
                     </label>
                 </div>
 

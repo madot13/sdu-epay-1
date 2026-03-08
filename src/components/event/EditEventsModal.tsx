@@ -205,12 +205,7 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
                 updatePayload.additional_fields = additional_fields;
             }
 
-            console.log("Full update payload:", updatePayload);
-            console.log("isActive value being sent:", isActive);
-            console.log("Checkbox checked state:", isActive);
-
-            const response = await updateEvent(eventData.id, updatePayload);
-            console.log("Backend response after update:", response);
+            await updateEvent(eventData.id, updatePayload);
 
             await fetchEvents();
 
@@ -290,10 +285,7 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
                         type="checkbox"
                         id="active"
                         checked={isActive}
-                        onChange={(e) => {
-                            console.log("Checkbox changed:", e.target.checked);
-                            setIsActive(e.target.checked);
-                        }}
+                        onChange={(e) => setIsActive(e.target.checked)}
                         disabled={!eventData.department?.active}
                         className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 disabled:opacity-50"
                     />

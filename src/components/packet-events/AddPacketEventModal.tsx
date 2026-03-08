@@ -25,6 +25,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
     const [priceUsd, setPriceUsd] = useState(0);
     const [withoutFixedPrice, setWithoutFixedPrice] = useState(false);
     const [isMain, setIsMain] = useState(false); // Добавляем состояние для главного типа оплаты
+    const [isActive, setIsActive] = useState(true); // Добавляем состояние для активного статуса
 
     // Дополнительные поля на каждом уровне
     const [paymentTypeCustomFields, setPaymentTypeCustomFields] = useState<{name:string; type:string; value?: any}[]>([]);
@@ -143,6 +144,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                 event_id: selectedEvent,
                 email: selectedManager,
                 category: category || undefined,
+                active: isActive, // Добавляем активный статус
                 priced: !withoutFixedPrice,
                 price: withoutFixedPrice ? null : price,
                 price_usd: withoutFixedPrice ? null : (priceUsd > 0 ? priceUsd : undefined),
@@ -160,6 +162,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
             setPrice(0); 
             setPriceUsd(0); 
             setCategory(""); 
+            setIsActive(true); // Сбрасываем активный статус в значение по умолчанию 
             setWithoutFixedPrice(false);
             setIsMain(false); // Сбрасываем главный тип оплаты
             setPaymentTypeCustomFields([]);
@@ -251,6 +254,19 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                         />
                         <label htmlFor="withoutFixedPrice" className="text-sm text-gray-700">
                             Без фиксированной цены
+                        </label>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            id="active-status"
+                            checked={isActive}
+                            onChange={(e) => setIsActive(e.target.checked)}
+                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                        />
+                        <label htmlFor="active-status" className="text-sm text-gray-700">
+                            Активный тип платежа
                         </label>
                     </div>
 
