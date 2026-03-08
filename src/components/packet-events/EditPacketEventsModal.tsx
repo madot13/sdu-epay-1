@@ -10,6 +10,7 @@ import { IEventRecord } from "@/types/packetevents";
 import { AddAdditionalFields } from "@/components/department/AddAdditionalFields.tsx";
 import { getUsers } from "@/api/endpoints/users.ts";
 import { IUser } from "@/types/users.ts";
+import { getPublicEventsById } from "@/api/endpoints/events.ts";
 
 interface Props {
     isOpen: boolean;
@@ -25,6 +26,7 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
     const [isActive, setIsActive] = useState(true); // Добавляем состояние для активного статуса
     const [customFields, setCustomFields] = useState<{name:string; type:string; value?: any}[]>([]);
     const [managers, setManagers] = useState<{ label: string; value: string }[]>([]);
+    const [events, setEvents] = useState<{ label: string; value: string }[]>([]);
 
     useEffect(() => {
         setForm({ ...eventData });
@@ -70,6 +72,28 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
 
         fetchManagers();
     }, []);
+
+    useEffect(() => {
+        const fetchEvents = async () => {
+            if (eventData.department_id) {
+                try {
+                    const data = await getPublicEventsById(eventData.department_id, { active: true });
+                    setEvents(data
+                        .filter((event: any) => event.title && event.id)
+                        .map((event: any) => ({ 
+                            label: event.title, 
+                            value: event.id 
+                        })));
+                } catch (e) { 
+                    console.error(e); 
+                    setEvents([]);
+                }
+            } else {
+                setEvents([]);
+            }
+        };
+        fetchEvents();
+    }, [eventData.department_id]);
 
     const handleSave = async () => {
         // Проверка на наличие ID (решает ошибку 2345)
