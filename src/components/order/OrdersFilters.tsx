@@ -31,7 +31,9 @@ export const OrdersFilters: FC = () => {
 
     const formatDate = (date: Date | null) => {
         if (!date) return null;
-        return date.toISOString().split('T')[0];
+        const formatted = date.toISOString().split('T')[0];
+        console.log("🔍 Formatted date:", formatted, "from date:", date);
+        return formatted;
     };
 
     // Auto-search when filters change
