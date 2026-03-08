@@ -28,14 +28,21 @@ export const PromocodeInput: FC<Props> = ({ promoCodeField }) => {
             return toast.error("Выберите событие");
         }
 
-        const errorMessage = await verifyPromo({
+        const payload = {
             code: promoCodeField.value,
             event_id: order.event_id,
-        });
+        };
+        
+        console.log("🔍 Verifying promo code with payload:", payload);
+        console.log("🔍 Current order:", order);
+
+        const errorMessage = await verifyPromo(payload);
 
         if (errorMessage) {
+            console.log("🔍 Promo verification error:", errorMessage);
             toast.error(t("paymentPage.promocode.toasts.invalid"));
         } else {
+            console.log("🔍 Promo verification successful!");
             toast.success(t("paymentPage.promocode.toasts.success"));
         }
     };
