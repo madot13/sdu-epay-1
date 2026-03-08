@@ -64,7 +64,7 @@ export const EditPromoCodeModal: FC<EditPromoCodeModalProps> = ({
     useEffect(() => {
         const fetchEvents = async () => {
             try {
-                const response = await getEvents();
+                const response = await getEvents({ active: true });
                 const formatted = response.data.map((event: IEvent) => ({
                     label: event.title,
                     value: event.id,

@@ -1,18 +1,15 @@
 import {FC, useEffect, useState} from "react";
 import {AdminLayout} from "@/layouts/AdminLayout.tsx";
 import {CustomTable} from "@/ui/CustomTable.tsx";
-import {PencilIcon, TrashIcon} from "lucide-react";
+import {PencilIcon} from "lucide-react";
 import {PromoCodeFilters} from "@/components/promocode/PromoCodeFilters.tsx";
 import {usePromoCodesStore} from "@/store/usePromoCodesStore.ts";
 import {EditPromoCodeModal} from "@/components/promocode/EditPromoCodeModal.tsx";
-import {DeleteModal} from "@/ui/DeleteModal.tsx";
-import {toast} from "react-hot-toast";
 import {Paginator} from "primereact/paginator";
 
 export const PromoCodesPage:FC = () => {
-    const {promoCodes, fetchPromoCodes, deletePromoCode, total} = usePromoCodesStore();
+    const {promoCodes, fetchPromoCodes, total} = usePromoCodesStore();
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedPromo, setSelectedPromo] = useState<any | null>(null);
     const [first, setFirst] = useState(0);
     const [rows, setRows] = useState(10);
@@ -47,25 +44,6 @@ export const PromoCodesPage:FC = () => {
         setIsEditModalOpen(true);
     };
 
-    const handleDeleteClick = (promo: any) => {
-        setSelectedPromo(promo);
-        setIsDeleteModalOpen(true)
-    }
-
-    const handleConfirmDelete = async () => {
-        if (selectedPromo) {
-            try{
-                await deletePromoCode(selectedPromo.id);
-                await fetchPromoCodes();
-                setIsDeleteModalOpen(false);
-                setSelectedPromo(null);
-                toast.success("Промо-код удален")
-            }catch (err:any){
-                toast.error(err.response.data.detail[0].msg)
-            }
-        }
-    };
-
     useEffect(() => {
         const load = async () => {
             await fetchPromoCodes({
@@ -98,9 +76,6 @@ export const PromoCodesPage:FC = () => {
                                 <button onClick={() => handleEditClick(row)} className="text-blue-600 hover:text-blue-800">
                                     <PencilIcon className="w-4 cursor-pointer h-4" />
                                 </button>
-                                <button onClick={() => handleDeleteClick(row)} className="text-red-600 hover:text-red-800">
-                                    <TrashIcon className="w-4 cursor-pointer h-4" />
-                                </button>
                             </div>
                         )}
                     />
@@ -124,7 +99,6 @@ export const PromoCodesPage:FC = () => {
                         onClose={() => setIsEditModalOpen(false)}
                         promoData={selectedPromo}
                     />
-                    <DeleteModal isOpen={isDeleteModalOpen} onDeleteClick={handleConfirmDelete} onClose={() => setIsDeleteModalOpen(false)} />
                 </>
             )}
         </AdminLayout>

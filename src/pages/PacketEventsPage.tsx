@@ -5,8 +5,7 @@ import { PacketEventsFilter } from "@/components/packet-events/PacketEventsFilte
 import { packetEventsApi } from "@/api/endpoints/packet-events";
 import { IEventRecord } from "@/types/packetevents";
 import { Paginator } from "primereact/paginator";
-import { PencilIcon, TrashIcon, Loader2 } from "lucide-react"; 
-import { DeleteModal } from "@/ui/DeleteModal.tsx";
+import { PencilIcon, Loader2 } from "lucide-react"; 
 import { toast } from "react-hot-toast";
 import { EditPacketEventsModal } from "@/components/packet-events/EditPacketEventsModal.tsx";
 import { ReactNode } from "react";
@@ -18,11 +17,8 @@ export const PacketEventsPage: FC = () => {
     const [first, setFirst] = useState(0);
     const [rows, setRows] = useState(10);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedItem, setSelectedItem] = useState<IEventRecord | null>(null);
     const [filters, setFilters] = useState<any>({});
-    const [updateTrigger, setUpdateTrigger] = useState(0); // Force re-render trigger
-    const [renderTrigger, setRenderTrigger] = useState(0); // Force table re-render
     // ✅ ДОБАВЛЕНО: стейт сортировки
     const [sort, setSort] = useState<{ column: string; direction: 'asc' | 'desc' } | null>(null);
 
@@ -202,42 +198,6 @@ export const PacketEventsPage: FC = () => {
         setIsEditModalOpen(true);
     };
 
-    const handleDeleteClick = (item: any) => {
-        setSelectedItem(item as IEventRecord);
-        setIsDeleteModalOpen(true);
-    };
-
-    const handleConfirmDelete = async () => {
-        if (selectedItem?.id) {
-            try {
-                console.log("🔍 Deleting item:", selectedItem.id);
-                await packetEventsApi.delete(selectedItem.id);
-                toast.success("Запись успешно удалена");
-                
-                // Force data refresh with a small delay to ensure backend updates
-                setTimeout(async () => {
-                    console.log("🔍 Force refreshing data after deletion");
-                    await loadData(filters);
-                    // Force table re-render
-                    setUpdateTrigger(prev => prev + 1);
-                    setRenderTrigger(prev => prev + 1);
-                }, 100);
-                
-                // If edit modal is open with the same item, update its data
-                if (isEditModalOpen) {
-                    setSelectedItem(null);
-                    setIsEditModalOpen(false);
-                }
-                
-                setIsDeleteModalOpen(false);
-                setSelectedItem(null);
-            } catch (err) {
-                console.error("🔍 Delete error:", err);
-                toast.error("Ошибка при удалении");
-            }
-        }
-    };
-
     return (
         <AdminLayout>
             <div className="w-full max-w-full px-4 lg:px-0">
@@ -250,7 +210,7 @@ export const PacketEventsPage: FC = () => {
                 <PacketEventsFilter onSearch={handleSearch} />
                 <div className="overflow-x-auto bg-white rounded-lg shadow-sm border border-gray-100 mt-4">
                     <CustomTable
-                        key={`table-${data.length}-${total}-${updateTrigger}-${renderTrigger}`}
+                        key={`table-${data.length}-${total}`}
                         columns={columns}
                         data={mappedData}
                         onSort={handleSort}
@@ -262,12 +222,6 @@ export const PacketEventsPage: FC = () => {
                                     className="text-blue-600 hover:text-blue-800 transition-colors"
                                 >
                                     <PencilIcon className="w-4 h-4" />
-                                </button>
-                                <button 
-                                    onClick={() => handleDeleteClick(row)} 
-                                    className="text-red-600 hover:text-red-800 transition-colors"
-                                >
-                                    <TrashIcon className="w-4 h-4" />
                                 </button>
                             </div>
                         )}
@@ -296,11 +250,6 @@ export const PacketEventsPage: FC = () => {
                     onSuccess={() => loadData(filters)}
                 />
             )}
-            <DeleteModal 
-                isOpen={isDeleteModalOpen} 
-                onDeleteClick={handleConfirmDelete} 
-                onClose={() => setIsDeleteModalOpen(false)} 
-            />
         </AdminLayout>
     );
 };

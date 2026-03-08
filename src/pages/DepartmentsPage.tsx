@@ -1,19 +1,16 @@
-import {FC, useEffect, useState} from "react";
+import {FC, useState, useEffect} from "react";
 import {useDepartmentsStore} from "@/store/useDepartmentsStore.ts";
 import {AdminLayout} from "@/layouts/AdminLayout.tsx";
 import {CustomTable} from "@/ui/CustomTable.tsx";
-import {PencilIcon, TrashIcon} from "lucide-react";
+import {PencilIcon} from "lucide-react";
 import {DepartmentsFilters} from "@/components/department/DepartmentsFilters.tsx";
 import {EditDepartmentModal} from "@/components/department/EditDepartmentModal.tsx";
-import {DeleteModal} from "@/ui/DeleteModal.tsx";
 import {Paginator} from "primereact/paginator";
-import {toast} from "react-hot-toast";
 import {ReactNode} from "react";
 
 export const DepartmentsPage:FC = () => {
-    const {departments, fetchDepartments, deleteDepartment, total} = useDepartmentsStore();
+    const {departments, fetchDepartments, total} = useDepartmentsStore();
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedDepartment, setSelectedDepartment] = useState<any | null>(null);
     const [first, setFirst] = useState(0);
     const [rows, setRows] = useState(10);
@@ -95,24 +92,6 @@ export const DepartmentsPage:FC = () => {
         setSelectedDepartment(dep);
         setIsEditModalOpen(true);
     };
-    const handleDeleteClick = (event: any) => {
-        setSelectedDepartment(event);
-        setIsDeleteModalOpen(true)
-    }
-
-    const handleConfirmDelete = async () => {
-        if (selectedDepartment) {
-            try{
-                await deleteDepartment(selectedDepartment.id);
-                await fetchDepartments();
-                setIsDeleteModalOpen(false);
-                setSelectedDepartment(null);
-                toast.success("Департамент успешно удален")
-            }catch (err:any){
-                toast.error(err.response.data.detail[0].msg)
-            }
-        }
-    };
 
     useEffect(() => {
         const load = async () => {
@@ -142,9 +121,6 @@ export const DepartmentsPage:FC = () => {
                                 <button onClick={() => handleEditClick(row)} className="text-blue-600 hover:text-blue-800">
                                     <PencilIcon className="w-4 cursor-pointer h-4" />
                                 </button>
-                                <button onClick={() => handleDeleteClick(row)} className="text-red-600 hover:text-red-800">
-                                    <TrashIcon className="w-4 cursor-pointer h-4" />
-                                </button>
                             </div>
                         )}
                     />
@@ -167,7 +143,6 @@ export const DepartmentsPage:FC = () => {
                         onClose={() => setIsEditModalOpen(false)}
                         departmentData={selectedDepartment}
                     />
-                    <DeleteModal isOpen={isDeleteModalOpen} onDeleteClick={handleConfirmDelete} onClose={() => setIsDeleteModalOpen(false)} />
                 </>
             )}
         </AdminLayout>
