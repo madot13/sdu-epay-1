@@ -93,20 +93,23 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
         fetchEvents();
     }, [department]);
 
-    // Check if event has existing payment types and auto-set isMain if none exist
+    // Check if event has existing payment types and auto-set isMain if none exist or only one active
     useEffect(() => {
         const checkExistingPaymentTypes = async () => {
             if (selectedEvent) {
                 try {
                     const response = await packetEventsApi.getAll({ event_id: selectedEvent });
                     const paymentTypes = Array.isArray(response) ? response : (response as any).data || [];
+                    const activePaymentTypes = paymentTypes.filter((pt: any) => pt.active === true);
                     
                     console.log("🔍 Existing payment types for event:", paymentTypes.length);
+                    console.log("🔍 Active payment types for event:", activePaymentTypes.length);
                     
-                    // Auto-set isMain to true if no payment types exist
-                    if (paymentTypes.length === 0) {
+                    // Auto-set isMain to true if no payment types exist or no active payment types exist
+                    if (paymentTypes.length === 0 || activePaymentTypes.length === 0) {
                         setIsMain(true);
-                        console.log("🔍 Auto-setting isMain to true - no existing payment types");
+                        console.log("🔍 Auto-setting isMain to true -", 
+                            paymentTypes.length === 0 ? "no existing payment types" : "no active payment types");
                     }
                 } catch (error) {
                     console.error("Error checking existing payment types:", error);
@@ -139,14 +142,22 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
         }
 
         try {
-            // Final check: if this is the first payment type for the event, force isMain to true
+            // Final check: determine if this payment type should be main
             const response = await packetEventsApi.getAll({ event_id: selectedEvent });
             const existingPaymentTypes = Array.isArray(response) ? response : (response as any).data || [];
             
             let finalIsMain = isMain;
-            if (existingPaymentTypes.length === 0) {
+            
+            // Count existing active payment types
+            const activeExistingTypes = existingPaymentTypes.filter((pt: any) => pt.active === true);
+            
+            // Force isMain to true in these cases:
+            // 1. No existing payment types at all (first payment type)
+            // 2. No existing active payment types and this new one is active (will be the only active one)
+            if (existingPaymentTypes.length === 0 || (activeExistingTypes.length === 0 && isActive)) {
                 finalIsMain = true;
-                console.log("🔍 Final check: forcing isMain to true - no existing payment types");
+                console.log("🔍 Final check: forcing isMain to true -", 
+                    existingPaymentTypes.length === 0 ? "no existing payment types" : "will be the only active payment type");
             }
 
             // Если этот тип оплаты отмечен как Main, снимаем флаг с других типов
@@ -316,7 +327,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                     </div>
                     {selectedEvent && (
                         <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded">
-                            💡 Первый тип оплаты для события автоматически устанавливается как основной
+                            💡 Первый или единственный активный тип оплаты для события автоматически устанавливается как основной
                         </div>
                     )}
 

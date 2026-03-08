@@ -209,6 +209,18 @@ export const PaymentForm: FC = () => {
                 }));
                 
                 setPaymentCategoryOptions(paymentCategories);
+                
+                // Reset payment category selection when event changes
+                setValue("event_payment_type_id", "");
+                setOrderField("event_payment_type_id", "");
+                
+                // Auto-select main payment type if exists
+                const mainPaymentType = paymentTypes.find((pt: any) => pt.is_main === true);
+                if (mainPaymentType) {
+                    setValue("event_payment_type_id", mainPaymentType.id);
+                    setOrderField("event_payment_type_id", mainPaymentType.id);
+                    console.log("🔍 Auto-selected main payment type in PaymentForm:", mainPaymentType.category || mainPaymentType.id);
+                }
             } catch (error) {
                 console.error("Error fetching payment categories:", error);
                 setPaymentCategoryOptions([]);
