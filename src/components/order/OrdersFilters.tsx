@@ -50,7 +50,12 @@ export const OrdersFilters: FC = () => {
                 size: 10,
             };
             console.log("🔍 Orders filters being sent:", filters);
-            await fetchOrders(filters);
+            const result = await fetchOrders(filters);
+            console.log("🔍 Orders received:", result?.data?.slice(0, 3)?.map(o => ({
+                id: o.id,
+                created_at: o.created_at,
+                date_only: o.created_at?.split('T')[0]
+            })));
         };
 
         // Debounce search to avoid too many requests
