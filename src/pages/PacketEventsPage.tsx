@@ -1,4 +1,4 @@
-import { FC, useEffect, useState, useCallback, useMemo } from "react";
+import { FC, useEffect, useState, useCallback } from "react";
 import { AdminLayout } from "@/layouts/AdminLayout.tsx";
 import { CustomTable } from "@/ui/CustomTable.tsx";
 import { PacketEventsFilter } from "@/components/packet-events/PacketEventsFilter";
@@ -140,9 +140,9 @@ export const PacketEventsPage: FC = () => {
         setSort({ column, direction });
     };
 
-    // ✅ ДОБАВЛЕНО: маппинг + клиентская сортировка через useMemo
-    const mappedData = useMemo(() => {
-        console.log("🔍 Recalculating mappedData, data length:", data.length);
+    // Simple mapping without useMemo for immediate updates
+    const getMappedData = () => {
+        console.log("🔍 Calculating mappedData, data length:", data.length);
         const mapped = data.map((item) => {
             console.log("🔍 Mapping item:", item.id, "active:", item.active);
             return {
@@ -168,7 +168,9 @@ export const PacketEventsPage: FC = () => {
             if (aValue > bValue) return sort.direction === 'asc' ? 1 : -1;
             return 0;
         });
-    }, [data, sort, updateTrigger]);
+    };
+
+    const mappedData = getMappedData();
 
     const handleSearch = (params: any) => {
         setFirst(0);
