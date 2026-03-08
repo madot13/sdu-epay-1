@@ -139,8 +139,18 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
         }
 
         try {
+            // Final check: if this is the first payment type for the event, force isMain to true
+            const response = await packetEventsApi.getAll({ event_id: selectedEvent });
+            const existingPaymentTypes = Array.isArray(response) ? response : (response as any).data || [];
+            
+            let finalIsMain = isMain;
+            if (existingPaymentTypes.length === 0) {
+                finalIsMain = true;
+                console.log("🔍 Final check: forcing isMain to true - no existing payment types");
+            }
+
             // Если этот тип оплаты отмечен как Main, снимаем флаг с других типов
-            if (isMain) {
+            if (finalIsMain) {
                 await packetEventsApi.clearMainFlag(selectedEvent, '');
                 console.log("🔍 Cleared main flag from other payment types for event:", selectedEvent);
             }
@@ -170,7 +180,7 @@ export const AddPacketEventModal: FC<{ onRefresh: () => void }> = ({ onRefresh }
                 priced: !withoutFixedPrice,
                 price: withoutFixedPrice ? null : price,
                 price_usd: withoutFixedPrice ? null : (priceUsd > 0 ? priceUsd : undefined),
-                is_main: isMain, // Используем is_main для соответствия бэкенду
+                is_main: finalIsMain, // Используем finalIsMain для соответствия бэкенду
                 additional_fields: Object.keys(allAdditionalFields).length > 0 ? allAdditionalFields : undefined
             });
 
