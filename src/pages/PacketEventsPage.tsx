@@ -142,12 +142,16 @@ export const PacketEventsPage: FC = () => {
 
     // ✅ ДОБАВЛЕНО: маппинг + клиентская сортировка через useMemo
     const mappedData = useMemo(() => {
-        const mapped = data.map((item) => ({
-            ...item,
-            event_name: item.title || item.event_name || '',
-            category: item.category || "—",
-            department: item.department_name || item.department || ''
-        }));
+        console.log("🔍 Recalculating mappedData, data length:", data.length);
+        const mapped = data.map((item) => {
+            console.log("🔍 Mapping item:", item.id, "active:", item.active);
+            return {
+                ...item,
+                event_name: item.title || item.event_name || '',
+                category: item.category || "—",
+                department: item.department_name || item.department || ''
+            };
+        });
 
         if (!sort) return mapped;
 
@@ -164,7 +168,7 @@ export const PacketEventsPage: FC = () => {
             if (aValue > bValue) return sort.direction === 'asc' ? 1 : -1;
             return 0;
         });
-    }, [data, sort]);
+    }, [data, sort, updateTrigger]);
 
     const handleSearch = (params: any) => {
         setFirst(0);
