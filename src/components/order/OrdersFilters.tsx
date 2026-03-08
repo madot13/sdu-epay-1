@@ -31,13 +31,10 @@ export const OrdersFilters: FC = () => {
 
     const formatDate = (date: Date | null) => {
         if (!date) return null;
-        // Use local date formatting to avoid timezone issues
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const formatted = `${year}-${month}-${day}`;
-        console.log("🔍 Formatted date:", formatted, "from date:", date);
-        return formatted;
+        // Try timestamp format
+        const timestamp = date.getTime();
+        console.log("🔍 Formatted date (timestamp):", timestamp, "from date:", date);
+        return timestamp;
     };
 
     // Auto-search when filters change
