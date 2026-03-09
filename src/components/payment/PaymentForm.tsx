@@ -63,7 +63,7 @@ export const usePaymentSchema = (departmentType: DepartmentType | null, eventPri
 };
 
 export const PaymentForm: FC = () => {
-    const {setPrice, setOrderField, setCurrency, discount, resetPromo} = usePaymentStore();
+    const {setPrice, setOrderField, setCurrency, discount, finalPrice, resetPromo} = usePaymentStore();
     const [isCustomPrice, setIsCustomPrice] = useState(false);
     const { t } = useTranslation();
     const [selectedDepartmentId, setSelectedDepartmentId] = useState("");
@@ -114,6 +114,16 @@ export const PaymentForm: FC = () => {
                     additional_fields: event.additional_fields
                 })).filter((event: any) => event.label && event.value);
                 setEventOptions(mapped);
+
+                // Автовыбор если событие одно
+                if (mapped.length === 1) {
+                    const singleEvent = mapped[0];
+                    setValue("event_id", singleEvent.value);
+                    setOrderField("event_id", singleEvent.value);
+                    setCurrentEventId(singleEvent.value);
+                    setSelectedEventPriced(null);
+                    setPrice(0);
+                }
             } catch (error) {
                 console.error("Failed to fetch events:", error);
             }
@@ -195,6 +205,14 @@ export const PaymentForm: FC = () => {
     const watchShowInUsd = watch("showInUsd");
     const watchPaymentMethod = watch("paymentMethod");
     const watchPaymentCategoryId = watch("event_payment_type_id");
+    const watchEventId = watch("event_id");
+
+    // Обновляем amount в форме когда применяется промокод
+    useEffect(() => {
+        if (discount > 0 && finalPrice > 0) {
+            setValue("amount", finalPrice);
+        }
+    }, [finalPrice, discount]);
 
     // Auto-set price and currency flags when payment category options load (main category)
     useEffect(() => {
@@ -696,35 +714,38 @@ export const PaymentForm: FC = () => {
                             <>
                                 <Controller name="promo_code" control={control} render={({ field }) => <PromocodeInput promoCodeField={{ ...field, value: field.value ?? undefined }} />} />
 
-                                {/* Amount field — disabled if payment category has a fixed price */}
-                                <Controller name="amount" control={control} render={({ field }) => {
-                                    const selectedCategory = watchPaymentCategoryId
-                                        ? paymentCategoryOptions.find(opt => opt.value === watchPaymentCategoryId) as any
-                                        : null;
-                                    const hasFixedPrice = selectedCategory && (
-                                        (selectedCategory.price !== null && selectedCategory.price > 0) ||
-                                        (selectedCategory.price_usd !== null && selectedCategory.price_usd > 0)
-                                    );
-                                    return (
-                                        <>
-                                            <CustomInput
-                                                {...field}
-                                                disabled={!!hasFixedPrice}
-                                                icon={watchShowInUsd
-                                                    ? <CurrencyDollarIcon className={errors.amount ? "text-red-500" : "text-[#6B9AB0]"} />
-                                                    : <TengeIcon color={errors.amount ? "#fb2c36" : "#6B9AB0"} />
-                                                }
-                                                type="number"
-                                                onChange={(e) => { field.onChange(e); setOrderField("amount", Number(e.target.value)); }}
-                                                placeholder={hasFixedPrice ? "Цена фиксирована" : isCustomPrice ? "Введите сумму" : t('paymentPage.inputs.amountPH')}
-                                                error={errors.amount?.message}
-                                            />
-                                            {errors.amount && <p className="text-red-500 text-sm -mt-4 ml-2">{errors.amount.message}</p>}
-                                        </>
-                                    );
-                                }} />
-
-                                {!isCustomPrice && <CheckOut />}
+                                {/* Amount and checkout — only show after event is selected */}
+                                {watchEventId && (
+                                    <>
+                                        <Controller name="amount" control={control} render={({ field }) => {
+                                            const selectedCategory = watchPaymentCategoryId
+                                                ? paymentCategoryOptions.find(opt => opt.value === watchPaymentCategoryId) as any
+                                                : null;
+                                            const hasFixedPrice = selectedCategory && (
+                                                (selectedCategory.price !== null && selectedCategory.price > 0) ||
+                                                (selectedCategory.price_usd !== null && selectedCategory.price_usd > 0)
+                                            );
+                                            return (
+                                                <>
+                                                    <CustomInput
+                                                        {...field}
+                                                        disabled={!!hasFixedPrice}
+                                                        icon={watchShowInUsd
+                                                            ? <CurrencyDollarIcon className={errors.amount ? "text-red-500" : "text-[#6B9AB0]"} />
+                                                            : <TengeIcon color={errors.amount ? "#fb2c36" : "#6B9AB0"} />
+                                                        }
+                                                        type="number"
+                                                        onChange={(e) => { field.onChange(e); setOrderField("amount", Number(e.target.value)); }}
+                                                        placeholder={hasFixedPrice ? "Цена фиксирована" : isCustomPrice ? "Введите сумму" : t('paymentPage.inputs.amountPH')}
+                                                        error={errors.amount?.message}
+                                                    />
+                                                    {errors.amount && <p className="text-red-500 text-sm -mt-4 ml-2">{errors.amount.message}</p>}
+                                                </>
+                                            );
+                                        }} />
+                                        {!isCustomPrice && <CheckOut />}
+                                    </>
+                                )}
                             </>
                         ) : (
                             /* SELF_PAY — amount always driven by payment category, no fixed price on department level */
