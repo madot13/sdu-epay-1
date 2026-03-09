@@ -258,7 +258,8 @@ export const OrderDetailsModal: FC<OrderDetailsModalProps> = ({ isOpen, onClose,
                                     
                                     // Формируем URL для скачивания файла
                                     const getFileUrl = (fileName: string) => {
-                                        return `/api/orders/${orderDetails.id}/files/${encodeURIComponent(fileName)}`;
+                                        const baseUrl = window.location.origin;
+                                        return `${baseUrl}/api/orders/${orderDetails.id}/files/${encodeURIComponent(fileName)}`;
                                     };
                                     
                                     return (
