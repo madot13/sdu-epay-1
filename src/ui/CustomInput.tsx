@@ -38,11 +38,12 @@ export const CustomInput: FC<InputProps> = ({
             <input
                 type={type}
                 value={value}
-                onChange={onChange}
+                onChange={disabled ? undefined : onChange}
+                onWheel={type === "number" ? (e) => (e.target as HTMLInputElement).blur() : undefined}
                 placeholder={placeholder}
                 disabled={disabled}
                 required={required}
-                className={`bg-[#F3F3F3] border border-[#6B9AB0] rounded-[5px] ring-[#6B9AB0] p-[13px] pl-[65px] w-full ${error ? 'border-red-500' : ''} ${disabled ? 'opacity-60 cursor-not-allowed bg-gray-200 border-gray-300' : ''} ${className}`}
+                className={`bg-[#F3F3F3] border border-[#6B9AB0] rounded-[5px] ring-[#6B9AB0] p-[13px] pl-[65px] w-full ${error ? 'border-red-500' : ''} ${disabled ? 'opacity-60 cursor-not-allowed bg-gray-200 border-gray-300 pointer-events-none' : ''} ${className}`}
             />
         </div>
     );
