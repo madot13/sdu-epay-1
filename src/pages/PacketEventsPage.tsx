@@ -44,7 +44,6 @@ export const PacketEventsPage: FC = () => {
             accessor: (item: Record<string, any>): ReactNode => {
                 const price = item.price;
                 const priceUsd = item.price_usd;
-
                 if (price === 0 && priceUsd === 0) {
                     return <span className="text-gray-500">Произвольная</span>;
                 }
@@ -59,7 +58,6 @@ export const PacketEventsPage: FC = () => {
             accessor: (item: Record<string, any>): ReactNode => {
                 const price = item.price;
                 const priceUsd = item.price_usd;
-
                 if (price === 0 && priceUsd === 0) {
                     return <span className="text-gray-500">Произвольная</span>;
                 }
@@ -71,10 +69,14 @@ export const PacketEventsPage: FC = () => {
         },
     ];
 
-    const loadData = useCallback(async (currentFilters: any = {}) => {
+    const loadData = useCallback(async (currentFilters: any = {}, page = 0, size = 10) => {
         setLoading(true);
         try {
-            const result = await packetEventsApi.getAll(currentFilters);
+            const result = await packetEventsApi.getAll({
+                ...currentFilters,
+                page,
+                size,
+            });
 
             let items: any[] = [];
             if (result && typeof result === 'object') {
@@ -99,7 +101,7 @@ export const PacketEventsPage: FC = () => {
     }, []);
 
     useEffect(() => {
-        loadData(filters);
+        loadData(filters, first / rows, rows);
     }, [first, rows, filters]);
 
     const handleSort = (column: string, direction: 'asc' | 'desc') => {
@@ -207,7 +209,7 @@ export const PacketEventsPage: FC = () => {
                         setSelectedItem(null);
                     }}
                     eventData={selectedItem}
-                    onSuccess={() => loadData(filters)}
+                    onSuccess={() => loadData(filters, first / rows, rows)}
                 />
             )}
         </AdminLayout>
