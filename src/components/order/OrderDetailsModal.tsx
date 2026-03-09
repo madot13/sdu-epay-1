@@ -137,17 +137,17 @@ export const OrderDetailsModal: FC<OrderDetailsModalProps> = ({ isOpen, onClose,
                     </div>
                     <div>
                         <p className="text-sm text-gray-500">Сумма</p>
-                        <p className="font-semibold">{orderDetails.amount} ₸</p>
+                        <p className="font-semibold">{orderDetails.amount} {orderDetails.currency === 'USD' ? '$' : '₸'}</p>
                     </div>
                     <div>
                         <p className="text-sm text-gray-500">Итоговая сумма</p>
-                        <p className="font-semibold text-lg text-blue-600">{orderDetails.final_amount} ₸</p>
+                        <p className="font-semibold text-lg text-blue-600">{orderDetails.final_amount} {orderDetails.currency === 'USD' ? '$' : '₸'}</p>
                     </div>
                     <div>
                         <p className="text-sm text-gray-500">Скидка</p>
                         <p className="font-semibold text-green-600">
                             {orderDetails.amount - orderDetails.final_amount > 0
-                                ? `${orderDetails.amount - orderDetails.final_amount} ₸`
+                                ? `${orderDetails.amount - orderDetails.final_amount} {orderDetails.currency === 'USD' ? '$' : '₸'}`
                                 : "Нет"}
                         </p>
                     </div>
@@ -186,7 +186,7 @@ export const OrderDetailsModal: FC<OrderDetailsModalProps> = ({ isOpen, onClose,
                             <div>
                                 <p className="text-sm text-gray-600">Цена</p>
                                 <p className="font-semibold">
-                                    {orderDetails.event.priced ? `${orderDetails.event.price} ₸` : "Произвольная"}
+                                    {orderDetails.event.priced ? `${orderDetails.event.price} ${orderDetails.currency === 'USD' ? '$' : '₸'}` : "Произвольная"}
                                 </p>
                             </div>
                             {!orderDetails.event.without_period && (
