@@ -48,7 +48,7 @@ export const PaymentHalyk: FC<PaymentHalykProps> = ({
                 console.warn("⚠️ Halyk widget loading timeout - possible iframe issues");
                 setLoadingTimeout(true);
                 toast.error("Платежная форма загружается дольше обычного. Если проблема сохранится, попробуйте другой способ оплаты.");
-            }, 15000); // 15 seconds timeout
+            }, 60000); // 60 seconds timeout
 
             // Listen for console errors related to iframe
             const originalConsoleError = console.error;
