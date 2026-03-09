@@ -1416,7 +1416,7 @@ export const PaymentForm: FC = () => {
                                                 <>
                                                     <CustomInput
                                                         {...field}
-                                                        disabled={!isCustomPrice || hasFixedPrice}
+                                                        disabled={!(isCustomPrice && !hasFixedPrice)}
                                                         icon={watchShowInUsd
                                                             ? <CurrencyDollarIcon className={errors.amount ? "text-red-500" : "text-[#6B9AB0]"} />
                                                             : <TengeIcon color={errors.amount ? "#fb2c36" : "#6B9AB0"} />
@@ -1459,7 +1459,7 @@ export const PaymentForm: FC = () => {
                                         <>
                                             <CustomInput
                                                 {...field}
-                                                disabled={!isCustomPrice || hasFixedPrice}
+                                                disabled={!(isCustomPrice && !hasFixedPrice)}
                                                 icon={<TengeIcon color={errors.amount ? "#fb2c36" : "#6B9AB0"} />}
                                                 type="number"
                                                 onChange={(e) => {
