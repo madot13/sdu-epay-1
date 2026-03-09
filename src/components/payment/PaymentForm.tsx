@@ -208,7 +208,14 @@ export const PaymentForm: FC = () => {
                     additional_fields: pt.additional_fields
                 }));
                 
-                setPaymentCategoryOptions(paymentCategories);
+                // Sort payment categories to put main payment type first
+                const sortedPaymentCategories = [...paymentCategories].sort((a, b) => {
+                    if (a.is_main && !b.is_main) return -1;
+                    if (!a.is_main && b.is_main) return 1;
+                    return 0;
+                });
+                
+                setPaymentCategoryOptions(sortedPaymentCategories);
                 
                 // Reset payment category selection when event changes
                 setValue("event_payment_type_id", "");
