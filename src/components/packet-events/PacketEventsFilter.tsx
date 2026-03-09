@@ -2,9 +2,8 @@ import { FC, useState, useEffect } from "react";
 import { CustomButton } from "@/ui/CustomButton.tsx";
 import { CustomSelect } from "@/ui/CustomSelect.tsx";
 import { getDepartments } from "@/api/endpoints/departments.ts";
-import { getPublicEventsById } from "@/api/endpoints/events.ts";
 import { Department } from "@/types/departments.ts";
-import { AddPacketEventModal } from "./AddPacketEventModal"; 
+import { AddPacketEventModal } from "./AddPacketEventModal";
 
 interface PacketEventsFilterProps {
     onSearch: (params: any) => void;
@@ -38,22 +37,6 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
         fetchDepartments();
     }, []);
 
-    useEffect(() => {
-        if (selectedDepartment) {
-            const fetchEvents = async () => {
-                try {
-                    const eventsData = await getPublicEventsById(selectedDepartment);
-                    console.log("Events loaded for department:", selectedDepartment, eventsData);
-                } catch (error) {
-                    console.error("Failed to fetch events:", error);
-                }
-            };
-            fetchEvents();
-        }
-    }, [selectedDepartment]);
-
-    // ✅ ИСПРАВЛЕНИЕ: принимаем актуальные значения как аргументы,
-    // чтобы не зависеть от стейта который мог не успеть обновиться
     const handleSearch = (
         overrides: {
             name?: string;
@@ -75,18 +58,13 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
             filters.department_id = currentDepartment.trim();
         }
 
-        // Явно добавляем active фильтр
         if (currentActive === "true") {
             filters.active = true;
         } else if (currentActive === "false") {
             filters.active = false;
         }
-        // Если "Все" (currentActive === ""), не добавляем active поле вообще
+        // Если "Все" (currentActive === "") — не передаём active вообще
 
-        console.log("🔍 Prepared filters:", filters);
-        console.log("🔍 currentActive value:", currentActive);
-        console.log("🔍 filters.active value:", filters.active);
-        console.log("🔍 About to call onSearch with:", JSON.stringify(filters, null, 2));
         onSearch(filters);
     };
 
@@ -108,9 +86,7 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
                     <CustomSelect
                         options={departments}
                         value={selectedDepartment}
-                        onChange={(val) => {
-                            setSelectedDepartment(val);
-                        }}
+                        onChange={(val) => setSelectedDepartment(val)}
                         triggerClassName="bg-white w-full sm:min-w-[200px] h-[37px] text-black text-sm border-[#6B9AB0]"
                     />
                 </div>
@@ -119,9 +95,7 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
                     <CustomSelect
                         options={activeOptions}
                         value={active}
-                        onChange={(val) => {
-                            setActive(val);
-                        }}
+                        onChange={(val) => setActive(val)}
                         triggerClassName="bg-white w-full sm:min-w-[150px] h-[37px] text-black text-sm border-[#6B9AB0]"
                     />
                 </div>
