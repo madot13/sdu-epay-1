@@ -147,7 +147,7 @@ export const OrderDetailsModal: FC<OrderDetailsModalProps> = ({ isOpen, onClose,
                         <p className="text-sm text-gray-500">Скидка</p>
                         <p className="font-semibold text-green-600">
                             {orderDetails.amount - orderDetails.final_amount > 0
-                                ? `${orderDetails.amount - orderDetails.final_amount} {orderDetails.currency === 'USD' ? '$' : '₸'}`
+                                ? `${(orderDetails.amount - orderDetails.final_amount).toFixed(2)} ${orderDetails.currency === 'USD' ? '$' : '₸'}`
                                 : "Нет"}
                         </p>
                     </div>

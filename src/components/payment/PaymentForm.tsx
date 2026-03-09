@@ -1412,6 +1412,16 @@ export const PaymentForm: FC = () => {
                                             // Произвольная цена если price или price_usd равны null
                                             const hasFixedPrice = selectedCategory && selectedCategory.price !== null && selectedCategory.price_usd !== null && (selectedCategory.price > 0 || selectedCategory.price_usd > 0);
                                             
+                                            console.log("🔍 Price field debug:", {
+                                                selectedCategory,
+                                                watchPaymentCategoryId,
+                                                isCustomPrice,
+                                                hasFixedPrice,
+                                                selectedCategoryPrice: selectedCategory?.price,
+                                                selectedCategoryPriceUsd: selectedCategory?.price_usd,
+                                                disabled: !(isCustomPrice && !hasFixedPrice)
+                                            });
+                                            
                                             return (
                                                 <>
                                                     <CustomInput

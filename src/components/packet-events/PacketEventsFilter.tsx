@@ -76,14 +76,12 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
         }
 
         // Явно добавляем active фильтр
-        if (currentActive === "") {
-            // Для "Все" отправляем строку "false", чтобы обойти фильтрацию (строка != bool)
-            filters.active = "false";
-        } else if (currentActive === "true") {
+        if (currentActive === "true") {
             filters.active = true;
         } else if (currentActive === "false") {
             filters.active = false;
         }
+        // Если "Все" (currentActive === ""), не добавляем active фильтр вообще
 
         console.log("🔍 Prepared filters:", filters);
         console.log("🔍 currentActive value:", currentActive);
