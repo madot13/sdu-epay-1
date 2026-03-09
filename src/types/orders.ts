@@ -29,13 +29,14 @@ export interface OrderDetails {
     amount: number;
     final_amount: number;
     currency?: "KZT" | "USD";
+    event_payment_type_id: string | null;
     created_at: string;
     department: {
         name: string;
         additional_fields: Record<string, any>;
         id: string;
         type: "EVENT_BASED" | "SELF_PAY";
-    };
+    } | null;
     event: {
         title: string;
         manager_email: string;
@@ -46,6 +47,7 @@ export interface OrderDetails {
         period_from: string;
         period_till: string;
         id: string;
+        event_payment_type_id: string | null;
     } | null;
     promo_code: {
         id: string;

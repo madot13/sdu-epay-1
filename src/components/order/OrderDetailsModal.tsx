@@ -204,9 +204,13 @@ export const OrderDetailsModal: FC<OrderDetailsModalProps> = ({ isOpen, onClose,
                             <div>
                                 <p className="text-sm text-gray-600">Цена</p>
                                 <p className="font-semibold">
-                                    {orderDetails.event.priced
-                                        ? `${orderDetails.event.price} ${currency}`
-                                        : "Произвольная"}
+                                    {orderDetails.event_payment_type_id && orderDetails.event_payment_type_id !== ""
+                                        ? orderDetails.final_amount > 0
+                                            ? `${orderDetails.final_amount} ${currency}`
+                                            : "Произвольная"
+                                        : orderDetails.event.priced
+                                            ? `${orderDetails.event.price} ${currency}`
+                                            : "Произвольная"}
                                 </p>
                             </div>
                             {!orderDetails.event.without_period && (

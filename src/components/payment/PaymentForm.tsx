@@ -750,7 +750,7 @@ export const PaymentForm: FC = () => {
                             </>
                         ) : (
                             <Controller name="amount" control={control} render={({ field }) => {
-                                const selectedDepartment = departmentOptions.find(opt => opt.value === watchDepartmentId) as any;
+                                const selectedDepartment = departments.find(d => d.id === watchDepartmentId);
                                 const hasFixedPrice = selectedDepartment && selectedDepartment.price !== null && selectedDepartment.price > 0;
                                 return (
                                     <>
