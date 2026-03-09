@@ -737,6 +737,7 @@ export const PaymentForm: FC = () => {
                                             (selectedCategory.price !== null && selectedCategory.price > 0) ||
                                             (selectedCategory.price_usd !== null && selectedCategory.price_usd > 0)
                                         );
+                                        console.log("DEBUG:", { watchPaymentCategoryId, selectedCategory, hasFixedPrice });
                                         return (
                                             <>
                                                 <CustomInput {...field} disabled={!!hasFixedPrice} icon={watchShowInUsd ? <CurrencyDollarIcon className={errors.amount ? "text-red-500" : "text-[#6B9AB0]"} /> : <TengeIcon color={errors.amount ? "#fb2c36" : "#6B9AB0"} />} type="number" onChange={(e) => { field.onChange(e); setOrderField("amount", Number(e.target.value)); }} placeholder={hasFixedPrice ? "Цена фиксирована" : isCustomPrice ? "Введите сумму" : t('paymentPage.inputs.amountPH')} error={errors.amount?.message} />
