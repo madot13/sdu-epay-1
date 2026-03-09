@@ -10,6 +10,27 @@ interface OrderDetailsModalProps {
     order: Order | null;
 }
 
+// Определяем является ли значение ссылкой на файл в MinIO
+const isFileUrl = (value: unknown): value is string => {
+    if (typeof value !== "string") return false;
+    return (
+        /^https?:\/\/.+\.(jpg|jpeg|png|gif|pdf|doc|docx|xls|xlsx|txt|zip|rar)(\?.*)?$/i.test(value) ||
+        /\.(jpg|jpeg|png|gif|pdf|doc|docx|xls|xlsx|txt|zip|rar)$/i.test(value)
+    );
+};
+
+// Скачиваем файл по прямой ссылке из MinIO
+const downloadFile = (fileUrl: string) => {
+    const filename = fileUrl.split("/").pop()?.split("?")[0] || "file";
+    const a = document.createElement("a");
+    a.href = fileUrl;
+    a.target = "_blank";
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+};
+
 export const OrderDetailsModal: FC<OrderDetailsModalProps> = ({ isOpen, onClose, order }) => {
     const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
     const [loading, setLoading] = useState(false);
@@ -17,7 +38,7 @@ export const OrderDetailsModal: FC<OrderDetailsModalProps> = ({ isOpen, onClose,
     useEffect(() => {
         const fetchOrderDetails = async () => {
             if (!order || !isOpen) return;
-            
+
             setLoading(true);
             try {
                 const details = await getOrderById(order.id);
@@ -48,29 +69,23 @@ export const OrderDetailsModal: FC<OrderDetailsModalProps> = ({ isOpen, onClose,
 
     const getStatusColor = (status: string) => {
         switch (status) {
-            case "SUCCESS":
-                return "text-green-600";
-            case "FAILURE":
-                return "text-red-600";
-            case "PENDING":
-                return "text-yellow-600";
-            default:
-                return "";
+            case "SUCCESS": return "text-green-600";
+            case "FAILURE": return "text-red-600";
+            case "PENDING": return "text-yellow-600";
+            default: return "";
         }
     };
 
     const getStatusText = (status: string) => {
         switch (status) {
-            case "SUCCESS":
-                return "Успешно";
-            case "FAILURE":
-                return "Ошибка";
-            case "PENDING":
-                return "В ожидании";
-            default:
-                return status;
+            case "SUCCESS": return "Успешно";
+            case "FAILURE": return "Ошибка";
+            case "PENDING": return "В ожидании";
+            default: return status;
         }
     };
+
+    const currency = orderDetails?.currency === "USD" ? "$" : "₸";
 
     if (loading) {
         return (
@@ -137,17 +152,17 @@ export const OrderDetailsModal: FC<OrderDetailsModalProps> = ({ isOpen, onClose,
                     </div>
                     <div>
                         <p className="text-sm text-gray-500">Сумма</p>
-                        <p className="font-semibold">{orderDetails.amount} {orderDetails.currency === 'USD' ? '$' : '₸'}</p>
+                        <p className="font-semibold">{orderDetails.amount} {currency}</p>
                     </div>
                     <div>
                         <p className="text-sm text-gray-500">Итоговая сумма</p>
-                        <p className="font-semibold text-lg text-blue-600">{orderDetails.final_amount} {orderDetails.currency === 'USD' ? '$' : '₸'}</p>
+                        <p className="font-semibold text-lg text-blue-600">{orderDetails.final_amount} {currency}</p>
                     </div>
                     <div>
                         <p className="text-sm text-gray-500">Скидка</p>
                         <p className="font-semibold text-green-600">
                             {orderDetails.amount - orderDetails.final_amount > 0
-                                ? `${(orderDetails.amount - orderDetails.final_amount).toFixed(2)} ${orderDetails.currency === 'USD' ? '$' : '₸'}`
+                                ? `${(orderDetails.amount - orderDetails.final_amount).toFixed(2)} ${currency}`
                                 : "Нет"}
                         </p>
                     </div>
@@ -164,7 +179,9 @@ export const OrderDetailsModal: FC<OrderDetailsModalProps> = ({ isOpen, onClose,
                         <div>
                             <p className="text-sm text-gray-600">Тип</p>
                             <p className="font-semibold">
-                                {orderDetails.department?.type === "EVENT_BASED" ? "На основе событий" : "Самостоятельная оплата"}
+                                {orderDetails.department?.type === "EVENT_BASED"
+                                    ? "На основе событий"
+                                    : "Самостоятельная оплата"}
                             </p>
                         </div>
                     </div>
@@ -186,7 +203,9 @@ export const OrderDetailsModal: FC<OrderDetailsModalProps> = ({ isOpen, onClose,
                             <div>
                                 <p className="text-sm text-gray-600">Цена</p>
                                 <p className="font-semibold">
-                                    {orderDetails.event.priced ? `${orderDetails.event.price} ${orderDetails.currency === 'USD' ? '$' : '₸'}` : "Произвольная"}
+                                    {orderDetails.event.priced
+                                        ? `${orderDetails.event.price} ${currency}`
+                                        : "Произвольная"}
                                 </p>
                             </div>
                             {!orderDetails.event.without_period && (
@@ -230,75 +249,35 @@ export const OrderDetailsModal: FC<OrderDetailsModalProps> = ({ isOpen, onClose,
                         <p className="text-sm text-gray-500 mb-3">Дополнительные поля</p>
                         <div className="bg-gray-50 p-4 rounded-md">
                             <div className="flex flex-col gap-3">
-                                {Object.entries(orderDetails.additional_fields).map(([key, value]) => {
-                                    console.log("🔍 Additional field debug:");
-                                    console.log("  - Key:", key);
-                                    console.log("  - Value:", value);
-                                    console.log("  - Value type:", typeof value);
-                                    
-                                    // Определяем файл по расширению или специальным паттернам
-                                    const isFile = typeof value === "string" && (
-                                        // Проверяем на URL
-                                        value.includes("http") || 
-                                        value.includes("https") || 
-                                        value.includes("www") || 
-                                        value.includes("C:\\fakepath") ||
-                                        value.includes("fakepath") ||
-                                        value.includes("blob:") ||
-                                        // Проверяем на расширения файлов
-                                        /\.(jpg|jpeg|png|gif|pdf|doc|docx|xls|xlsx|txt|zip|rar)$/i.test(value) ||
-                                        // Проверяем на паттерны имен файлов
-                                        /Screenshot_\d{4}-\d{2}-\d{2}/.test(value) ||
-                                        value.includes("_at_") && value.includes(".png") ||
-                                        value.includes("_at_") && value.includes(".jpg") ||
-                                        value.includes("_at_") && value.includes(".pdf")
-                                    );
-                                    
-                                    console.log("  - isFile result:", isFile);
-                                    
-                                    // Функция для скачивания файла
-                                    const downloadFile = async (fileName: string) => {
-                                        const baseUrl = window.location.origin;
-                                        const fileUrl = `${baseUrl}/api/orders/${orderDetails.id}/files/${encodeURIComponent(fileName)}`;
-                                        const a = document.createElement('a');
-                                        a.href = fileUrl;
-                                        a.download = fileName;
-                                        a.click();
-                                    };
-                                    
-                                    return (
-                                        <div key={key} className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 pb-3 border-b border-gray-200 last:border-0">
-                                            <span className="text-gray-600 font-medium min-w-[120px]">{key}:</span>
-                                            
-                                            {isFile ? (
-                                                <div className="flex items-center gap-2">
-                                                    <button
-                                                        onClick={() => {
-                                                            downloadFile(value);
-                                                        }}
-                                                        className="flex items-center gap-2 px-3 py-2 bg-white border border-blue-500 text-blue-600 rounded-md hover:bg-blue-50 transition-colors text-sm font-medium"
-                                                    >
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                        </svg>
-                                                        Скачать файл
-                                                    </button>
-                                                    <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">
-                                                        ✓ Файл загружен
-                                                    </span>
-                                                </div>
-                                            ) : (
-                                                <span className="font-semibold text-gray-800 break-all">
-                                                    {typeof value === "boolean"
-                                                        ? value
-                                                            ? "Да"
-                                                            : "Нет"
-                                                        : String(value)}
+                                {Object.entries(orderDetails.additional_fields).map(([key, value]) => (
+                                    <div
+                                        key={key}
+                                        className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 pb-3 border-b border-gray-200 last:border-0"
+                                    >
+                                        <span className="text-gray-600 font-medium min-w-[120px]">{key}:</span>
+
+                                        {isFileUrl(value) ? (
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => downloadFile(value)}
+                                                    className="flex items-center gap-2 px-3 py-2 bg-white border border-blue-500 text-blue-600 rounded-md hover:bg-blue-50 transition-colors text-sm font-medium"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                    </svg>
+                                                    Скачать файл
+                                                </button>
+                                                <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">
+                                                    ✓ Файл загружен
                                                 </span>
-                                            )}
-                                        </div>
-                                    );
-                                })}
+                                            </div>
+                                        ) : (
+                                            <span className="font-semibold text-gray-800 break-all">
+                                                {typeof value === "boolean" ? (value ? "Да" : "Нет") : String(value)}
+                                            </span>
+                                        )}
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </div>
@@ -312,4 +291,3 @@ export const OrderDetailsModal: FC<OrderDetailsModalProps> = ({ isOpen, onClose,
         </CustomModal>
     );
 };
-
