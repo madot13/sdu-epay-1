@@ -42,6 +42,7 @@ export const OrderDetailsModal: FC<OrderDetailsModalProps> = ({ isOpen, onClose,
             setLoading(true);
             try {
                 const details = await getOrderById(order.id);
+                console.log("🔍 additional_fields:", JSON.stringify(details.additional_fields, null, 2)); // <- добавьте
                 setOrderDetails(details);
             } catch (error) {
                 console.error("Failed to fetch order details:", error);
