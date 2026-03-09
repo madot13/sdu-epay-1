@@ -231,6 +231,18 @@ export const OrderDetailsModal: FC<OrderDetailsModalProps> = ({ isOpen, onClose,
                         <div className="bg-gray-50 p-4 rounded-md">
                             <div className="flex flex-col gap-3">
                                 {Object.entries(orderDetails.additional_fields).map(([key, value]) => {
+                                    console.log("🔍 Additional field debug:");
+                                    console.log("  - Key:", key);
+                                    console.log("  - Value:", value);
+                                    console.log("  - Value type:", typeof value);
+                                    console.log("  - Value includes checks:", {
+                                        hasHttp: typeof value === "string" ? value.includes("http") : false,
+                                        hasHttps: typeof value === "string" ? value.includes("https") : false,
+                                        hasWww: typeof value === "string" ? value.includes("www") : false,
+                                        hasFakepath: typeof value === "string" ? value.includes("fakepath") : false,
+                                        hasBlob: typeof value === "string" ? value.includes("blob:") : false
+                                    });
+                                    
                                     const isFile = typeof value === "string" && (
                                         value.includes("http") || 
                                         value.includes("https") || 
@@ -239,6 +251,8 @@ export const OrderDetailsModal: FC<OrderDetailsModalProps> = ({ isOpen, onClose,
                                         value.includes("fakepath") ||
                                         value.includes("blob:")
                                     );
+                                    
+                                    console.log("  - isFile result:", isFile);
                                     
                                     return (
                                         <div key={key} className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 pb-3 border-b border-gray-200 last:border-0">
