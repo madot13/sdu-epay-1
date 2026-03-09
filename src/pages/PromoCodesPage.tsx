@@ -25,6 +25,19 @@ export const PromoCodesPage:FC = () => {
         { header: "Уже использовано", accessor: "already_used" },
         { header: "Лимит использования", accessor: "limit" },
         { header: "Скидка", accessor: "discount" },
+        { 
+            header: "Статус", 
+            accessor: (promo: any) => (
+                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    promo.active 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                }`}>
+                    {promo.active ? 'Активен' : 'Неактивен'}
+                </span>
+            ),
+            sortable: true
+        },
     ];
 
 

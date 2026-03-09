@@ -25,6 +25,7 @@ interface EditPromoCodeModalProps {
         period_from: string;
         period_till: string;
         already_used: number;
+        active: boolean;
         event: {
             id: string;
             title: string;
@@ -45,6 +46,7 @@ export const EditPromoCodeModal: FC<EditPromoCodeModalProps> = ({
     const [limit, setLimit] = useState(promoData.limit);
     const [discount, setDiscount] = useState(promoData.discount);
     const [selectedEvent, setSelectedEvent] = useState(promoData.event.id);
+    const [active, setActive] = useState(promoData.active);
     const [dates, setDates] = useState<Date[] | null>([
         new Date(promoData.period_from),
         new Date(promoData.period_till),
@@ -75,6 +77,7 @@ export const EditPromoCodeModal: FC<EditPromoCodeModalProps> = ({
                     setCode(promoData.code);
                     setLimit(promoData.limit);
                     setDiscount(promoData.discount);
+                    setActive(promoData.active);
                     setDates([
                         new Date(promoData.period_from),
                         new Date(promoData.period_till),
@@ -136,6 +139,7 @@ export const EditPromoCodeModal: FC<EditPromoCodeModalProps> = ({
                 event_id: selectedEvent,
                 period_from: periodFromFormat!,
                 period_till: periodTillFormat!,
+                active: active,
             });
 
             await fetchPromoCodes();
@@ -203,6 +207,20 @@ export const EditPromoCodeModal: FC<EditPromoCodeModalProps> = ({
                     readOnlyInput
                     hideOnRangeSelection
                 />
+
+                <div className="flex items-center gap-2">
+                    <input
+                        type="checkbox"
+                        id="active"
+                        checked={active}
+                        onChange={(e) => setActive(e.target.checked)}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <label htmlFor="active" className="text-sm font-medium text-gray-700">
+                        Активен
+                    </label>
+                </div>
+
                 <CustomButton onClick={handleUpdate} className="w-full">
                     Сохранить
                 </CustomButton>

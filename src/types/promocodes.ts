@@ -9,6 +9,7 @@ export interface IPromocode {
     id: string;
     already_used: number;
     event: IEvent;
+    active: boolean;
 }
 
 export interface CreatePromocodePayload {
@@ -18,11 +19,13 @@ export interface CreatePromocodePayload {
     period_from: string;
     period_till: string;
     event_id: string;
+    active: boolean;
 }
 
 export interface PromocodeQuery {
     code?: string;
     event_id?: string;
+    active?: boolean;
     page?: number;
     size?: number;
 }
@@ -45,4 +48,5 @@ export interface UpdatePromocodePayload {
     period_from: string;
     period_till: string;
     event_id: string;
+    active: boolean;
 }

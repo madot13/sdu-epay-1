@@ -1,22 +1,39 @@
 import {FC, useEffect, useState} from "react";
 import {usePromoCodesStore} from "@/store/usePromoCodesStore.ts";
 import {CustomButton} from "@/ui/CustomButton.tsx";
+import {CustomSelect} from "@/ui/CustomSelect.tsx";
 import {AddPromoCodeModal} from "@/components/promocode/AddPromoCodeModal.tsx";
 import {getEvents} from "@/api/endpoints/events.ts";
 import {AnimatePresence, motion} from "framer-motion";
+
 export const PromoCodeFilters: FC = () => {
     const [promo, setPromo] = useState("");
     const [eventName, setEventName] = useState("");
     const [eventSuggestions, setEventSuggestions] = useState<{title: string, id: string}[]>([]);
     const [selectedEventId, setSelectedEventId] = useState<string | undefined>(undefined);
     const [showSuggestions, setShowSuggestions] = useState(false);
+    const [active, setActive] = useState("");
     const {fetchPromoCodes} = usePromoCodesStore();
 
+    const activeOptions = [
+        { label: "Все", value: "" },
+        { label: "Активные", value: "true" },
+        { label: "Неактивные", value: "false" }
+    ];
+
     const handleSearch = async () => {
-        await fetchPromoCodes({
+        const filters: any = {
             code: promo || undefined,
             event_id: selectedEventId || undefined,
-        });
+        };
+        
+        if (active === "true") {
+            filters.active = true;
+        } else if (active === "false") {
+            filters.active = false;
+        }
+        
+        await fetchPromoCodes(filters);
         setShowSuggestions(false);
     };
 
@@ -94,6 +111,16 @@ export const PromoCodeFilters: FC = () => {
                         onChange={(e) => setPromo(e.target.value)}
                         className="bg-[#FFFFFF] h-[37px] p-2 border border-[#6B9AB0] rounded-[4px] text-sm"
                         placeholder="Введите промо-код"
+                    />
+                </div>
+
+                <div className="flex flex-col gap-[10px] flex-1 sm:flex-none">
+                    <label className="text-sm">Статус</label>
+                    <CustomSelect
+                        options={activeOptions}
+                        value={active}
+                        onChange={(val) => setActive(val)}
+                        triggerClassName="bg-white w-full sm:min-w-[150px] h-[37px] text-black text-sm border-[#6B9AB0]"
                     />
                 </div>
 
