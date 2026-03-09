@@ -19,13 +19,28 @@ const isFileUrl = (value: unknown): value is string => {
     );
 };
 
-// Скачиваем файл по прямой ссылке из MinIO
-const downloadFile = (fileUrl: string) => {
-    const filename = fileUrl.split("/").pop()?.split("?")[0] || "file";
+// Скачиваем файл по прямой ссылке или через API если это ключ
+const downloadFile = (fileValue: string) => {
+    // Если это полный URL от MinIO, скачиваем напрямую
+    if (fileValue.startsWith('http')) {
+        const filename = fileValue.split("/").pop()?.split("?")[0] || "file";
+        const a = document.createElement("a");
+        a.href = fileValue;
+        a.target = "_blank";
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        return;
+    }
+    
+    // Если это ключ MinIO, формируем URL через API
+    const baseUrl = window.location.origin;
+    const fileUrl = `${baseUrl}/api/uploads/${encodeURIComponent(fileValue)}`;
     const a = document.createElement("a");
     a.href = fileUrl;
     a.target = "_blank";
-    a.download = filename;
+    a.download = fileValue.split("/").pop() || "file";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
