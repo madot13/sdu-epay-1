@@ -63,11 +63,19 @@ export const OrdersPage: FC = () => {
         { header: "Дата создания", accessor: "created_at_display", sortable: true },
     ];
 
-    const handleUpdateFilters = (filters: OrderQuery) => {
+    const handleUpdateFilters = async (filters: OrderQuery) => {
+        console.log('🔍 Orders filters being sent:', filters);
+        
+        // Защита от повторных вызовов с теми же фильтрами
+        if (JSON.stringify(filters) === JSON.stringify(currentFilters)) {
+            console.log('🔍 Filters are the same, skipping request');
+            return;
+        }
+        
         const newFilters = { ...filters, page: 0, size: rows };
         setCurrentFilters(newFilters);
         setFirst(0); // Reset to first page when filters change
-        fetchOrders(newFilters);
+        await fetchOrders(newFilters);
     };
 
     useEffect(() => {
@@ -76,6 +84,11 @@ export const OrdersPage: FC = () => {
 
     // Update sorted orders when original orders or sort changes
     useEffect(() => {
+        // Защита от бесконечных вызовов
+        if (!orders || orders.length === 0) {
+            return;
+        }
+        
         const ordersWithDisplay = orders.map((order: any) => {
             console.log('Order type:', order.type, 'type_display:', getTypeText(order.type));
             return {
@@ -106,9 +119,8 @@ export const OrdersPage: FC = () => {
                 aValue = a.amount || 0;
                 bValue = b.amount || 0;
             } else if (sort.column === 'created_at_display') {
-                // Use original date values for sorting
-                aValue = a.created_at ? new Date(a.created_at).getTime() : 0;
-                bValue = b.created_at ? new Date(b.created_at).getTime() : 0;
+                aValue = new Date(a.created_at || '');
+                bValue = new Date(b.created_at || '');
             }
             
             if (aValue == null) aValue = '';
