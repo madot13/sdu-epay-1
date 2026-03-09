@@ -5,7 +5,7 @@ import { PacketEventsFilter } from "@/components/packet-events/PacketEventsFilte
 import { packetEventsApi } from "@/api/endpoints/packet-events";
 import { IEventRecord } from "@/types/packetevents";
 import { Paginator } from "primereact/paginator";
-import { PencilIcon, Loader2 } from "lucide-react"; 
+import { PencilIcon, Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { EditPacketEventsModal } from "@/components/packet-events/EditPacketEventsModal.tsx";
 import { ReactNode } from "react";
@@ -19,7 +19,6 @@ export const PacketEventsPage: FC = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedItem, setSelectedItem] = useState<IEventRecord | null>(null);
     const [filters, setFilters] = useState<any>({});
-    // ✅ ДОБАВЛЕНО: стейт сортировки
     const [sort, setSort] = useState<{ column: string; direction: 'asc' | 'desc' } | null>(null);
 
     const columns = [
@@ -27,63 +26,47 @@ export const PacketEventsPage: FC = () => {
         { header: "Департамент", accessor: "department", sortable: true },
         { header: "Email", accessor: "email", sortable: true },
         { header: "Категория", accessor: "category", sortable: true },
-        { 
-            header: "Активный", 
-            accessor: (item: Record<string, any>): ReactNode => {
-                const isActive = item.active === true || item.event_active === true;
-                console.log("🔍 Rendering Active column for item:", item.id, "active:", item.active, "isActive:", isActive);
-                return (
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                        isActive 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-red-100 text-red-800'
-                    }`}>
-                        {isActive ? 'Да' : 'Нет'}
-                    </span>
-                );
-            },
+        {
+            header: "Активный",
+            accessor: (item: Record<string, any>): ReactNode => (
+                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    item.active
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-red-100 text-red-800'
+                }`}>
+                    {item.active ? 'Да' : 'Нет'}
+                </span>
+            ),
             sortable: true
         },
-        { 
-            header: "Цена KZT", 
+        {
+            header: "Цена KZT",
             accessor: (item: Record<string, any>): ReactNode => {
                 const price = item.price;
                 const priceUsd = item.price_usd;
-                const priced = item.priced !== false; // По умолчанию priced=true
-                
-                if (!priced) return "—";
-                
-                // "Произвольная" только если обе цены равны 0
+
                 if (price === 0 && priceUsd === 0) {
                     return <span className="text-gray-500">Произвольная</span>;
                 }
-                
                 if (price !== null && price !== undefined && price > 0) {
-                    return Number(price) + " ₸";
+                    return `${Number(price)} ₸`;
                 }
-                
-                return "—"; // Если цена KZT не указана или равна 0 (но USD > 0)
+                return "—";
             }
         },
-        { 
-            header: "Цена USD", 
+        {
+            header: "Цена USD",
             accessor: (item: Record<string, any>): ReactNode => {
                 const price = item.price;
                 const priceUsd = item.price_usd;
-                const priced = item.priced !== false; // По умолчанию priced=true
-                
-                if (!priced) return "—";
-                
-                // "Произвольная" только если обе цены равны 0
+
                 if (price === 0 && priceUsd === 0) {
                     return <span className="text-gray-500">Произвольная</span>;
                 }
-                
                 if (priceUsd !== null && priceUsd !== undefined && priceUsd > 0) {
-                    return Number(priceUsd) + " $";
+                    return `${Number(priceUsd)} $`;
                 }
-                
-                return "—"; // Если цена USD не указана или равна 0 (но KZT > 0)
+                return "—";
             }
         },
     ];
@@ -91,31 +74,15 @@ export const PacketEventsPage: FC = () => {
     const loadData = useCallback(async (currentFilters: any = {}) => {
         setLoading(true);
         try {
-            console.log("🔍 Loading data with filters:", currentFilters);
-            console.log("🔍 Full filter object:", JSON.stringify(currentFilters, null, 2));
-            
             const result = await packetEventsApi.getAll(currentFilters);
-            console.log("🔍 API Response:", result);
 
             let items: any[] = [];
             if (result && typeof result === 'object') {
                 items = Array.isArray(result) ? result : (result as any).data || [];
             }
 
-            // Логирование для отладки структуры данных
-            console.log("API Response:", result);
-            console.log("Items:", items);
-            if (items.length > 0) {
-                console.log("First item structure:", items[0]);
-                console.log("Price fields:", {
-                    price: items[0].price,
-                    price_usd: items[0].price_usd,
-                    priced: items[0].priced
-                });
-            }
-
             if (result && typeof result === 'object' && 'detail' in result) {
-                toast.error(`Ошибка API: ${result.detail}`);
+                toast.error(`Ошибка API: ${(result as any).detail}`);
                 setData([]);
                 setTotal(0);
                 return;
@@ -135,23 +102,17 @@ export const PacketEventsPage: FC = () => {
         loadData(filters);
     }, [first, rows, filters]);
 
-    // ✅ ДОБАВЛЕНО: обработчик сортировки
     const handleSort = (column: string, direction: 'asc' | 'desc') => {
         setSort({ column, direction });
     };
 
-    // Simple mapping without useMemo for immediate updates
     const getMappedData = () => {
-        console.log("🔍 Calculating mappedData, data length:", data.length);
-        const mapped = data.map((item) => {
-            console.log("🔍 Mapping item:", item.id, "active:", item.active);
-            return {
-                ...item,
-                event_name: item.title || item.event_name || '',
-                category: item.category || "—",
-                department: item.department_name || item.department || ''
-            };
-        });
+        const mapped = data.map((item) => ({
+            ...item,
+            event_name: item.title || item.event_name || '',
+            category: item.category || "—",
+            department: item.department_name || item.department || ''
+        }));
 
         if (!sort) return mapped;
 
@@ -159,10 +120,9 @@ export const PacketEventsPage: FC = () => {
             let aValue: any = a[sort.column] ?? '';
             let bValue: any = b[sort.column] ?? '';
 
-            // Handle Active column sorting (custom-4 for Active column)
             if (sort.column === 'custom-4') {
-                aValue = a.active === true || a.event_active === true;
-                bValue = b.active === true || b.event_active === true;
+                aValue = a.active;
+                bValue = b.active;
             }
 
             if (typeof aValue === 'string' && typeof bValue === 'string') {
@@ -170,9 +130,8 @@ export const PacketEventsPage: FC = () => {
                 return sort.direction === 'asc' ? cmp : -cmp;
             }
 
-            // For boolean values (Active column)
             if (typeof aValue === 'boolean' && typeof bValue === 'boolean') {
-                return sort.direction === 'asc' 
+                return sort.direction === 'asc'
                     ? (aValue ? 1 : -1) - (bValue ? 1 : -1)
                     : (bValue ? 1 : -1) - (aValue ? 1 : -1);
             }
@@ -212,15 +171,14 @@ export const PacketEventsPage: FC = () => {
                 <PacketEventsFilter onSearch={handleSearch} />
                 <div className="overflow-x-auto bg-white rounded-lg shadow-sm border border-gray-100 mt-4">
                     <CustomTable
-                        key={`table-${data.length}-${total}`}
                         columns={columns}
                         data={mappedData}
                         onSort={handleSort}
                         currentSort={sort || undefined}
                         actions={(row: any) => (
                             <div className="flex gap-3">
-                                <button 
-                                    onClick={() => handleEditClick(row)} 
+                                <button
+                                    onClick={() => handleEditClick(row)}
                                     className="text-blue-600 hover:text-blue-800 transition-colors"
                                 >
                                     <PencilIcon className="w-4 h-4" />
