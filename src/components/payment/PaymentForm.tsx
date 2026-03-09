@@ -739,7 +739,7 @@ export const PaymentForm: FC = () => {
                                         );
                                         return (
                                             <>
-                                                <CustomInput {...field} disabled={!(isCustomPrice && !hasFixedPrice)} icon={watchShowInUsd ? <CurrencyDollarIcon className={errors.amount ? "text-red-500" : "text-[#6B9AB0]"} /> : <TengeIcon color={errors.amount ? "#fb2c36" : "#6B9AB0"} />} type="number" onChange={(e) => { field.onChange(e); setOrderField("amount", Number(e.target.value)); }} placeholder={hasFixedPrice ? "Цена фиксирована" : isCustomPrice ? "Введите сумму" : t('paymentPage.inputs.amountPH')} error={errors.amount?.message} />
+                                                <CustomInput {...field} disabled={!!hasFixedPrice} icon={watchShowInUsd ? <CurrencyDollarIcon className={errors.amount ? "text-red-500" : "text-[#6B9AB0]"} /> : <TengeIcon color={errors.amount ? "#fb2c36" : "#6B9AB0"} />} type="number" onChange={(e) => { field.onChange(e); setOrderField("amount", Number(e.target.value)); }} placeholder={hasFixedPrice ? "Цена фиксирована" : isCustomPrice ? "Введите сумму" : t('paymentPage.inputs.amountPH')} error={errors.amount?.message} />
                                                 {errors.amount && <p className="text-red-500 text-sm -mt-4 ml-2">{errors.amount.message}</p>}
                                             </>
                                         );
