@@ -5,10 +5,10 @@ export const packetEventsApi = {
     getAll: async (params?: any) => {
         console.log("🔍 API Call packetEventsApi.getAll with params:", params);
         
-        // Если active === null или undefined, отправляем массив [true, false] чтобы показать все
+        // Если active === null или undefined, отправляем null как в событиях
         const cleanParams = { ...params };
         if (cleanParams.active === null || cleanParams.active === undefined) {
-            cleanParams.active = [true, false];  // Показать и активные, и неактивные
+            cleanParams.active = null;  // Как в событиях
         }
         
         console.log("🔍 Cleaned params:", cleanParams);
