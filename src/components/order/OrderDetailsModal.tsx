@@ -256,10 +256,14 @@ export const OrderDetailsModal: FC<OrderDetailsModalProps> = ({ isOpen, onClose,
                                     
                                     console.log("  - isFile result:", isFile);
                                     
-                                    // Формируем URL для скачивания файла
-                                    const getFileUrl = (fileName: string) => {
+                                    // Функция для скачивания файла
+                                    const downloadFile = async (fileName: string) => {
                                         const baseUrl = window.location.origin;
-                                        return `${baseUrl}/api/orders/${orderDetails.id}/files/${encodeURIComponent(fileName)}`;
+                                        const fileUrl = `${baseUrl}/api/orders/${orderDetails.id}/files/${encodeURIComponent(fileName)}`;
+                                        const a = document.createElement('a');
+                                        a.href = fileUrl;
+                                        a.download = fileName;
+                                        a.click();
                                     };
                                     
                                     return (
@@ -270,39 +274,7 @@ export const OrderDetailsModal: FC<OrderDetailsModalProps> = ({ isOpen, onClose,
                                                 <div className="flex items-center gap-2">
                                                     <button
                                                         onClick={() => {
-                                                            const url = getFileUrl(value);
-                                                            console.log("🔍 File debug for key:", key, "value:", value);
-                                                            console.log("🔍 Generated URL:", url);
-                                                            console.log("🔍 URL type check:", {
-                                                                hasHttp: url.includes("http"),
-                                                                hasHttps: url.includes("https"),
-                                                                hasBlob: url.includes("blob:")
-                                                            });
-                                                            console.log("Attempting to download file from:", url);
-                                                            
-                                                            try {
-                                                                if (url.includes("http") || url.includes("https")) {
-                                                                    // Для веб-URL открываем в новой вкладке
-                                                                    window.open(url, '_blank');
-                                                                    console.log("✅ File opened successfully:", url);
-                                                                } else if (url.includes("blob:")) {
-                                                                    // Для blob URL создаем временную ссылку
-                                                                    const link = document.createElement('a');
-                                                                    link.href = url;
-                                                                    link.download = `file_${Date.now()}`;
-                                                                    document.body.appendChild(link);
-                                                                    link.click();
-                                                                    document.body.removeChild(link);
-                                                                    console.log("✅ File downloaded successfully:", url);
-                                                                } else {
-                                                                    // Для локальных файлов или других случаев
-                                                                    console.log("Cannot download file from this URL:", url);
-                                                                    alert("Не удалось скачать файл. Свяжитесь с администратором.");
-                                                                }
-                                                            } catch (error) {
-                                                                console.error("❌ Error downloading file:", error);
-                                                                alert("Ошибка при скачивании файла. Попробуйте еще раз.");
-                                                            }
+                                                            downloadFile(value);
                                                         }}
                                                         className="flex items-center gap-2 px-3 py-2 bg-white border border-blue-500 text-blue-600 rounded-md hover:bg-blue-50 transition-colors text-sm font-medium"
                                                     >

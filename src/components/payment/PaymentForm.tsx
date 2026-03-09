@@ -231,7 +231,6 @@ export const PaymentForm: FC = () => {
                 if (mainPaymentType) {
                     setValue("event_payment_type_id", mainPaymentType.id);
                     setOrderField("event_payment_type_id", mainPaymentType.id);
-                    console.log("🔍 Auto-selected main payment type in PaymentForm:", mainPaymentType.category || mainPaymentType.id);
                     
                     // Load additional fields for the auto-selected main payment type
                     if (mainPaymentType.additional_fields) {
@@ -242,7 +241,6 @@ export const PaymentForm: FC = () => {
                         }));
                         setPaymentCategoryAdditionalFields(categoryFields);
                         setSelectedPaymentCategory(mainPaymentType);
-                        console.log("🔍 Loaded additional fields for auto-selected main payment type:", categoryFields);
                     } else {
                         setPaymentCategoryAdditionalFields([]);
                         setSelectedPaymentCategory(null);
@@ -392,11 +390,6 @@ export const PaymentForm: FC = () => {
 
 
     const onSubmit: SubmitHandler<FormValues> = async (data) => {
-        console.log("🔍 onSubmit called with data:", data);
-        console.log("🔍 selectedEventPriced:", selectedEventPriced);
-        console.log("🔍 isCustomPrice:", isCustomPrice);
-        console.log("🔍 selectedDepartmentType:", selectedDepartmentType);
-        console.log("🔍 Current event data:", eventOptions.find(e => e.value === currentEventId));
         if (data.paymentMethod === "KaspiBank" && data.showInUsd === true) {
             toast.error("Kaspi Bank does not support USD payments. Please select HalykBank for non-resident payments or change to Resident.");
             return;
@@ -416,8 +409,7 @@ export const PaymentForm: FC = () => {
                         // Для загруженных файлов отправляем только URL из MinIO
                         const fileData = value as any;
                         converted[key] = fileData.url || '';
-                        console.log(`🔍 Converting file field ${key}:`, { url: fileData.url, fileName: fileData.file?.name });
-                    } else if (typeof value === 'object' && value !== null && 'name' in value) {
+                                            } else if (typeof value === 'object' && value !== null && 'name' in value) {
                         // Фоллбэк для старого формата (если есть)
                         const fileName = (value as any).name || 'file';
                         const cleanFileName = fileName
@@ -432,8 +424,7 @@ export const PaymentForm: FC = () => {
                         converted[key] = String(value);
                     }
                 });
-                console.log("🔍 Converted additional fields:", converted);
-                return converted;
+                                return converted;
             };
 
             if (data.amount && typeof data.amount !== 'number') {
@@ -482,12 +473,6 @@ export const PaymentForm: FC = () => {
                 currency
             };
 
-            console.log("🔍 Payload for order:", payload);
-            console.log("🔍 Selected payment category:", selectedPaymentCategory);
-            console.log("🔍 selectedEventPriced:", selectedEventPriced);
-            console.log("🔍 isCustomPrice:", isCustomPrice);
-            console.log("🔍 paymentMethod:", data.paymentMethod);
-
             if (selectedDepartmentType === "EVENT_BASED") {
                 if (data.paymentMethod === "KaspiBank") {
                     // Для фиксированных цен (с категориями или без)
@@ -517,8 +502,7 @@ export const PaymentForm: FC = () => {
                         // #region agent log
                         debugLog("PaymentForm.tsx:kaspi-custom-price-direct", "taking direct custom price path", { hypothesisId: "K2" });
                         // #endregion
-                        console.log("🔍 Using orderKaspiCustomPrice (event has no direct price, category amount)");
-                        try {
+                                                try {
                             const kaspiData = await orderKaspiCustomPrice({
                                 ...dataWithoutPaymentMethodAndDepartment,
                                 event_id: data.event_id!,
@@ -541,8 +525,7 @@ export const PaymentForm: FC = () => {
                         return;
                     }
 
-                    console.log("🔍 Using orderKaspi endpoint");
-                    // #region agent log
+                                        // #region agent log
                     debugLog("PaymentForm.tsx:orderKaspi-call", "calling orderKaspi", { hypothesisId: "K3", finalAmount, currency: "KZT" });
                     // #endregion
                     try {
@@ -575,8 +558,7 @@ export const PaymentForm: FC = () => {
                             // #region agent log
                             debugLog("PaymentForm.tsx:kaspi-fallback-call", "fallback to orderKaspiCustomPrice", { hypothesisId: "K4", amount: finalAmount ?? 0 });
                             // #endregion
-                            console.log("🔍 Fallback to orderKaspiCustomPrice due to priced route rejection");
-                            try {
+                                                        try {
                                 const kaspiData = await orderKaspiCustomPrice({
                                     ...dataWithoutPaymentMethodAndDepartment,
                                     event_id: data.event_id!,
@@ -606,8 +588,7 @@ export const PaymentForm: FC = () => {
                         // Только для произвольных цен БЕЗ категорий платежа
                         if (data.event_payment_type_id) {
                             // Если есть категория - используем обычный эндпоинт с правильным event_id
-                            console.log("🔍 Using orderHalyk endpoint (with category, correct event_id)");
-                            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                                                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
                             const { paymentMethod, department_id, showInUsd, ...dataWithoutPaymentMethodAndDepartment } = payload;
                             try {
                                 const halykData = await orderHalyk({
@@ -627,8 +608,7 @@ export const PaymentForm: FC = () => {
                             }
                         } else {
                             // Бесплатное событие без категории - используем CustomPrice
-                            console.log("🔍 Using orderHalykCustomPrice endpoint");
-                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                                                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
                         const { paymentMethod, department_id, promo_code, showInUsd, ...customPriceData } = payload;
                         try {
                             const halykData = await orderHalykCustomPrice({
@@ -675,8 +655,7 @@ export const PaymentForm: FC = () => {
                             // #region agent log
                             debugLog("PaymentForm.tsx:custom-price-direct", "taking direct custom price path", { hypothesisId: "H2" });
                             // #endregion
-                            console.log("🔍 Using orderHalykCustomPrice (event has no direct price, category amount)");
-                            try {
+                                                        try {
                                 const halykData = await orderHalykCustomPrice({
                                     ...dataWithoutPaymentMethodAndDepartment,
                                     event_id: data.event_id!,
@@ -700,8 +679,7 @@ export const PaymentForm: FC = () => {
                             return;
                         }
 
-                        console.log("🔍 Using orderHalyk endpoint");
-                        // #region agent log
+                                                // #region agent log
                         debugLog("PaymentForm.tsx:orderHalyk-call", "calling orderHalyk", { hypothesisId: "H3", finalAmount, currency });
                         // #endregion
                         try {
@@ -735,8 +713,7 @@ export const PaymentForm: FC = () => {
                                 // #region agent log
                                 debugLog("PaymentForm.tsx:fallback-call", "fallback to orderHalykCustomPrice", { hypothesisId: "H4", amount: finalAmount ?? 0 });
                                 // #endregion
-                                console.log("🔍 Fallback to orderHalykCustomPrice due to priced route rejection");
-                                try {
+                                                                try {
                                     const halykData = await orderHalykCustomPrice({
                                         ...dataWithoutPaymentMethodAndDepartment,
                                         event_id: data.event_id!,
@@ -1125,11 +1102,9 @@ export const PaymentForm: FC = () => {
                                                 setOrderField("event_payment_type_id", val);
 
                                                 const selectedCategory = paymentCategoryOptions.find(opt => opt.value === val);
-                                                console.log("🔍 Selected category from options:", selectedCategory);
-                                                if (selectedCategory) {
+                                                                                                if (selectedCategory) {
                                                     const categoryData = selectedCategory as any;
-                                                    console.log("🔍 Category data:", categoryData);
-                                                    setSelectedPaymentCategory(categoryData); // Сохраняем выбранную категорию
+                                                                                                        setSelectedPaymentCategory(categoryData); // Сохраняем выбранную категорию
                                                     if (categoryData.additional_fields) {
                                                         const categoryFields = Object.entries(categoryData.additional_fields).map(([name, config]: [string, any]) => ({
                                                             name,
@@ -1411,16 +1386,6 @@ export const PaymentForm: FC = () => {
                                                 : null;
                                             // Произвольная цена если price или price_usd равны null
                                             const hasFixedPrice = selectedCategory && selectedCategory.price !== null && selectedCategory.price_usd !== null && (selectedCategory.price > 0 || selectedCategory.price_usd > 0);
-                                            
-                                            console.log("🔍 Price field debug:", {
-                                                selectedCategory,
-                                                watchPaymentCategoryId,
-                                                isCustomPrice,
-                                                hasFixedPrice,
-                                                selectedCategoryPrice: selectedCategory?.price,
-                                                selectedCategoryPriceUsd: selectedCategory?.price_usd,
-                                                disabled: !(isCustomPrice && !hasFixedPrice)
-                                            });
                                             
                                             return (
                                                 <>
