@@ -128,16 +128,16 @@ export const OrdersPage: FC = () => {
         setSortedOrders(sorted);
     }, [orders, sort]);
 
-    useEffect(() => {
-        const load = async () => {
-            await fetchOrders({
-                page: first / rows,
-                size: rows,
-            });
-        };
+    // useEffect(() => {
+    //     const load = async () => {
+    //         await fetchOrders({
+    //             page: first / rows,
+    //             size: rows,
+    //         });
+    //     };
 
-        load();
-    }, [first, rows]);
+    //     load();
+    // }, [first, rows]);
 
     const onPageChange = async (event: any) => {
         setFirst(event.first);
