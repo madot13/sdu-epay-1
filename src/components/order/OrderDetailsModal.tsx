@@ -249,6 +249,13 @@ export const OrderDetailsModal: FC<OrderDetailsModalProps> = ({ isOpen, onClose,
                                                     <button
                                                         onClick={() => {
                                                             const url = value;
+                                                            console.log("🔍 File debug for key:", key, "value:", value);
+                                                            console.log("🔍 isFile result:", isFile);
+                                                            console.log("🔍 URL type check:", {
+                                                                hasHttp: value.includes("http"),
+                                                                hasHttps: value.includes("https"),
+                                                                hasBlob: value.includes("blob:")
+                                                            });
                                                             console.log("Attempting to download file from:", url);
                                                             
                                                             try {
