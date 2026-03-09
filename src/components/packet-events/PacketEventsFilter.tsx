@@ -80,14 +80,13 @@ export const PacketEventsFilter: FC<PacketEventsFilterProps> = ({ onSearch }) =>
             filters.active = true;
         } else if (currentActive === "false") {
             filters.active = false;
-        } else {
-            // Для "Все" явно передаем null чтобы бэкенд не фильтровал по active
-            filters.active = null;
         }
+        // Если "Все" (currentActive === ""), не добавляем active поле вообще
 
         console.log("🔍 Prepared filters:", filters);
         console.log("🔍 currentActive value:", currentActive);
         console.log("🔍 filters.active value:", filters.active);
+        console.log("🔍 About to call onSearch with:", JSON.stringify(filters, null, 2));
         onSearch(filters);
     };
 

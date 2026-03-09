@@ -92,8 +92,10 @@ export const PacketEventsPage: FC = () => {
         setLoading(true);
         try {
             console.log("🔍 Loading data with filters:", currentFilters);
+            console.log("🔍 Full filter object:", JSON.stringify(currentFilters, null, 2));
             
             const result = await packetEventsApi.getAll(currentFilters);
+            console.log("🔍 API Response:", result);
 
             let items: any[] = [];
             if (result && typeof result === 'object') {
