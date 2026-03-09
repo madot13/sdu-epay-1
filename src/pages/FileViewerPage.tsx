@@ -1,56 +1,34 @@
-import { FC } from "react";
-import EpayPaymentWidget from "epay-payment-widget";
+import {FC, useState} from "react";
+import {CustomButton} from "@/ui/CustomButton.tsx";
+import {SduReader} from "@/components/reader/SduReader.tsx";
+import {DormReader} from "@/components/reader/DormReader.tsx";
+import {AdminLayout} from "@/layouts/AdminLayout.tsx";
 
-interface PaymentHalykProps {
-    showWidget: boolean;
-    amount: number;
-    terminalId: string;
-    orderId: string;
-    successUrl: string;
-    currency: string;
-    failUrl: string;
-    email: string;
-    oauthData: {
-        access_token: string;
-        token_type: string;
-        expires_in?: number;
-        scope?: string;
-    };
-    description?: string;
-    onClose?: () => void;
-}
+export const FileViewerPage: FC = () => {
+    const [select, setSelect] = useState(0);
 
-export const PaymentHalyk: FC<PaymentHalykProps> = ({
-    showWidget,
-    amount,
-    terminalId,
-    orderId,
-    successUrl,
-    currency,
-    failUrl,
-    email,
-    oauthData,
-    description = "Оплата заказа",
-    onClose,
-}) => {
     return (
-        <EpayPaymentWidget
-            visible={showWidget}
-            terminalId={terminalId}
-            amount={amount}
-            invoiceId={orderId}
-            oauthData={oauthData}
-            currency={currency}
-            paymentData={{
-                backLink: successUrl,
-                failureBackLink: failUrl,
-                postLink: `${successUrl}/post`,
-                failurePostLink: `${failUrl}/post`,
-                description: description,
-                accountId: email,
-                language: "RUS",
-            }}
-            onWidgetClose={onClose}
-        />
+        <AdminLayout>
+            <div className={"w-full"}>
+                <div className="mb-6 lg:mb-0">
+                    <p className="font-bold text-xl lg:text-[32px] mb-3 lg:mb-[20px]">Просмотр файлов</p>
+                    <span className="text-base lg:text-[20px] font-light">
+                        Выберите тип файла для просмотра.
+                    </span>
+                </div>
+
+                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                    <h3 className="text-lg font-semibold mb-4">📊 Просмотр Excel файлов</h3>
+                    <div className={"flex flex-col sm:flex-row gap-3 lg:gap-5"}>
+                        <CustomButton variant="submit" onClick={() => setSelect(1)} className="w-full sm:w-auto">SDU University</CustomButton>
+                        <CustomButton variant="submit" onClick={() => setSelect(2)} className="w-full sm:w-auto">Dormitory</CustomButton>
+                    </div>
+                    <div className="mt-6">
+                        {select === 1 && <SduReader />}
+                        {select === 2 && <DormReader />}
+                    </div>
+                </div>
+            </div>
+        </AdminLayout>
     );
 };
