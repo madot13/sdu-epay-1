@@ -235,24 +235,31 @@ export const OrderDetailsModal: FC<OrderDetailsModalProps> = ({ isOpen, onClose,
                                     console.log("  - Key:", key);
                                     console.log("  - Value:", value);
                                     console.log("  - Value type:", typeof value);
-                                    console.log("  - Value includes checks:", {
-                                        hasHttp: typeof value === "string" ? value.includes("http") : false,
-                                        hasHttps: typeof value === "string" ? value.includes("https") : false,
-                                        hasWww: typeof value === "string" ? value.includes("www") : false,
-                                        hasFakepath: typeof value === "string" ? value.includes("fakepath") : false,
-                                        hasBlob: typeof value === "string" ? value.includes("blob:") : false
-                                    });
                                     
+                                    // Определяем файл по расширению или специальным паттернам
                                     const isFile = typeof value === "string" && (
+                                        // Проверяем на URL
                                         value.includes("http") || 
                                         value.includes("https") || 
                                         value.includes("www") || 
                                         value.includes("C:\\fakepath") ||
                                         value.includes("fakepath") ||
-                                        value.includes("blob:")
+                                        value.includes("blob:") ||
+                                        // Проверяем на расширения файлов
+                                        /\.(jpg|jpeg|png|gif|pdf|doc|docx|xls|xlsx|txt|zip|rar)$/i.test(value) ||
+                                        // Проверяем на паттерны имен файлов
+                                        /Screenshot_\d{4}-\d{2}-\d{2}/.test(value) ||
+                                        value.includes("_at_") && value.includes(".png") ||
+                                        value.includes("_at_") && value.includes(".jpg") ||
+                                        value.includes("_at_") && value.includes(".pdf")
                                     );
                                     
                                     console.log("  - isFile result:", isFile);
+                                    
+                                    // Формируем URL для скачивания файла
+                                    const getFileUrl = (fileName: string) => {
+                                        return `/api/orders/${orderDetails.id}/files/${encodeURIComponent(fileName)}`;
+                                    };
                                     
                                     return (
                                         <div key={key} className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 pb-3 border-b border-gray-200 last:border-0">
@@ -262,13 +269,13 @@ export const OrderDetailsModal: FC<OrderDetailsModalProps> = ({ isOpen, onClose,
                                                 <div className="flex items-center gap-2">
                                                     <button
                                                         onClick={() => {
-                                                            const url = value;
+                                                            const url = getFileUrl(value);
                                                             console.log("🔍 File debug for key:", key, "value:", value);
-                                                            console.log("🔍 isFile result:", isFile);
+                                                            console.log("🔍 Generated URL:", url);
                                                             console.log("🔍 URL type check:", {
-                                                                hasHttp: value.includes("http"),
-                                                                hasHttps: value.includes("https"),
-                                                                hasBlob: value.includes("blob:")
+                                                                hasHttp: url.includes("http"),
+                                                                hasHttps: url.includes("https"),
+                                                                hasBlob: url.includes("blob:")
                                                             });
                                                             console.log("Attempting to download file from:", url);
                                                             
