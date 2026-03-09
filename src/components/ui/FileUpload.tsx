@@ -9,7 +9,7 @@ interface UploadOptions {
 }
 
 interface FileUploadProps {
-    onChange: (file: File | null, url?: string) => void;
+    onChange: (file: File | null, key?: string | undefined) => void;
     uploadOptions: UploadOptions;
     placeholder?: string;
     accept?: string;
@@ -45,7 +45,7 @@ export const FileUpload: FC<FileUploadProps> = ({
                 uploadOptions,
                 (progress) => setUploadProgress(progress)
             );
-            onChange(file, uploadResponse.url);
+            onChange(file, uploadResponse.key);
         } catch (error) {
             console.error("File upload error:", error);
             setFileName("");
