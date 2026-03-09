@@ -82,8 +82,8 @@ export const OrdersPage: FC = () => {
                 ...order,
                 type_display: getTypeText(order.type),
                 status_display: getStatusText(order.status),
-                amount_display: `${order.amount} ₸`,
-                final_amount_display: `${order.final_amount} ₸`,
+                amount_display: `${order.amount} ${order.currency === 'USD' ? '$' : '₸'}`,
+                final_amount_display: `${order.final_amount} ${order.currency === 'USD' ? '$' : '₸'}`,
                 created_at_display: formatDate(order.created_at),
             };
         });
