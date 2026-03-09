@@ -3,65 +3,37 @@ import { AxiosProgressEvent } from 'axios';
 
 export interface UploadResponse {
     url: string;
+    key: string;
+    bucket: string;
     filename: string;
-    size: number;
     content_type: string;
+    size: number;
 }
-
-export const uploadFile = async (
-    file: File,
-    onProgress?: (progress: number) => void
-): Promise<UploadResponse> => {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-        const response = await publicApi.post<UploadResponse>('/upload/public', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-            onUploadProgress: (progressEvent: AxiosProgressEvent) => {
-                if (onProgress && progressEvent.total) {
-                    const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                    onProgress(progress);
-                }
-            },
-        });
-
-        return response.data;
-    } catch (error) {
-        console.error('Upload error:', error);
-        throw new Error('Failed to upload file');
-    }
-};
 
 export const uploadFileToMinio = async (
     file: File,
-    folder?: string,
+    options: {
+        field_key: string;
+        entity_type: "departments" | "events" | "event_payment_types";
+        entity_id: string;
+    },
     onProgress?: (progress: number) => void
 ): Promise<UploadResponse> => {
     const formData = new FormData();
     formData.append('file', file);
-    if (folder) {
-        formData.append('folder', folder);
-    }
+    formData.append('field_key', options.field_key);
+    formData.append('entity_type', options.entity_type);
+    formData.append('entity_id', options.entity_id);
 
-    try {
-        const response = await publicApi.post<UploadResponse>('/upload/minio', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-            onUploadProgress: (progressEvent: AxiosProgressEvent) => {
-                if (onProgress && progressEvent.total) {
-                    const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                    onProgress(progress);
-                }
-            },
-        });
+    const response = await publicApi.post<UploadResponse>('/uploads', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (progressEvent: AxiosProgressEvent) => {
+            if (onProgress && progressEvent.total) {
+                const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                onProgress(progress);
+            }
+        },
+    });
 
-        return response.data;
-    } catch (error) {
-        console.error('MinIO upload error:', error);
-        throw new Error('Failed to upload file to MinIO');
-    }
+    return response.data;
 };

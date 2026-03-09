@@ -20,6 +20,9 @@ import {PaymentHalyk} from "@/components/payment/PaymentHalyk.tsx";
 import {toast} from "react-hot-toast";
 import {useTranslation} from "react-i18next";
 import {DepartmentType} from "@/types/payment.ts";
+import {TengeIcon} from "@/assets/TengeIcon.tsx";
+import { FileUpload } from "@/components/ui/FileUpload.tsx";
+
 
 const formatDate = (date: Date): string => {
     return date.toISOString().split('T')[0];
@@ -30,8 +33,6 @@ const debugLog = (location: string, message: string, data: Record<string, unknow
     fetch("http://127.0.0.1:7399/ingest/d8c64204-f012-4f5e-aee1-a9fe62c69ed8", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "84f5a0" }, body: JSON.stringify({ sessionId: "84f5a0", location, message, data, timestamp: Date.now() }) }).catch(() => {});
 };
 // #endregion
-
-import {TengeIcon} from "@/assets/TengeIcon.tsx";
 
 interface FormValues {
     fullname: string;
@@ -49,13 +50,9 @@ interface FormValues {
 
 export const usePaymentSchema = (departmentType: DepartmentType | null, eventPriced: boolean | null, isCustomPrice: boolean | null) => {
     const { t } = useTranslation();
-
     return yup.object().shape({
         fullname: yup.string().required(t("paymentPage.errors.fullname")),
-        email: yup
-            .string()
-            .email(t("paymentPage.errors.email"))
-            .required(t("paymentPage.errors.emailRequired")),
+        email: yup.string().email(t("paymentPage.errors.email")).required(t("paymentPage.errors.emailRequired")),
         cellphone: yup.string().required(t("paymentPage.errors.cellphone")),
         promo_code: yup.string().nullable(),
         department_id: yup.string().required(t("paymentPage.errors.department_id")),
@@ -76,9 +73,8 @@ export const PaymentForm: FC = () => {
     const {setPrice, setOrderField, setCurrency, discount, resetPromo} = usePaymentStore();
     const [isCustomPrice, setIsCustomPrice] = useState(false);
     const { t } = useTranslation();
-
     const [selectedDepartmentId, setSelectedDepartmentId] = useState("");
-    const [submitting, setSubmitting] = useState(false); // 👈 только для кнопки, не блокирует экран
+    const [submitting, setSubmitting] = useState(false);
     const [showWidget, setShowWidget] = useState(false);
     const [paymentData, setPaymentData] = useState<any>(null);
     const [departmentOptions, setDepartmentOptions] = useState<Option[]>([]);
@@ -87,7 +83,7 @@ export const PaymentForm: FC = () => {
     const [currentEventId, setCurrentEventId] = useState<string | null>(null);
     const [departments, setDepartments] = useState<any[]>([]);
     const [additionalFields, setAdditionalFields] = useState<any[]>([]);
-    const [additionalFieldValues, setAdditionalFieldValues] = useState<Record<string, string | boolean | { name: string; size: number; type: string; lastModified: number }>>({});
+    const [additionalFieldValues, setAdditionalFieldValues] = useState<Record<string, any>>({});
     const [eventAdditionalFields, setEventAdditionalFields] = useState<any[]>([]);
     const [eventAdditionalFieldValues, setEventAdditionalFieldValues] = useState<Record<string, any>>({});
     const [paymentCategoryAdditionalFields, setPaymentCategoryAdditionalFields] = useState<any[]>([]);
@@ -101,11 +97,7 @@ export const PaymentForm: FC = () => {
             try {
                 const data = await getPublicDepartments(true);
                 setDepartments(data);
-                const mapped = data.map((dept: { name: string; id: string }) => ({
-                    label: dept.name,
-                    value: dept.id,
-                }));
-                setDepartmentOptions(mapped);
+                setDepartmentOptions(data.map((dept: { name: string; id: string }) => ({ label: dept.name, value: dept.id })));
             } catch (error) {
                 console.error("Failed to fetch departments:", error);
             }
@@ -135,48 +127,27 @@ export const PaymentForm: FC = () => {
     }, [selectedDepartmentId]);
 
     const schema = usePaymentSchema(selectedDepartmentType, selectedEventPriced, isCustomPrice);
-    const {
-        control,
-        handleSubmit,
-        setValue,
-        watch,
-        formState: { errors }
-    } = useForm<FormValues>({
+    const { control, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormValues>({
         resolver: yupResolver(schema) as never,
         defaultValues: {
-            fullname: '',
-            email: '',
-            cellphone: '',
-            department_id: '',
-            event_id: '',
-            event_payment_type_id: '',
-            additional: '',
-            promo_code: null,
-            paymentMethod: '',
-            amount: null,
-            showInUsd: false,
+            fullname: '', email: '', cellphone: '', department_id: '', event_id: '',
+            event_payment_type_id: '', additional: '', promo_code: null,
+            paymentMethod: '', amount: null, showInUsd: false,
         }
     });
 
     useEffect(() => {
         const fetchPaymentCategories = async () => {
-            if (!currentEventId) {
-                setPaymentCategoryOptions([]);
-                return;
-            }
+            if (!currentEventId) { setPaymentCategoryOptions([]); return; }
             try {
                 const response = await packetEventsApi.getAll({ event_id: currentEventId, active: true });
                 const paymentTypes = Array.isArray(response) ? response : (response as any).data || [];
                 const selectedEvent = eventOptions.find(opt => opt.value === currentEventId);
                 if (selectedEvent) {
                     if ((selectedEvent as any).additional_fields) {
-                        const eventFields = Object.entries((selectedEvent as any).additional_fields).map(([name, config]: [string, any]) => ({
-                            name,
-                            type: config.type,
-                            label: name,
-                            required: config.required ?? false
-                        }));
-                        setEventAdditionalFields(eventFields);
+                        setEventAdditionalFields(Object.entries((selectedEvent as any).additional_fields).map(([name, config]: [string, any]) => ({
+                            name, type: config.type, label: name, required: config.required ?? false
+                        })));
                     } else {
                         setEventAdditionalFields([]);
                     }
@@ -185,11 +156,8 @@ export const PaymentForm: FC = () => {
                 }
                 const paymentCategories = paymentTypes.map((pt: any) => ({
                     label: pt.category || `Тип платежа ${pt.id}`,
-                    value: pt.id,
-                    price: pt.price,
-                    price_usd: pt.price_usd,
-                    is_main: pt.is_main,
-                    additional_fields: pt.additional_fields
+                    value: pt.id, price: pt.price, price_usd: pt.price_usd,
+                    is_main: pt.is_main, additional_fields: pt.additional_fields
                 }));
                 const sortedPaymentCategories = [...paymentCategories].sort((a, b) => {
                     if (a.is_main && !b.is_main) return -1;
@@ -207,12 +175,7 @@ export const PaymentForm: FC = () => {
                     setValue("event_payment_type_id", mainPaymentType.id);
                     setOrderField("event_payment_type_id", mainPaymentType.id);
                     if (mainPaymentType.additional_fields) {
-                        const categoryFields = Object.entries(mainPaymentType.additional_fields).map(([name, config]: [string, any]) => ({
-                            name,
-                            type: config.type,
-                            label: name
-                        }));
-                        setPaymentCategoryAdditionalFields(categoryFields);
+                        setPaymentCategoryAdditionalFields(Object.entries(mainPaymentType.additional_fields).map(([name, config]: [string, any]) => ({ name, type: config.type, label: name })));
                         setSelectedPaymentCategory(mainPaymentType);
                     } else {
                         setPaymentCategoryAdditionalFields([]);
@@ -231,7 +194,6 @@ export const PaymentForm: FC = () => {
     const watchPaymentMethod = watch("paymentMethod");
     const watchPaymentCategoryId = watch("event_payment_type_id");
     const watchDepartmentId = watch("department_id");
-
     const [isKaspiDisabled, setIsKaspiDisabled] = useState(false);
     const [isUsdForced, setIsUsdForced] = useState(false);
     const [isKztForced, setIsKztForced] = useState(false);
@@ -246,29 +208,17 @@ export const PaymentForm: FC = () => {
                 const price = (mainCategory as any).price || 0;
                 const priceUsd = (mainCategory as any).price_usd || 0;
                 if (price > 0 && priceUsd === 0) {
-                    setIsKztForced(true);
-                    setIsUsdForced(false);
-                    setValue("showInUsd", false);
-                    setValue("amount", price);
-                    setPrice(price);
+                    setIsKztForced(true); setIsUsdForced(false);
+                    setValue("showInUsd", false); setValue("amount", price); setPrice(price);
                 } else if (price === 0 && priceUsd > 0) {
-                    setIsUsdForced(true);
-                    setIsKztForced(false);
-                    setValue("showInUsd", true);
-                    setValue("amount", priceUsd);
-                    setPrice(priceUsd);
+                    setIsUsdForced(true); setIsKztForced(false);
+                    setValue("showInUsd", true); setValue("amount", priceUsd); setPrice(priceUsd);
                 } else if (price > 0 && priceUsd > 0) {
-                    setIsUsdForced(false);
-                    setIsKztForced(false);
-                    setValue("showInUsd", false);
-                    setValue("amount", price);
-                    setPrice(price);
+                    setIsUsdForced(false); setIsKztForced(false);
+                    setValue("showInUsd", false); setValue("amount", price); setPrice(price);
                 } else {
-                    setIsUsdForced(false);
-                    setIsKztForced(false);
-                    setIsCustomPrice(true);
-                    setValue("amount", null);
-                    setPrice(0);
+                    setIsUsdForced(false); setIsKztForced(false);
+                    setIsCustomPrice(true); setValue("amount", null); setPrice(0);
                 }
             }
         }
@@ -281,56 +231,28 @@ export const PaymentForm: FC = () => {
                 const categoryData = selectedCategory as any;
                 const price = categoryData.price ?? 0;
                 const priceUsd = categoryData.price_usd ?? 0;
-                const hasOnlyKzt = price > 0 && priceUsd === 0;
-                const hasOnlyUsd = price === 0 && priceUsd > 0;
-                const hasBothPrices = price > 0 && priceUsd > 0;
-                const hasCustomPrice = price === null || priceUsd === null;
-                setIsUsdForced(false);
-                setIsKztForced(false);
-                setIsKaspiDisabled(false);
-                setPaymentMethodMessage("");
-                if (hasOnlyUsd) {
-                    setIsUsdForced(true);
-                    setIsKaspiDisabled(true);
+                setIsUsdForced(false); setIsKztForced(false); setIsKaspiDisabled(false); setPaymentMethodMessage("");
+                if (price === 0 && priceUsd > 0) {
+                    setIsUsdForced(true); setIsKaspiDisabled(true);
                     setPaymentMethodMessage("Для данного события оплата через Kaspi недоступна");
-                    setValue("showInUsd", true);
-                    setValue("amount", priceUsd || 0);
-                    setPrice(priceUsd || 0);
-                } else if (hasOnlyKzt) {
-                    setIsKztForced(true);
-                    setValue("showInUsd", false);
-                    setValue("amount", price || 0);
-                    setPrice(price || 0);
-                } else if (hasBothPrices) {
-                    if (watchShowInUsd) {
-                        setValue("amount", priceUsd || 0);
-                        setPrice(priceUsd || 0);
-                    } else {
-                        setValue("amount", price || 0);
-                        setPrice(price || 0);
-                    }
-                } else if (hasCustomPrice) {
-                    setIsCustomPrice(true);
-                    setValue("amount", null);
-                    setPrice(0);
+                    setValue("showInUsd", true); setValue("amount", priceUsd || 0); setPrice(priceUsd || 0);
+                } else if (price > 0 && priceUsd === 0) {
+                    setIsKztForced(true); setValue("showInUsd", false); setValue("amount", price || 0); setPrice(price || 0);
+                } else if (price > 0 && priceUsd > 0) {
+                    if (watchShowInUsd) { setValue("amount", priceUsd || 0); setPrice(priceUsd || 0); }
+                    else { setValue("amount", price || 0); setPrice(price || 0); }
+                } else if (price === null || priceUsd === null) {
+                    setIsCustomPrice(true); setValue("amount", null); setPrice(0);
                 }
             }
         } else {
-            setIsUsdForced(false);
-            setIsKztForced(false);
-            setIsKaspiDisabled(false);
-            setPaymentMethodMessage("");
-            setIsCustomPrice(false);
-            setValue("amount", null);
-            setPrice(0);
+            setIsUsdForced(false); setIsKztForced(false); setIsKaspiDisabled(false);
+            setPaymentMethodMessage(""); setIsCustomPrice(false); setValue("amount", null); setPrice(0);
         }
     }, [watchPaymentCategoryId, watchShowInUsd, paymentCategoryOptions, setValue, setPrice]);
 
     useEffect(() => {
-        if (!watchPaymentCategoryId) {
-            setValue("amount", null);
-            setPrice(0);
-        }
+        if (!watchPaymentCategoryId) { setValue("amount", null); setPrice(0); }
     }, [watchPaymentCategoryId, setValue, setPrice]);
 
     const handleAdditionalChange = (key: string, value: any) => {
@@ -343,26 +265,16 @@ export const PaymentForm: FC = () => {
             toast.error("Kaspi Bank does not support USD payments. Please select HalykBank for non-resident payments or change to Resident.");
             return;
         }
-
-        setSubmitting(true); // 👈 только кнопку блокируем
+        setSubmitting(true);
         try {
             let currency: "KZT" | "USD" = "KZT";
-            if (data.paymentMethod === "HalykBank" && data.showInUsd === true) {
-                currency = "USD";
-            }
+            if (data.paymentMethod === "HalykBank" && data.showInUsd === true) currency = "USD";
 
-            const convertAdditionalFields = (fields: Record<string, string | boolean | { file: File; url: string; name: string; size: number; type: string; lastModified: number }>): Record<string, string | boolean> => {
+            // Все файловые поля уже содержат URL из MinIO — просто берём строки
+            const convertAdditionalFields = (fields: Record<string, any>): Record<string, string | boolean> => {
                 const converted: Record<string, string | boolean> = {};
                 Object.entries(fields).forEach(([key, value]) => {
-                    if (typeof value === 'object' && value !== null && 'file' in value && 'url' in value) {
-                        converted[key] = (value as any).url || '';
-                    } else if (typeof value === 'object' && value !== null && 'name' in value) {
-                        const cleanFileName = ((value as any).name || 'file')
-                            .replace(/[^a-zA-Z0-9._-]/g, '_')
-                            .replace(/\s+/g, '_')
-                            .substring(0, 100);
-                        converted[key] = cleanFileName;
-                    } else if (typeof value === 'string' || typeof value === 'boolean' || typeof value === 'number') {
+                    if (typeof value === 'string' || typeof value === 'boolean') {
                         converted[key] = value;
                     } else {
                         converted[key] = String(value);
@@ -379,7 +291,6 @@ export const PaymentForm: FC = () => {
                 toast.error("Сумма платежа должна быть положительным числом.");
                 return;
             }
-
             const hasMissingEventFields = eventAdditionalFields.some(field => {
                 if (field.required && !eventAdditionalFieldValues[field.name]) {
                     toast.error(`Поле "${field.label}" обязательно для заполнения`);
@@ -421,20 +332,13 @@ export const PaymentForm: FC = () => {
                     let finalAmount = amount ?? null;
                     if (selectedPaymentCategory && data.event_payment_type_id === selectedPaymentCategory.value) {
                         const categoryData = selectedPaymentCategory as any;
-                        if (currency === "USD" && categoryData.price_usd) {
-                            finalAmount = Number(categoryData.price_usd);
-                        } else if (categoryData.price) {
-                            finalAmount = Number(categoryData.price);
-                        }
+                        if (currency === "USD" && categoryData.price_usd) finalAmount = Number(categoryData.price_usd);
+                        else if (categoryData.price) finalAmount = Number(categoryData.price);
                     }
                     const useCustomPriceDirectly = false;
-                    // #region agent log
                     debugLog("PaymentForm.tsx:kaspi-branch", "kaspi priced branch", { hypothesisId: "K1", currentEventId, eventOptionsLen: eventOptions.length, useCustomPriceDirectly, finalAmount, hasPaymentCategoryId: !!data.event_payment_type_id });
-                    // #endregion
                     if (useCustomPriceDirectly) {
-                        // #region agent log
                         debugLog("PaymentForm.tsx:kaspi-custom-price-direct", "taking direct custom price path", { hypothesisId: "K2" });
-                        // #endregion
                         try {
                             const kaspiData = await orderKaspiCustomPrice({ ...dataWithoutPaymentMethodAndDepartment, event_id: data.event_id!, event_payment_type_id: data.event_payment_type_id!, amount: finalAmount!, currency: "KZT" });
                             debugLog("PaymentForm.tsx:kaspi-custom-price-ok", "orderKaspiCustomPrice success", { hypothesisId: "K2", hasOrder: !!kaspiData?.order });
@@ -445,9 +349,7 @@ export const PaymentForm: FC = () => {
                         }
                         return;
                     }
-                    // #region agent log
                     debugLog("PaymentForm.tsx:orderKaspi-call", "calling orderKaspi", { hypothesisId: "K3", finalAmount, currency: "KZT" });
-                    // #endregion
                     try {
                         const kaspiData = await orderKaspi({ ...dataWithoutPaymentMethodAndDepartment, amount: finalAmount, currency: "KZT" });
                         setPaymentData(kaspiData);
@@ -500,20 +402,13 @@ export const PaymentForm: FC = () => {
                         let finalAmount = amount ?? null;
                         if (selectedPaymentCategory && data.event_payment_type_id === selectedPaymentCategory.value) {
                             const categoryData = selectedPaymentCategory as any;
-                            if (currency === "USD" && categoryData.price_usd) {
-                                finalAmount = Number(categoryData.price_usd);
-                            } else if (categoryData.price) {
-                                finalAmount = Number(categoryData.price);
-                            }
+                            if (currency === "USD" && categoryData.price_usd) finalAmount = Number(categoryData.price_usd);
+                            else if (categoryData.price) finalAmount = Number(categoryData.price);
                         }
                         const useCustomPriceDirectly = false;
-                        // #region agent log
                         debugLog("PaymentForm.tsx:halyk-branch", "halyk priced branch", { hypothesisId: "H1", currentEventId, eventOptionsLen: eventOptions.length, useCustomPriceDirectly, finalAmount, hasPaymentCategoryId: !!data.event_payment_type_id });
-                        // #endregion
                         if (useCustomPriceDirectly) {
-                            // #region agent log
                             debugLog("PaymentForm.tsx:custom-price-direct", "taking direct custom price path", { hypothesisId: "H2" });
-                            // #endregion
                             try {
                                 const halykData = await orderHalykCustomPrice({ ...dataWithoutPaymentMethodAndDepartment, event_id: data.event_id!, event_payment_type_id: data.event_payment_type_id!, amount: finalAmount!, currency });
                                 debugLog("PaymentForm.tsx:custom-price-ok", "orderHalykCustomPrice success", { hypothesisId: "H2", hasOrder: !!halykData?.order });
@@ -525,9 +420,7 @@ export const PaymentForm: FC = () => {
                             }
                             return;
                         }
-                        // #region agent log
                         debugLog("PaymentForm.tsx:orderHalyk-call", "calling orderHalyk", { hypothesisId: "H3", finalAmount, currency });
-                        // #endregion
                         try {
                             const halykData = await orderHalyk({ ...dataWithoutPaymentMethodAndDepartment, amount: finalAmount, currency });
                             setPaymentData(halykData);
@@ -554,19 +447,18 @@ export const PaymentForm: FC = () => {
                             toast.error("Ошибка при создании платежа. Пожалуйста, попробуйте еще раз.");
                         }
                     }
-                } else if (data.paymentMethod === "HalykBank") {
-                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                    const { paymentMethod, event_id, promo_code, showInUsd, ...dataWithoutPaymentMethodAndDepartment } = payload;
-                    setPaymentData(await orderSelfHalyk({ ...dataWithoutPaymentMethodAndDepartment, currency: "KZT" }));
-                    setShowWidget(true);
                 }
+            } else if (data.paymentMethod === "HalykBank") {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                const { paymentMethod, event_id, promo_code, showInUsd, ...dataWithoutPaymentMethodAndDepartment } = payload;
+                setPaymentData(await orderSelfHalyk({ ...dataWithoutPaymentMethodAndDepartment, currency: "KZT" }));
+                setShowWidget(true);
             }
-
         } catch (err: any) {
             toast.error(err.response.data.detail[0].msg || t('paymentPage.toasts.error'));
             console.error("Payment API error:", err);
         } finally {
-            setSubmitting(false); // 👈 только кнопку разблокируем
+            setSubmitting(false);
         }
     };
 
@@ -584,87 +476,42 @@ export const PaymentForm: FC = () => {
         >
             <p className="mb-[31px] text-[24px]">{t('paymentPage.personalInfo')}</p>
             <div className="flex flex-col md:w-full w-[340px] gap-[20px]">
-                <Controller
-                    name="fullname"
-                    control={control}
-                    render={({ field }) => (
-                        <>
-                            <CustomInput
-                                {...field}
-                                icon={<UserIcon className={`text-[#6B9AB0] ${errors.fullname ? "text-red-500" : ""}`} />}
-                                type="text"
-                                onChange={(e) => { field.onChange(e); setOrderField("fullname", e.target.value); }}
-                                placeholder={t('paymentPage.inputs.namePH')}
-                                error={errors.fullname?.message}
-                            />
-                            {errors.fullname && <p className="text-red-500 text-sm -mt-4 ml-2">{errors.fullname.message}</p>}
-                        </>
-                    )}
-                />
-                <Controller
-                    name="email"
-                    control={control}
-                    render={({ field }) => (
-                        <>
-                            <CustomInput
-                                {...field}
-                                icon={<EnvelopeIcon className={`text-[#6B9AB0] ${errors.email ? "text-red-500" : ""}`} />}
-                                type="email"
-                                onChange={(e) => { field.onChange(e); setOrderField("email", e.target.value); }}
-                                placeholder={t('paymentPage.inputs.emailPH')}
-                                error={errors.email?.message}
-                            />
-                            {errors.email && <p className="text-red-500 text-sm -mt-4 ml-2">{errors.email.message}</p>}
-                        </>
-                    )}
-                />
-                <Controller
-                    name="cellphone"
-                    control={control}
-                    render={({ field }) => (
-                        <>
-                            <CustomInput
-                                {...field}
-                                icon={<PhoneIcon className={`text-[#6B9AB0] ${errors.cellphone ? "text-red-500" : ""}`} />}
-                                type="text"
-                                onChange={(e) => { field.onChange(e); setOrderField("cellphone", e.target.value); }}
-                                placeholder={t('paymentPage.inputs.phonePH')}
-                                error={errors.cellphone?.message}
-                            />
-                            {errors.cellphone && <p className="text-red-500 text-sm -mt-4 ml-2">{errors.cellphone.message}</p>}
-                        </>
-                    )}
-                />
-                <Controller
-                    name="department_id"
-                    control={control}
-                    render={({ field }) => (
-                        <>
-                            <CustomSelect
-                                {...field}
-                                options={departmentOptions}
-                                value={field.value}
-                                onChange={(val) => {
-                                    field.onChange(val);
-                                    setSelectedDepartmentId(val);
-                                    if (discount > 0) { setValue("promo_code", null); resetPromo(); toast("Промокод сброшен. Департамент изменен.", { icon: "ℹ️" }); }
-                                    setValue("event_id", null); setOrderField("event_id", ""); setEventOptions([]); setSelectedEventPriced(null); setPrice(0);
-                                    setValue("event_payment_type_id", null); setOrderField("event_payment_type_id", ""); setPaymentCategoryOptions([]); setPaymentCategoryAdditionalFields([]); setPaymentCategoryAdditionalFieldValues({});
-                                    setValue("showInUsd", false); setCurrency("KZT"); setAdditionalFieldValues({});
-                                    type AdditionalFieldsMap = Record<string, { type: string }>;
-                                    const selected = departments.find((d) => d.id === val);
-                                    setSelectedDepartmentType(selected?.type as DepartmentType || null);
-                                    const additional = (selected?.additional_fields || {}) as AdditionalFieldsMap;
-                                    setAdditionalFields(Object.entries(additional).map(([label, config]) => ({ label, type: config.type, name: label.replace(/\s+/g, "_").toLowerCase() })));
-                                }}
-                                triggerClassName={"text-white"}
-                                placeholder={t('paymentPage.inputs.selectDepPH')}
-                                error={errors.department_id?.message}
-                            />
-                            {errors.department_id && <p className="text-red-500 text-sm -mt-2 ml-2">{errors.department_id.message}</p>}
-                        </>
-                    )}
-                />
+                <Controller name="fullname" control={control} render={({ field }) => (
+                    <>
+                        <CustomInput {...field} icon={<UserIcon className={`text-[#6B9AB0] ${errors.fullname ? "text-red-500" : ""}`} />} type="text" onChange={(e) => { field.onChange(e); setOrderField("fullname", e.target.value); }} placeholder={t('paymentPage.inputs.namePH')} error={errors.fullname?.message} />
+                        {errors.fullname && <p className="text-red-500 text-sm -mt-4 ml-2">{errors.fullname.message}</p>}
+                    </>
+                )} />
+                <Controller name="email" control={control} render={({ field }) => (
+                    <>
+                        <CustomInput {...field} icon={<EnvelopeIcon className={`text-[#6B9AB0] ${errors.email ? "text-red-500" : ""}`} />} type="email" onChange={(e) => { field.onChange(e); setOrderField("email", e.target.value); }} placeholder={t('paymentPage.inputs.emailPH')} error={errors.email?.message} />
+                        {errors.email && <p className="text-red-500 text-sm -mt-4 ml-2">{errors.email.message}</p>}
+                    </>
+                )} />
+                <Controller name="cellphone" control={control} render={({ field }) => (
+                    <>
+                        <CustomInput {...field} icon={<PhoneIcon className={`text-[#6B9AB0] ${errors.cellphone ? "text-red-500" : ""}`} />} type="text" onChange={(e) => { field.onChange(e); setOrderField("cellphone", e.target.value); }} placeholder={t('paymentPage.inputs.phonePH')} error={errors.cellphone?.message} />
+                        {errors.cellphone && <p className="text-red-500 text-sm -mt-4 ml-2">{errors.cellphone.message}</p>}
+                    </>
+                )} />
+                <Controller name="department_id" control={control} render={({ field }) => (
+                    <>
+                        <CustomSelect {...field} options={departmentOptions} value={field.value} onChange={(val) => {
+                            field.onChange(val);
+                            setSelectedDepartmentId(val);
+                            if (discount > 0) { setValue("promo_code", null); resetPromo(); toast("Промокод сброшен. Департамент изменен.", { icon: "ℹ️" }); }
+                            setValue("event_id", null); setOrderField("event_id", ""); setEventOptions([]); setSelectedEventPriced(null); setPrice(0);
+                            setValue("event_payment_type_id", null); setOrderField("event_payment_type_id", ""); setPaymentCategoryOptions([]); setPaymentCategoryAdditionalFields([]); setPaymentCategoryAdditionalFieldValues({});
+                            setValue("showInUsd", false); setCurrency("KZT"); setAdditionalFieldValues({});
+                            type AdditionalFieldsMap = Record<string, { type: string }>;
+                            const selected = departments.find((d) => d.id === val);
+                            setSelectedDepartmentType(selected?.type as DepartmentType || null);
+                            const additional = (selected?.additional_fields || {}) as AdditionalFieldsMap;
+                            setAdditionalFields(Object.entries(additional).map(([label, config]) => ({ label, type: config.type, name: label.replace(/\s+/g, "_").toLowerCase() })));
+                        }} triggerClassName={"text-white"} placeholder={t('paymentPage.inputs.selectDepPH')} error={errors.department_id?.message} />
+                        {errors.department_id && <p className="text-red-500 text-sm -mt-2 ml-2">{errors.department_id.message}</p>}
+                    </>
+                )} />
 
                 {selectedDepartmentId && (
                     <>
@@ -681,57 +528,49 @@ export const PaymentForm: FC = () => {
                                 return (
                                     <div key={key} className="ml-2">
                                         <label className="block text-sm font-medium text-gray-700">{field.label}</label>
-                                        <input type="date" value={typeof additionalFieldValues[key] === "string" || typeof additionalFieldValues[key] === "number" ? new Date(additionalFieldValues[key] as string).toISOString().split('T')[0] : ''} placeholder={field.label} onChange={(e) => handleAdditionalChange(key, e.target.value)} />
+                                        <input type="date" value={typeof additionalFieldValues[key] === "string" ? new Date(additionalFieldValues[key]).toISOString().split('T')[0] : ''} placeholder={field.label} onChange={(e) => handleAdditionalChange(key, e.target.value)} />
                                     </div>
                                 );
                             } else if (field.type === "file") {
                                 return (
                                     <div key={key} className="ml-2">
                                         <label className="block text-sm font-medium text-gray-700 mb-1">{field.label}</label>
-                                        <div className="relative">
-                                            <input type="file" id={`file-${key}`} className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleAdditionalChange(key, { name: file.name, size: file.size, type: file.type, lastModified: file.lastModified }); }} />
-                                            <button type="button" onClick={() => document.getElementById(`file-${key}`)?.click()} className="flex items-center justify-center gap-2 rounded-[5px] p-[13px] text-[16px] cursor-pointer select-none border transition-colors w-full text-white bg-[#006799] border-[#6B9AB0] hover:bg-[#004C71]">
-                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
-                                                <span className="text-sm font-medium">{(additionalFieldValues[key] as any)?.name || "Выберите файл"}</span>
-                                            </button>
-                                            {(additionalFieldValues[key] as any)?.name && <div className="mt-2 text-xs text-gray-600">Файл: {(additionalFieldValues[key] as any).name} ({((additionalFieldValues[key] as any).size / 1024).toFixed(1)} KB)</div>}
-                                        </div>
+                                        <FileUpload
+                                            placeholder={`Загрузить ${field.label}`}
+                                            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+                                            maxSize={20}
+                                            uploadOptions={{
+                                                field_key: key,
+                                                entity_type: "departments",
+                                                entity_id: selectedDepartmentId,
+                                            }}
+                                            onChange={(_, url) => handleAdditionalChange(key, url ?? "")}
+                                        />
+                                        {additionalFieldValues[key] && <p className="text-xs text-green-600 mt-1">✓ Файл загружен</p>}
                                     </div>
                                 );
                             }
                             return <CustomInput key={key} icon={<UserIcon className="text-[#6B9AB0]" />} type={field.type} value={(additionalFieldValues[key] as string) || ""} onChange={(e) => handleAdditionalChange(key, e.target.value)} placeholder={field.label} />;
                         })}
 
-                        <Controller
-                            name="event_id"
-                            control={control}
-                            render={({ field }) => (
-                                <>
-                                    <CustomSelect
-                                        {...field}
-                                        options={eventOptions}
-                                        value={field.value || ''}
-                                        onChange={(val) => {
-                                            field.onChange(val); setOrderField("event_id", val); setCurrentEventId(val);
-                                            if (discount > 0) { setValue("promo_code", null); resetPromo(); toast("Промокод сброшен. Событие изменено.", { icon: "ℹ️" }); }
-                                            setValue("showInUsd", false); setCurrency("KZT");
-                                            const selectedEvent = eventOptions.find(e => e.value === val);
-                                            if (selectedEvent) {
-                                                const eventData = selectedEvent as any;
-                                                const eventPrice = Number(eventData.price || 0);
-                                                const eventPriceUsd = Number(eventData.price_usd || 0);
-                                                setPrice(eventPrice);
-                                                setSelectedEventPriced(eventPrice > 0 || eventPriceUsd > 0);
-                                            }
-                                        }}
-                                        triggerClassName={"text-white"}
-                                        placeholder={t('paymentPage.inputs.selectEvPH')}
-                                        error={errors.event_id?.message}
-                                    />
-                                    {errors.event_id && <p className="text-red-500 text-sm -mt-2 ml-2">{errors.event_id.message}</p>}
-                                </>
-                            )}
-                        />
+                        <Controller name="event_id" control={control} render={({ field }) => (
+                            <>
+                                <CustomSelect {...field} options={eventOptions} value={field.value || ''} onChange={(val) => {
+                                    field.onChange(val); setOrderField("event_id", val); setCurrentEventId(val);
+                                    if (discount > 0) { setValue("promo_code", null); resetPromo(); toast("Промокод сброшен. Событие изменено.", { icon: "ℹ️" }); }
+                                    setValue("showInUsd", false); setCurrency("KZT");
+                                    const selectedEvent = eventOptions.find(e => e.value === val);
+                                    if (selectedEvent) {
+                                        const eventData = selectedEvent as any;
+                                        const eventPrice = Number(eventData.price || 0);
+                                        const eventPriceUsd = Number(eventData.price_usd || 0);
+                                        setPrice(eventPrice);
+                                        setSelectedEventPriced(eventPrice > 0 || eventPriceUsd > 0);
+                                    }
+                                }} triggerClassName={"text-white"} placeholder={t('paymentPage.inputs.selectEvPH')} error={errors.event_id?.message} />
+                                {errors.event_id && <p className="text-red-500 text-sm -mt-2 ml-2">{errors.event_id.message}</p>}
+                            </>
+                        )} />
 
                         {eventAdditionalFields.length > 0 && (
                             <div className="flex flex-col gap-2">
@@ -744,6 +583,24 @@ export const PaymentForm: FC = () => {
                                                 <label htmlFor={uniqueKey} className="text-sm font-medium text-gray-700">{field.label}</label>
                                             </div>
                                         );
+                                    } else if (field.type === 'file') {
+                                        return (
+                                            <div key={uniqueKey} className="ml-2">
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">{field.label}{field.required && <span className="text-red-500 ml-1">*</span>}</label>
+                                                <FileUpload
+                                                    placeholder={`Загрузить ${field.label}`}
+                                                    accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+                                                    maxSize={20}
+                                                    uploadOptions={{
+                                                        field_key: field.name,
+                                                        entity_type: "events",
+                                                        entity_id: currentEventId!,
+                                                    }}
+                                                    onChange={(_, url) => setEventAdditionalFieldValues(prev => ({ ...prev, [field.name]: url ?? "" }))}
+                                                />
+                                                {eventAdditionalFieldValues[field.name] && <p className="text-xs text-green-600 mt-1">✓ Файл загружен</p>}
+                                            </div>
+                                        );
                                     }
                                     return <CustomInput key={uniqueKey} icon={<UserIcon className="text-[#6B9AB0]" />} type={field.type} value={(eventAdditionalFieldValues[field.name] as string) || ""} onChange={(e) => setEventAdditionalFieldValues(prev => ({ ...prev, [field.name]: e.target.value }))} placeholder={field.label} required={field.required} />;
                                 })}
@@ -751,39 +608,27 @@ export const PaymentForm: FC = () => {
                         )}
 
                         {currentEventId && paymentCategoryOptions.length > 0 && (
-                            <Controller
-                                name="event_payment_type_id"
-                                control={control}
-                                render={({ field }) => (
-                                    <>
-                                        <CustomSelect
-                                            {...field}
-                                            options={paymentCategoryOptions}
-                                            value={field.value || ''}
-                                            onChange={(val) => {
-                                                field.onChange(val); setOrderField("event_payment_type_id", val);
-                                                const selectedCategory = paymentCategoryOptions.find(opt => opt.value === val);
-                                                if (selectedCategory) {
-                                                    const categoryData = selectedCategory as any;
-                                                    setSelectedPaymentCategory(categoryData);
-                                                    if (categoryData.additional_fields) {
-                                                        setPaymentCategoryAdditionalFields(Object.entries(categoryData.additional_fields).map(([name, config]: [string, any]) => ({ name, type: config.type, label: name })));
-                                                    } else {
-                                                        setPaymentCategoryAdditionalFields([]);
-                                                    }
-                                                } else {
-                                                    setSelectedPaymentCategory(null);
-                                                    setPaymentCategoryAdditionalFields([]);
-                                                }
-                                            }}
-                                            triggerClassName={"text-white"}
-                                            placeholder={t('paymentPage.inputs.selectPaymentTypePH')}
-                                            error={errors.event_payment_type_id?.message}
-                                        />
-                                        {errors.event_payment_type_id && <p className="text-red-500 text-sm -mt-2 ml-2">{errors.event_payment_type_id.message}</p>}
-                                    </>
-                                )}
-                            />
+                            <Controller name="event_payment_type_id" control={control} render={({ field }) => (
+                                <>
+                                    <CustomSelect {...field} options={paymentCategoryOptions} value={field.value || ''} onChange={(val) => {
+                                        field.onChange(val); setOrderField("event_payment_type_id", val);
+                                        const selectedCategory = paymentCategoryOptions.find(opt => opt.value === val);
+                                        if (selectedCategory) {
+                                            const categoryData = selectedCategory as any;
+                                            setSelectedPaymentCategory(categoryData);
+                                            if (categoryData.additional_fields) {
+                                                setPaymentCategoryAdditionalFields(Object.entries(categoryData.additional_fields).map(([name, config]: [string, any]) => ({ name, type: config.type, label: name })));
+                                            } else {
+                                                setPaymentCategoryAdditionalFields([]);
+                                            }
+                                        } else {
+                                            setSelectedPaymentCategory(null);
+                                            setPaymentCategoryAdditionalFields([]);
+                                        }
+                                    }} triggerClassName={"text-white"} placeholder={t('paymentPage.inputs.selectPaymentTypePH')} error={errors.event_payment_type_id?.message} />
+                                    {errors.event_payment_type_id && <p className="text-red-500 text-sm -mt-2 ml-2">{errors.event_payment_type_id.message}</p>}
+                                </>
+                            )} />
                         )}
 
                         {paymentCategoryAdditionalFields.length > 0 && (
@@ -801,14 +646,18 @@ export const PaymentForm: FC = () => {
                                         return (
                                             <div key={uniqueKey} className="ml-2">
                                                 <label className="block text-sm font-medium text-gray-700 mb-1">{field.label}{field.required && <span className="text-red-500 ml-1">*</span>}</label>
-                                                <div className="relative">
-                                                    <input type="file" id={`payment-file-${uniqueKey}`} className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) setPaymentCategoryAdditionalFieldValues(prev => ({ ...prev, [field.name]: { name: file.name, size: file.size, type: file.type, lastModified: file.lastModified } })); }} />
-                                                    <button type="button" onClick={() => document.getElementById(`payment-file-${uniqueKey}`)?.click()} className="flex items-center justify-center gap-2 rounded-[5px] p-[13px] text-[16px] cursor-pointer select-none border transition-colors w-full text-white bg-[#006799] border-[#6B9AB0] hover:bg-[#004C71]">
-                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
-                                                        <span className="text-sm font-medium">{(paymentCategoryAdditionalFieldValues[field.name] as any)?.name || "Выберите файл"}</span>
-                                                    </button>
-                                                    {(paymentCategoryAdditionalFieldValues[field.name] as any)?.name && <div className="mt-2 text-xs text-gray-600">Файл: {(paymentCategoryAdditionalFieldValues[field.name] as any).name} ({((paymentCategoryAdditionalFieldValues[field.name] as any).size / 1024).toFixed(1)} KB)</div>}
-                                                </div>
+                                                <FileUpload
+                                                    placeholder={`Загрузить ${field.label}`}
+                                                    accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+                                                    maxSize={20}
+                                                    uploadOptions={{
+                                                        field_key: field.name,
+                                                        entity_type: "event_payment_types",
+                                                        entity_id: watchPaymentCategoryId!,
+                                                    }}
+                                                    onChange={(_, url) => setPaymentCategoryAdditionalFieldValues(prev => ({ ...prev, [field.name]: url ?? "" }))}
+                                                />
+                                                {paymentCategoryAdditionalFieldValues[field.name] && <p className="text-xs text-green-600 mt-1">✓ Файл загружен</p>}
                                             </div>
                                         );
                                     } else if (field.type === "select") {
@@ -834,125 +683,85 @@ export const PaymentForm: FC = () => {
                             const categoryData = selectedCategory as any;
                             return (categoryData.price > 0 && categoryData.price_usd > 0) || categoryData.price === null || categoryData.price_usd === null;
                         })() && (
-                            <Controller
-                                name="showInUsd"
-                                control={control}
-                                render={({ field }) => (
-                                    <div className="flex items-center gap-2">
-                                        <input
-                                            type="checkbox"
-                                            id="showInUsd"
-                                            checked={field.value || false}
-                                            disabled={isUsdForced || isKztForced}
-                                            onChange={(e) => {
-                                                if (isUsdForced || isKztForced) return;
-                                                const isChecked = e.target.checked;
-                                                field.onChange(isChecked);
-                                                const selectedCategory = paymentCategoryOptions.find(opt => opt.value === watchPaymentCategoryId);
-                                                if (selectedCategory) {
-                                                    const categoryData = selectedCategory as any;
-                                                    if (isChecked) {
-                                                        setValue("amount", categoryData.price_usd || null); setPrice(categoryData.price_usd || 0); setCurrency("USD");
-                                                        setValue("paymentMethod", "HalykBank"); setIsKaspiDisabled(true); setPaymentMethodMessage("Для USD платежей доступен только HalykBank");
-                                                    } else {
-                                                        setValue("amount", categoryData.price || null); setPrice(categoryData.price || 0); setCurrency("KZT");
-                                                        setIsKaspiDisabled(false); setPaymentMethodMessage("");
-                                                    }
-                                                }
-                                            }}
-                                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                                        />
-                                        <label htmlFor="showInUsd" className="text-sm font-medium text-gray-700">Show in USD</label>
-                                    </div>
-                                )}
-                            />
+                            <Controller name="showInUsd" control={control} render={({ field }) => (
+                                <div className="flex items-center gap-2">
+                                    <input type="checkbox" id="showInUsd" checked={field.value || false} disabled={isUsdForced || isKztForced} onChange={(e) => {
+                                        if (isUsdForced || isKztForced) return;
+                                        const isChecked = e.target.checked;
+                                        field.onChange(isChecked);
+                                        const selectedCategory = paymentCategoryOptions.find(opt => opt.value === watchPaymentCategoryId);
+                                        if (selectedCategory) {
+                                            const categoryData = selectedCategory as any;
+                                            if (isChecked) {
+                                                setValue("amount", categoryData.price_usd || null); setPrice(categoryData.price_usd || 0); setCurrency("USD");
+                                                setValue("paymentMethod", "HalykBank"); setIsKaspiDisabled(true); setPaymentMethodMessage("Для USD платежей доступен только HalykBank");
+                                            } else {
+                                                setValue("amount", categoryData.price || null); setPrice(categoryData.price || 0); setCurrency("KZT");
+                                                setIsKaspiDisabled(false); setPaymentMethodMessage("");
+                                            }
+                                        }
+                                    }} className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2" />
+                                    <label htmlFor="showInUsd" className="text-sm font-medium text-gray-700">Show in USD</label>
+                                </div>
+                            )} />
                         )}
 
-                        <Controller
-                            name="paymentMethod"
-                            control={control}
-                            render={({ field }) => (
-                                <>
-                                    <PaymentMethod
-                                        {...field}
-                                        error={errors.paymentMethod?.message}
-                                        onChange={(value) => {
-                                            if (watchShowInUsd && value === "KaspiBank") return;
-                                            if (watchShowInUsd && watchPaymentMethod === "HalykBank" && value !== "HalykBank") { toast.error("Для USD платежей можно использовать только HalykBank"); return; }
-                                            setValue("paymentMethod", value);
-                                        }}
-                                        disableKaspi={watchShowInUsd || isKaspiDisabled}
-                                    />
-                                    {paymentMethodMessage && <p className="text-yellow-600 text-sm -mt-2 ml-2">⚠️ {paymentMethodMessage}</p>}
-                                    {errors.paymentMethod && <p className="text-red-500 text-sm -mt-2 ml-2">{errors.paymentMethod.message}</p>}
-                                    {watchShowInUsd && watchPaymentMethod === "KaspiBank" && <p className="text-red-500 text-sm -mt-2 ml-2">⚠️ Kaspi Bank does not support USD payments for non-residents. Please select HalykBank.</p>}
-                                </>
-                            )}
-                        />
+                        <Controller name="paymentMethod" control={control} render={({ field }) => (
+                            <>
+                                <PaymentMethod {...field} error={errors.paymentMethod?.message} onChange={(value) => {
+                                    if (watchShowInUsd && value === "KaspiBank") return;
+                                    if (watchShowInUsd && watchPaymentMethod === "HalykBank" && value !== "HalykBank") { toast.error("Для USD платежей можно использовать только HalykBank"); return; }
+                                    setValue("paymentMethod", value);
+                                }} disableKaspi={watchShowInUsd || isKaspiDisabled} />
+                                {paymentMethodMessage && <p className="text-yellow-600 text-sm -mt-2 ml-2">⚠️ {paymentMethodMessage}</p>}
+                                {errors.paymentMethod && <p className="text-red-500 text-sm -mt-2 ml-2">{errors.paymentMethod.message}</p>}
+                                {watchShowInUsd && watchPaymentMethod === "KaspiBank" && <p className="text-red-500 text-sm -mt-2 ml-2">⚠️ Kaspi Bank does not support USD payments for non-residents. Please select HalykBank.</p>}
+                            </>
+                        )} />
 
                         {selectedDepartmentType === "EVENT_BASED" ? (
                             <>
-                                {selectedDepartmentType === "EVENT_BASED" && (
-                                    <Controller name="promo_code" control={control} render={({ field }) => <PromocodeInput promoCodeField={{ ...field, value: field.value ?? undefined }} />} />
-                                )}
-
+                                <Controller name="promo_code" control={control} render={({ field }) => <PromocodeInput promoCodeField={{ ...field, value: field.value ?? undefined }} />} />
                                 {selectedEventPriced === false && (
-                                    <Controller
-                                        name="amount"
-                                        control={control}
-                                        render={({ field }) => (
+                                    <Controller name="amount" control={control} render={({ field }) => (
+                                        <>
+                                            <CustomInput {...field} disabled={false} icon={watchShowInUsd ? <CurrencyDollarIcon className={errors.amount ? "text-red-500" : "text-[#6B9AB0]"} /> : <TengeIcon color={errors.amount ? "#fb2c36" : "#6B9AB0"} />} type="number" onChange={(e) => { field.onChange(e); setOrderField("amount", Number(e.target.value)); }} placeholder={isCustomPrice ? "Введите сумму" : t('paymentPage.inputs.amountPH')} error={errors.amount?.message} />
+                                            {errors.amount && <p className="text-red-500 text-sm -mt-4 ml-2">{errors.amount.message}</p>}
+                                        </>
+                                    )} />
+                                )}
+                                {(selectedEventPriced !== false || isCustomPrice) && (
+                                    <Controller name="amount" control={control} render={({ field }) => {
+                                        const selectedCategory = watchPaymentCategoryId ? paymentCategoryOptions.find(opt => opt.value === watchPaymentCategoryId) as any : null;
+                                        const hasFixedPrice = selectedCategory && (
+                                            (selectedCategory.price !== null && selectedCategory.price > 0) ||
+                                            (selectedCategory.price_usd !== null && selectedCategory.price_usd > 0)
+                                        );
+                                        return (
                                             <>
-                                                <CustomInput {...field} disabled={false} icon={watchShowInUsd ? <CurrencyDollarIcon className={errors.amount ? "text-red-500" : "text-[#6B9AB0]"} /> : <TengeIcon color={errors.amount ? "#fb2c36" : "#6B9AB0"} />} type="number" onChange={(e) => { field.onChange(e); setOrderField("amount", Number(e.target.value)); }} placeholder={isCustomPrice ? "Введите сумму" : t('paymentPage.inputs.amountPH')} error={errors.amount?.message} />
+                                                <CustomInput {...field} disabled={!(isCustomPrice && !hasFixedPrice)} icon={watchShowInUsd ? <CurrencyDollarIcon className={errors.amount ? "text-red-500" : "text-[#6B9AB0]"} /> : <TengeIcon color={errors.amount ? "#fb2c36" : "#6B9AB0"} />} type="number" onChange={(e) => { field.onChange(e); setOrderField("amount", Number(e.target.value)); }} placeholder={hasFixedPrice ? "Цена фиксирована" : isCustomPrice ? "Введите сумму" : t('paymentPage.inputs.amountPH')} error={errors.amount?.message} />
                                                 {errors.amount && <p className="text-red-500 text-sm -mt-4 ml-2">{errors.amount.message}</p>}
                                             </>
-                                        )}
-                                    />
+                                        );
+                                    }} />
                                 )}
-
-                                {(selectedEventPriced !== false || isCustomPrice) && (
-                                    <Controller
-                                        name="amount"
-                                        control={control}
-                                        render={({ field }) => {
-                                            const selectedCategory = watchPaymentCategoryId ? paymentCategoryOptions.find(opt => opt.value === watchPaymentCategoryId) as any : null;
-                                            const hasFixedPrice = selectedCategory && selectedCategory.price !== null && selectedCategory.price_usd !== null && (selectedCategory.price > 0 || selectedCategory.price_usd > 0);
-                                            return (
-                                                <>
-                                                    <CustomInput {...field} disabled={!(isCustomPrice && !hasFixedPrice)} icon={watchShowInUsd ? <CurrencyDollarIcon className={errors.amount ? "text-red-500" : "text-[#6B9AB0]"} /> : <TengeIcon color={errors.amount ? "#fb2c36" : "#6B9AB0"} />} type="number" onChange={(e) => { field.onChange(e); setOrderField("amount", Number(e.target.value)); }} placeholder={hasFixedPrice ? "Цена фиксирована" : isCustomPrice ? "Введите сумму" : t('paymentPage.inputs.amountPH')} error={errors.amount?.message} />
-                                                    {errors.amount && <p className="text-red-500 text-sm -mt-4 ml-2">{errors.amount.message}</p>}
-                                                </>
-                                            );
-                                        }}
-                                    />
-                                )}
-
                                 {selectedEventPriced !== false && !isCustomPrice && <CheckOut />}
                             </>
                         ) : (
-                            <Controller
-                                name="amount"
-                                control={control}
-                                render={({ field }) => {
-                                    const selectedDepartment = departmentOptions.find(opt => opt.value === watchDepartmentId) as any;
-                                    const hasFixedPrice = selectedDepartment && selectedDepartment.price !== null && selectedDepartment.price > 0;
-                                    return (
-                                        <>
-                                            <CustomInput {...field} disabled={!(isCustomPrice && !hasFixedPrice)} icon={<TengeIcon color={errors.amount ? "#fb2c36" : "#6B9AB0"} />} type="number" onChange={(e) => { field.onChange(e); setOrderField("amount", Number(e.target.value)); }} placeholder={hasFixedPrice ? "Цена фиксирована" : isCustomPrice ? "Введите сумму" : t('paymentPage.inputs.amountPH')} error={errors.amount?.message} />
-                                            {errors.amount && <p className="text-red-500 text-sm -mt-4 ml-2">{errors.amount.message}</p>}
-                                        </>
-                                    );
-                                }}
-                            />
+                            <Controller name="amount" control={control} render={({ field }) => {
+                                const selectedDepartment = departmentOptions.find(opt => opt.value === watchDepartmentId) as any;
+                                const hasFixedPrice = selectedDepartment && selectedDepartment.price !== null && selectedDepartment.price > 0;
+                                return (
+                                    <>
+                                        <CustomInput {...field} disabled={!(isCustomPrice && !hasFixedPrice)} icon={<TengeIcon color={errors.amount ? "#fb2c36" : "#6B9AB0"} />} type="number" onChange={(e) => { field.onChange(e); setOrderField("amount", Number(e.target.value)); }} placeholder={hasFixedPrice ? "Цена фиксирована" : isCustomPrice ? "Введите сумму" : t('paymentPage.inputs.amountPH')} error={errors.amount?.message} />
+                                        {errors.amount && <p className="text-red-500 text-sm -mt-4 ml-2">{errors.amount.message}</p>}
+                                    </>
+                                );
+                            }} />
                         )}
 
-                        {/* 👇 submitting вместо loading — только кнопка меняется, экран не темнеет */}
                         {!submitting ? (
-                            <CustomButton
-                                type="submit"
-                                variant="submit"
-                                disabled={isCustomPrice && (!watch("amount") || Number(watch("amount")) <= 0)}
-                                className="bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-[#1E40AF] px-4 py-2 text-white font-medium rounded-md transition duration-200 ease-in-out shadow-md hover:shadow-lg"
-                            >
+                            <CustomButton type="submit" variant="submit" disabled={isCustomPrice && (!watch("amount") || Number(watch("amount")) <= 0)} className="bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-[#1E40AF] px-4 py-2 text-white font-medium rounded-md transition duration-200 ease-in-out shadow-md hover:shadow-lg">
                                 {t('paymentPage.payBtn')}
                             </CustomButton>
                         ) : (
