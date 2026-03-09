@@ -12,7 +12,7 @@ export const packetEventsApi = {
         }
         
         console.log("🔍 Cleaned params:", cleanParams);
-        const response = await publicApi.get<IEventRecord[]>('event-payment-types', { params: cleanParams });
+        const response = await api.get<IEventRecord[]>('event-payment-types', { params: cleanParams });
         console.log("🔍 API Response:", response.data);
         return response.data;
     },
