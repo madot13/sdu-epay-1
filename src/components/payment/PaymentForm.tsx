@@ -260,6 +260,7 @@ export const PaymentForm: FC = () => {
     const watchShowInUsd = watch("showInUsd");
     const watchPaymentMethod = watch("paymentMethod");
     const watchPaymentCategoryId = watch("event_payment_type_id");
+    const watchDepartmentId = watch("department_id");
 
     const [isKaspiDisabled, setIsKaspiDisabled] = useState(false);
     const [isUsdForced, setIsUsdForced] = useState(false);
@@ -1449,25 +1450,37 @@ export const PaymentForm: FC = () => {
                             <Controller
                                 name="amount"
                                 control={control}
-                                render={({ field }) => (
-                                    <>
-                                        <CustomInput
-                                            {...field}
-                                            disabled={!isCustomPrice}
-                                            icon={<TengeIcon color={errors.amount ? "#fb2c36" : "#6B9AB0"} />}
-                                            type="number"
-                                            onChange={(e) => {
-                                                field.onChange(e);
-                                                setOrderField("amount", Number(e.target.value));
-                                            }}
-                                            placeholder={isCustomPrice ? "Введите сумму" : t('paymentPage.inputs.amountPH')}
-                                            error={errors.amount?.message}
-                                        />
+                                render={({ field }) => {
+                                    // For SELF_PAY, check if there's a fixed price from department
+                                    const selectedDepartment = departmentOptions.find(opt => opt.value === watchDepartmentId) as any;
+                                    const hasFixedPrice = selectedDepartment && selectedDepartment.price !== null && selectedDepartment.price > 0;
+                                    
+                                    return (
+                                        <>
+                                            <CustomInput
+                                                {...field}
+                                                disabled={!isCustomPrice || hasFixedPrice}
+                                                icon={<TengeIcon color={errors.amount ? "#fb2c36" : "#6B9AB0"} />}
+                                                type="number"
+                                                onChange={(e) => {
+                                                    field.onChange(e);
+                                                    setOrderField("amount", Number(e.target.value));
+                                                }}
+                                                placeholder={
+                                                    hasFixedPrice
+                                                        ? "Цена фиксирована"
+                                                        : isCustomPrice 
+                                                            ? "Введите сумму" 
+                                                            : t('paymentPage.inputs.amountPH')
+                                                }
+                                                error={errors.amount?.message}
+                                            />
                                         {errors.amount && (
                                             <p className="text-red-500 text-sm -mt-4 ml-2">{errors.amount.message}</p>
                                         )}
                                     </>
-                                )}
+                                );
+                                }}
                             />
                         )}
 

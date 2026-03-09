@@ -245,35 +245,47 @@ export const OrderDetailsModal: FC<OrderDetailsModalProps> = ({ isOpen, onClose,
                                             <span className="text-gray-600 font-medium min-w-[120px]">{key}:</span>
                                             
                                             {isFile ? (
-                                                <button
-                                                    onClick={() => {
-                                                        const url = value;
-                                                        console.log("Attempting to download file from:", url);
-                                                        
-                                                        if (url.includes("http") || url.includes("https")) {
-                                                            // Для веб-URL открываем в новой вкладке
-                                                            window.open(url, '_blank');
-                                                        } else if (url.includes("blob:")) {
-                                                            // Для blob URL создаем временную ссылку
-                                                            const link = document.createElement('a');
-                                                            link.href = url;
-                                                            link.download = `file_${Date.now()}`;
-                                                            document.body.appendChild(link);
-                                                            link.click();
-                                                            document.body.removeChild(link);
-                                                        } else {
-                                                            // Для локальных файлов или других случаев
-                                                            console.log("Cannot download file from this URL:", url);
-                                                            alert("Не удалось скачать файл. Свяжитесь с администратором.");
-                                                        }
-                                                    }}
-                                                    className="flex items-center gap-2 px-3 py-2 bg-white border border-blue-500 text-blue-600 rounded-md hover:bg-blue-50 transition-colors text-sm font-medium"
-                                                >
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                    </svg>
-                                                    Скачать файл
-                                                </button>
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        onClick={() => {
+                                                            const url = value;
+                                                            console.log("Attempting to download file from:", url);
+                                                            
+                                                            try {
+                                                                if (url.includes("http") || url.includes("https")) {
+                                                                    // Для веб-URL открываем в новой вкладке
+                                                                    window.open(url, '_blank');
+                                                                    console.log("✅ File opened successfully:", url);
+                                                                } else if (url.includes("blob:")) {
+                                                                    // Для blob URL создаем временную ссылку
+                                                                    const link = document.createElement('a');
+                                                                    link.href = url;
+                                                                    link.download = `file_${Date.now()}`;
+                                                                    document.body.appendChild(link);
+                                                                    link.click();
+                                                                    document.body.removeChild(link);
+                                                                    console.log("✅ File downloaded successfully:", url);
+                                                                } else {
+                                                                    // Для локальных файлов или других случаев
+                                                                    console.log("Cannot download file from this URL:", url);
+                                                                    alert("Не удалось скачать файл. Свяжитесь с администратором.");
+                                                                }
+                                                            } catch (error) {
+                                                                console.error("❌ Error downloading file:", error);
+                                                                alert("Ошибка при скачивании файла. Попробуйте еще раз.");
+                                                            }
+                                                        }}
+                                                        className="flex items-center gap-2 px-3 py-2 bg-white border border-blue-500 text-blue-600 rounded-md hover:bg-blue-50 transition-colors text-sm font-medium"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                        </svg>
+                                                        Скачать файл
+                                                    </button>
+                                                    <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">
+                                                        ✓ Файл загружен
+                                                    </span>
+                                                </div>
                                             ) : (
                                                 <span className="font-semibold text-gray-800 break-all">
                                                     {typeof value === "boolean"
