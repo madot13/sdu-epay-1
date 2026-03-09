@@ -35,9 +35,17 @@ export const verifyPromocode = async (payload: VerifyPromocodePayload): Promise<
         // If public API fails (because backend requires auth), try with authenticated API
         if (error.response?.status === 401 || error.response?.status === 403) {
             console.log("🔍 Public API requires auth, falling back to authenticated API");
-            const {data} = await api.post('/promo-codes/public/verify', payload);
-            return data;
+            try {
+                const {data} = await api.post('/promo-codes/public/verify', payload);
+                return data;
+            } catch (authError: any) {
+                console.log("🔍 Authenticated API error:", authError.response?.data);
+                console.log("🔍 Authenticated API status:", authError.response?.status);
+                throw authError;
+            }
         }
+        console.log("🔍 Public API error:", error.response?.data);
+        console.log("🔍 Public API status:", error.response?.status);
         throw error;
     }
 }
