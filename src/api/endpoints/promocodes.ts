@@ -3,7 +3,7 @@ import {
     PromocodeQuery, UpdatePromocodePayload, VerifyPromocodePayload,
     VerifyPromocodeResponse
 } from "@/types/promocodes.ts";
-import {api} from "@/api/api.ts";
+import {api, publicApi} from "@/api/api.ts";
 
 export const getPromocodes = async (query?:PromocodeQuery) => {
     const queryString = query
@@ -27,9 +27,19 @@ export const addPromocode = async (promocode: CreatePromocodePayload) => {
 }
 
 export const verifyPromocode = async (payload: VerifyPromocodePayload): Promise<VerifyPromocodeResponse> => {
-    const {data} = await api.post('/promo-codes/public/verify', payload);
-
-    return data;
+    try {
+        // Try public API first (for guests)
+        const {data} = await publicApi.post('/promo-codes/public/verify', payload);
+        return data;
+    } catch (error: any) {
+        // If public API fails (because backend requires auth), try with authenticated API
+        if (error.response?.status === 401 || error.response?.status === 403) {
+            console.log("🔍 Public API requires auth, falling back to authenticated API");
+            const {data} = await api.post('/promo-codes/public/verify', payload);
+            return data;
+        }
+        throw error;
+    }
 }
 
 export const updatePromocode = async (id: string, payload: UpdatePromocodePayload) => {
