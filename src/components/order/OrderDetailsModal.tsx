@@ -10,37 +10,36 @@ interface OrderDetailsModalProps {
     order: Order | null;
 }
 
-// Определяем является ли значение ссылкой на файл в MinIO
-const isFileUrl = (value: unknown): value is string => {
+// Определяем является ли значение ссылкой на файл (URL или key)
+const isFileValue = (value: unknown): value is string => {
     if (typeof value !== "string") return false;
-    return (
-        /^https?:\/\/.+\.(jpg|jpeg|png|gif|pdf|doc|docx|xls|xlsx|txt|zip|rar)(\?.*)?$/i.test(value) ||
-        /\.(jpg|jpeg|png|gif|pdf|doc|docx|xls|xlsx|txt|zip|rar)$/i.test(value)
-    );
+    return /\.(jpg|jpeg|png|gif|pdf|doc|docx|xls|xlsx|txt|zip|rar)$/i.test(value);
 };
 
-// Скачиваем файл по прямой ссылке или через API если это ключ
-const downloadFile = (fileValue: string) => {
-    // Если это полный URL от MinIO, скачиваем напрямую
-    if (fileValue.startsWith('http')) {
-        const filename = fileValue.split("/").pop()?.split("?")[0] || "file";
-        const a = document.createElement("a");
-        a.href = fileValue;
-        a.target = "_blank";
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        return;
+// Строим корректный URL для скачивания через бэкенд прокси
+const buildFileUrl = (fileValue: string): string => {
+    // Старый формат — внутренний MinIO URL (http://minio:9000/epay-files/...)
+    if (fileValue.includes('/epay-files/')) {
+        const key = fileValue.split('/epay-files/')[1];
+        return `https://ems.optims.app/api/api/uploads/${key}`;
     }
-    
-    // Если это ключ MinIO, формируем URL через API
-    const baseUrl = window.location.origin;
-    const fileUrl = `${baseUrl}/api/uploads/${encodeURIComponent(fileValue)}`;
+
+    // Любой другой http URL — пробуем скачать напрямую
+    if (fileValue.startsWith('http')) {
+        return fileValue;
+    }
+
+    // Новый формат — просто key (departments/uuid/field/uuid_file.ext)
+    return `https://ems.optims.app/api/api/uploads/${fileValue}`;
+};
+
+const downloadFile = (fileValue: string) => {
+    const fileUrl = buildFileUrl(fileValue);
+    const filename = fileValue.split("/").pop()?.split("?")[0] || "file";
     const a = document.createElement("a");
     a.href = fileUrl;
     a.target = "_blank";
-    a.download = fileValue.split("/").pop() || "file";
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -53,11 +52,9 @@ export const OrderDetailsModal: FC<OrderDetailsModalProps> = ({ isOpen, onClose,
     useEffect(() => {
         const fetchOrderDetails = async () => {
             if (!order || !isOpen) return;
-
             setLoading(true);
             try {
                 const details = await getOrderById(order.id);
-                console.log("🔍 additional_fields:", JSON.stringify(details.additional_fields, null, 2)); // <- добавьте
                 setOrderDetails(details);
             } catch (error) {
                 console.error("Failed to fetch order details:", error);
@@ -65,7 +62,6 @@ export const OrderDetailsModal: FC<OrderDetailsModalProps> = ({ isOpen, onClose,
                 setLoading(false);
             }
         };
-
         fetchOrderDetails();
     }, [order, isOpen]);
 
@@ -276,7 +272,7 @@ export const OrderDetailsModal: FC<OrderDetailsModalProps> = ({ isOpen, onClose,
                                     >
                                         <span className="text-gray-600 font-medium min-w-[120px]">{key}:</span>
 
-                                        {isFileUrl(value) ? (
+                                        {isFileValue(value) ? (
                                             <div className="flex items-center gap-2">
                                                 <button
                                                     onClick={() => downloadFile(value)}
