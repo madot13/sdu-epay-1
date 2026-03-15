@@ -1,6 +1,8 @@
+import { FieldLabel } from "./additionalFields";
+
 export interface IEvent {
     title?: string;
-    id?: string
+    id?: string;
     manager_email?: string;
     priced?: boolean;
     price?: number;
@@ -10,7 +12,7 @@ export interface IEvent {
     period_till?: string,
     department_id?: string;
     active?: boolean;
-    additional_fields?: Record<string, any>;
+    additional_fields?: Record<string, { type: string; value?: any; label: FieldLabel; required?: boolean }>;
 }
 
 export type CreateEventPayload = IEvent & {

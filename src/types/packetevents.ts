@@ -1,3 +1,5 @@
+import { FieldLabel } from "./additionalFields";
+
 export interface IEventRecord {
     id?: string;
     event_name?: string;
@@ -17,7 +19,7 @@ export interface IEventRecord {
     period_from?: string;
     period_till?: string; // API может возвращать period_till
     without_period?: boolean;
-    additional_fields?: Record<string, any>; // ← Добавляем дополнительные поля
+    additional_fields?: Record<string, { type: string; value?: any; label: FieldLabel; required?: boolean }>; // ← Добавляем дополнительные поля
 }
 
 export type CreateEventPayload = Omit<IEventRecord, 'id'>;

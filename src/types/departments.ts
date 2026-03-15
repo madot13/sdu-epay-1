@@ -1,8 +1,10 @@
+import { FieldLabel } from "./additionalFields";
+
 export interface Department {
     id?: string;
     name?: string;
     active?: boolean;
-    additional_fields?: Record<string, { type: string; value?: any }>;
+    additional_fields?: Record<string, { type: string; value?: any; label: FieldLabel; required?: boolean }>;
 }
 
 

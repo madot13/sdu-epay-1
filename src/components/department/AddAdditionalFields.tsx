@@ -2,21 +2,22 @@ import { FC } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CustomButton } from "@/ui/CustomButton.tsx";
 import { CustomInput } from "@/ui/CustomInput.tsx";
-import {InformationCircleIcon} from "@heroicons/react/24/outline";
+import { InformationCircleIcon } from "@heroicons/react/24/outline";
+import { FieldLabel, AdditionalFieldConfig } from "@/types/additionalFields.ts";
 
 const fieldTypes = ["text", "number", "date", "checkbox", "file"];
 
 interface AddAdditionalFieldsProps {
-    value: { name: string; type: string; value?: any }[];
-    onChange: (fields: { name: string; type: string; value?: any }[]) => void;
+    value: { name: string; type: string; value?: any; label?: FieldLabel }[];
+    onChange: (fields: { name: string; type: string; value?: any; label?: FieldLabel }[]) => void;
 }
 
 export const AddAdditionalFields: FC<AddAdditionalFieldsProps> = ({ value, onChange }) => {
     const addField = () => {
-        onChange([...value, { name: "", type: "text" }]);
+        onChange([...value, { name: "", type: "text", label: { kz: "Атауын", ru: "Название поля", en: "Field name" } }]);
     };
 
-    const updateField = (index: number, key: "name" | "type", val: string) => {
+    const updateField = (index: number, key: "name" | "type" | "label", val: string | FieldLabel) => {
         const updated = [...value];
         updated[index][key] = val;
         
@@ -58,7 +59,7 @@ export const AddAdditionalFields: FC<AddAdditionalFieldsProps> = ({ value, onCha
                         >
                             <CustomInput
                                 value={field.name}
-                                placeholder={"Введите название поля"}
+                                placeholder={field.label?.ru || "Введите название поля"}
                                 icon={<InformationCircleIcon className="text-[#6B9AB0]" />}
                                 onChange={(e) => updateField(index, "name", e.target.value)}
                             />

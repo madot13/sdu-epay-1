@@ -3,12 +3,13 @@ import { CustomInput } from "@/ui/CustomInput.tsx";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { getDepartmentById } from "@/api/endpoints/departments.ts";
 import { FileUpload } from "@/ui/FileUpload.tsx";
+import { FieldLabel, MultilingualAdditionalFields } from "@/types/additionalFields.ts";
 
 interface PaymentFormAdditionalFieldsProps {
     departmentId: string;
     values: Record<string, any>;
     onChange: (values: Record<string, any>) => void;
-    onFieldsLoad?: (fields: Record<string, { type: string }>) => void;
+    onFieldsLoad?: (fields: MultilingualAdditionalFields) => void;
 }
 
 export const PaymentFormAdditionalFields: FC<PaymentFormAdditionalFieldsProps> = ({
@@ -17,7 +18,7 @@ export const PaymentFormAdditionalFields: FC<PaymentFormAdditionalFieldsProps> =
     onChange,
     onFieldsLoad
 }) => {
-    const [additionalFields, setAdditionalFields] = useState<Record<string, { type: string }>>({});
+    const [additionalFields, setAdditionalFields] = useState<MultilingualAdditionalFields>({});
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -31,11 +32,11 @@ export const PaymentFormAdditionalFields: FC<PaymentFormAdditionalFieldsProps> =
             try {
                 // Получаем департамент по ID с дополнительными полями
                 const department = await getDepartmentById(departmentId);
-                console.log("Department data:", department); // ← Логируем для отладки
+                console.log("Department data:", department);
                 const fields = department?.additional_fields || {};
                 console.log("Raw fields from API:", fields);
                 setAdditionalFields(fields);
-                onFieldsLoad?.(fields); // Передаем типы полей наверх
+                onFieldsLoad?.(fields);
             } catch (error) {
                 console.error("Failed to fetch department fields:", error);
                 setAdditionalFields({});
@@ -75,7 +76,7 @@ export const PaymentFormAdditionalFields: FC<PaymentFormAdditionalFieldsProps> =
         onChange(newValues);
     };
 
-    const renderField = (fieldName: string, fieldConfig: { type: string }) => {
+    const renderField = (fieldName: string, fieldConfig: { label: FieldLabel; type: string; required?: boolean }) => {
         const currentValue = values[fieldName] || "";
 
         switch (fieldConfig.type) {
@@ -84,7 +85,7 @@ export const PaymentFormAdditionalFields: FC<PaymentFormAdditionalFieldsProps> =
                     <CustomInput
                         key={fieldName}
                         icon={<InformationCircleIcon className="text-[#6B9AB0]" />}
-                        placeholder={`Введите ${fieldName}`}
+                        placeholder={fieldConfig.label?.ru || `Введите ${fieldName}`}
                         value={currentValue}
                         onChange={(e) => handleFieldChange(fieldName, fieldConfig.type, e.target.value)}
                     />
@@ -95,7 +96,7 @@ export const PaymentFormAdditionalFields: FC<PaymentFormAdditionalFieldsProps> =
                     <CustomInput
                         key={fieldName}
                         icon={<InformationCircleIcon className="text-[#6B9AB0]" />}
-                        placeholder={`Введите ${fieldName}`}
+                        placeholder={fieldConfig.label?.ru || `Введите ${fieldName}`}
                         type="number"
                         value={String(currentValue)}
                         onChange={(e) => handleFieldChange(fieldName, fieldConfig.type, e.target.value)}
@@ -105,7 +106,7 @@ export const PaymentFormAdditionalFields: FC<PaymentFormAdditionalFieldsProps> =
             case "date":
                 return (
                     <div key={fieldName} className="flex flex-col gap-[10px]">
-                        <label className="text-sm font-medium">{fieldName}</label>
+                        <label className="text-sm font-medium">{fieldConfig.label?.ru || fieldName}</label>
                         <input
                             type="date"
                             value={currentValue || ""}
@@ -126,7 +127,7 @@ export const PaymentFormAdditionalFields: FC<PaymentFormAdditionalFieldsProps> =
                             className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
                         />
                         <label htmlFor={fieldName} className="text-sm text-gray-700">
-                            {fieldName}
+                            {fieldConfig.label?.ru || fieldName}
                         </label>
                     </div>
                 );
@@ -134,10 +135,10 @@ export const PaymentFormAdditionalFields: FC<PaymentFormAdditionalFieldsProps> =
             case "file":
                 return (
                     <div key={fieldName} className="flex flex-col gap-[10px]">
-                        <label className="text-sm font-medium">{fieldName}</label>
+                        <label className="text-sm font-medium">{fieldConfig.label?.ru || fieldName}</label>
                         <FileUpload
-                            onChange={(file: File | null, url?: string) => handleFieldChange(fieldName, fieldConfig.type, { file, url })}
-                            placeholder={`Выберите файл для ${fieldName}`}
+                            onChange={(file: File | null, key?: string) => handleFieldChange(fieldName, fieldConfig.type, { file, key })}
+                            placeholder={`Выберите файл для ${fieldConfig.label?.ru || fieldName}`}
                             accept="*/*"
                             maxSize={10}
                         />
