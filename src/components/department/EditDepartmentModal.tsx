@@ -6,6 +6,7 @@ import {CustomButton} from "@/ui/CustomButton.tsx";
 import {CustomModal} from "@/ui/CustomModal.tsx";
 import {toast} from "react-hot-toast";
 import { AddAdditionalFields } from "@/components/department/AddAdditionalFields";
+import { FieldLabel } from "@/types/additionalFields.ts";
 
 
 interface EditDepartmentModalProps {
@@ -15,13 +16,13 @@ interface EditDepartmentModalProps {
         id:string;
         name: string;
         active?: boolean;
-        additional_fields?: Record<string, { type: string; value?: any }>;
+        additional_fields?: Record<string, { type: string; value?: any; label?: FieldLabel }>;
     },
 }
 
 
 export const EditDepartmentModal: FC<EditDepartmentModalProps> = ({isOpen, onClose, departmentData}) => {
-    const [additionalFields, setAdditionalFields] = useState<{ name: string; type: string; value?: any }[]>([]);
+    const [additionalFields, setAdditionalFields] = useState<{ name: string; type: string; value?: any; label?: FieldLabel }[]>([]);
     const [name, setName] = useState(departmentData.name);
     const [active, setActive] = useState(departmentData.active !== false);
 
@@ -33,9 +34,10 @@ export const EditDepartmentModal: FC<EditDepartmentModalProps> = ({isOpen, onClo
             setActive(departmentData.active !== false);
             const fields = departmentData.additional_fields
                 ? Object.entries(departmentData.additional_fields).map(([key, value]) => {
-                    const field: { name: string; type: string; value?: any } = {
+                    const field: { name: string; type: string; value?: any; label?: FieldLabel } = {
                         name: key,
                         type: value.type,
+                        label: value.label
                     };
                     
                     // If it's a file type and value doesn't exist, create empty value object
@@ -60,9 +62,12 @@ export const EditDepartmentModal: FC<EditDepartmentModalProps> = ({isOpen, onClo
     }, [isOpen, departmentData]);
 
     const handleUpdate = async () => {
-        const additional_fields: Record<string, { type: string; value?: any }> = {};
+        const additional_fields: Record<string, { type: string; value?: any; label?: FieldLabel }> = {};
         additionalFields.forEach((field) => {
-            const fieldData: { type: string; value?: any } = { type: field.type };
+            const fieldData: { type: string; value?: any; label?: FieldLabel } = { 
+                type: field.type,
+                label: field.label
+            };
             
             if (field.type === 'file') {
                 // For file types, always include a value object (even if empty)

@@ -10,6 +10,7 @@ import { IEventRecord } from "@/types/packetevents";
 import { AddAdditionalFields } from "@/components/department/AddAdditionalFields.tsx";
 import { getUsers } from "@/api/endpoints/users.ts";
 import { IUser } from "@/types/users.ts";
+import { FieldLabel } from "@/types/additionalFields.ts";
 
 interface Props {
     isOpen: boolean;
@@ -23,7 +24,7 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
     const [withoutFixedPrice, setWithoutFixedPrice] = useState(false);
     const [isMain, setIsMain] = useState(false); // Добавляем состояние для главного типа оплаты
     const [isActive, setIsActive] = useState(true); // Добавляем состояние для активного статуса
-    const [customFields, setCustomFields] = useState<{name:string; type:string; value?: any}[]>([]);
+    const [customFields, setCustomFields] = useState<{name:string; type:string; value?: any; label?: FieldLabel}[]>([]);
     const [managers, setManagers] = useState<{ label: string; value: string }[]>([]);
 
     useEffect(() => {
@@ -40,7 +41,8 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
             const fields = Object.entries(eventData.additional_fields).map(([name, config]) => ({
                 name,
                 type: config.type,
-                value: config.value || ''
+                value: config.value || '',
+                label: config.label
             }));
             setCustomFields(fields);
         }
@@ -107,11 +109,16 @@ export const EditPacketEventsModal: FC<Props> = ({ isOpen, onClose, eventData, o
                     // Для файлов копируем весь объект с value
                     allAdditionalFields[field.name] = {
                         type: field.type,
+                        label: field.label,
                         value: field.value
                     };
                 } else {
-                    // Для других типов только type
-                    allAdditionalFields[field.name] = { type: field.type };
+                    // Для других типов только type и label
+                    allAdditionalFields[field.name] = { 
+                        type: field.type,
+                        label: field.label,
+                        ...(field.value && { value: field.value })
+                    };
                 }
             });
 

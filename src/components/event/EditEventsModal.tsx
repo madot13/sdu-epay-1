@@ -14,6 +14,7 @@ import {CustomButton} from "@/ui/CustomButton.tsx";
 import {Calendar} from "primereact/calendar";
 import { getUsers } from "@/api/endpoints/users.ts";
 import { IUser } from "@/types/users.ts";
+import { FieldLabel } from "@/types/additionalFields.ts";
 
 interface EditEventsModalProps {
     isOpen: boolean;
@@ -31,7 +32,7 @@ interface EditEventsModalProps {
             name: string;
             active: boolean;
         };
-        additional_fields?: Record<string, { type: string }>;
+        additional_fields?: Record<string, { type: string; value?: any; label?: FieldLabel }>;
     };
 }
 
@@ -46,7 +47,7 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
             ? [new Date(eventData.period_from), new Date(eventData.period_till)]
             : null
     );
-    const [additionalFields, setAdditionalFields] = useState<{ name: string; type: string; value?: any }[]>([]);
+    const [additionalFields, setAdditionalFields] = useState<{ name: string; type: string; value?: any; label?: FieldLabel }[]>([]);
     const [departments, setDepartments] = useState<{ label: string; value: string; active: boolean }[]>([]);
     const [errors, setErrors] = useState({
         title: false,
@@ -82,7 +83,8 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
                 ? Object.entries(eventData.additional_fields).map(([key, value]) => ({
                     name: key,
                     type: value.type,
-                    value: (value as any).value
+                    value: (value as any).value,
+                    label: (value as any).label
                 }))
                 : [];
             setAdditionalFields(fields);
@@ -168,6 +170,7 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
                         // Для file типа всегда включаем value, даже если пустое
                         additional_fields[field.name] = {
                             type: field.type,
+                            label: field.label,
                             value: field.value || {
                                 url: "",
                                 key: "",
@@ -181,6 +184,7 @@ export const EditEventsModal: FC<EditEventsModalProps> = ({isOpen, onClose, even
                         // Для остальных типов включаем value только если оно есть
                         additional_fields[field.name] = {
                             type: field.type,
+                            label: field.label,
                             ...(field.value && { value: field.value })
                         };
                     }
