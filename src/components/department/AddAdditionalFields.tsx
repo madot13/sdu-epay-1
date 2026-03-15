@@ -2,6 +2,7 @@ import { FC } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CustomButton } from "@/ui/CustomButton.tsx";
 import { CustomInput } from "@/ui/CustomInput.tsx";
+import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { FieldLabel } from "@/types/additionalFields.ts";
 
 const fieldTypes = ["text", "number", "date", "checkbox", "file"];
@@ -86,16 +87,19 @@ export const AddAdditionalFields: FC<AddAdditionalFieldsProps> = ({ value, onCha
                                 <CustomInput
                                     value={field.label?.kz || ""}
                                     placeholder="Атауын (казахский)"
+                                    icon={<InformationCircleIcon className="text-[#6B9AB0]" />}
                                     onChange={(e) => updateLabel(index, "kz", e.target.value)}
                                 />
                                 <CustomInput
                                     value={field.label?.ru || ""}
                                     placeholder="Название поля (русский)"
+                                    icon={<InformationCircleIcon className="text-[#6B9AB0]" />}
                                     onChange={(e) => updateLabel(index, "ru", e.target.value)}
                                 />
                                 <CustomInput
                                     value={field.label?.en || ""}
                                     placeholder="Field name (english)"
+                                    icon={<InformationCircleIcon className="text-[#6B9AB0]" />}
                                     onChange={(e) => updateLabel(index, "en", e.target.value)}
                                 />
                             </div>
