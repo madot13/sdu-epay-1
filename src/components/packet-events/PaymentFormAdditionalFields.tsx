@@ -3,7 +3,7 @@ import { CustomInput } from "@/ui/CustomInput.tsx";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { getDepartmentById } from "@/api/endpoints/departments.ts";
 import { FileUpload } from "@/ui/FileUpload.tsx";
-import { FieldLabel, MultilingualAdditionalFields } from "@/types/additionalFields.ts";
+import { FieldLabel, MultilingualAdditionalFields, FieldValue } from "@/types/additionalFields.ts";
 
 interface PaymentFormAdditionalFieldsProps {
     departmentId: string;
@@ -49,7 +49,7 @@ export const PaymentFormAdditionalFields: FC<PaymentFormAdditionalFieldsProps> =
         fetchDepartmentFields();
     }, [departmentId]);
 
-    const handleFieldChange = (fieldName: string, fieldType: string, value: any) => {
+    const handleFieldChange = (fieldName: string, fieldType: string, value: FieldValue) => {
         console.log(`PaymentFormAdditionalFields handleFieldChange:`);
         console.log(`  - fieldName: ${fieldName}`);
         console.log(`  - fieldType: ${fieldType}`);
@@ -76,7 +76,7 @@ export const PaymentFormAdditionalFields: FC<PaymentFormAdditionalFieldsProps> =
         onChange(newValues);
     };
 
-    const renderField = (fieldName: string, fieldConfig: { label: FieldLabel; type: string; required?: boolean }) => {
+    const renderField = (fieldName: string, fieldConfig: { label?: FieldLabel; type: string; required?: boolean }) => {
         const currentValue = values[fieldName] || "";
 
         switch (fieldConfig.type) {
@@ -137,7 +137,10 @@ export const PaymentFormAdditionalFields: FC<PaymentFormAdditionalFieldsProps> =
                     <div key={fieldName} className="flex flex-col gap-[10px]">
                         <label className="text-sm font-medium">{fieldConfig.label?.ru || fieldName}</label>
                         <FileUpload
-                            onChange={(file: File | null, key?: string) => handleFieldChange(fieldName, fieldConfig.type, { file, key })}
+                            onChange={(file: File | null, key?: string | undefined) => {
+                                const fileValue: FieldValue = file ? { file: { url: '', key: key || '', bucket: '', filename: file.name, content_type: file.type, size: file.size } } : null;
+                                handleFieldChange(fieldName, fieldConfig.type, fileValue);
+                            }}
                             placeholder={`Выберите файл для ${fieldConfig.label?.ru || fieldName}`}
                             accept="*/*"
                             maxSize={10}

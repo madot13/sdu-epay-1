@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { CustomButton } from "@/ui/CustomButton.tsx";
 import { CustomInput } from "@/ui/CustomInput.tsx";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
-import { FieldLabel, AdditionalFieldConfig } from "@/types/additionalFields.ts";
+import { FieldLabel } from "@/types/additionalFields.ts";
 
 const fieldTypes = ["text", "number", "date", "checkbox", "file"];
 
@@ -19,21 +19,22 @@ export const AddAdditionalFields: FC<AddAdditionalFieldsProps> = ({ value, onCha
 
     const updateField = (index: number, key: "name" | "type" | "label", val: string | FieldLabel) => {
         const updated = [...value];
-        updated[index][key] = val;
+        updated[index] = { ...updated[index], [key]: val };
         
         // Если тип file, добавляем обязательное value поле
         if (key === "type" && val === "file") {
-            updated[index].value = {
+            updated[index] = { ...updated[index], value: {
                 url: "",
                 key: "",
                 bucket: "",
                 filename: "",
                 content_type: "",
                 size: 0
-            };
+            }};
         } else if (key === "type" && val !== "file") {
             // Если меняем с file на другой тип, убираем value
-            delete updated[index].value;
+            const { value: _, ...rest } = updated[index];
+            updated[index] = { ...rest };
         }
         
         onChange(updated);
